@@ -54,6 +54,7 @@ security_admin_exclude_perms = (
     ('audits', '*', '*', '*'),
     ('perms', '*', '*', '*'),
     ('acls', '*', '*', '*'),
+    ('orgs', 'organization', '*', '*'),
     ('terminal', 'command', '*', 'command'),
     ('terminal', 'session', '*', 'session'),
     ('terminal', 'session', 'add', 'supersessionsharing'),
@@ -61,11 +62,13 @@ security_admin_exclude_perms = (
     ('terminal', 'sessionreplay', '*', 'sessionreplay'),
     ('terminal', 'sessionsharing', '*', 'sessionsharing'),
     ('terminal', 'sessionjoinrecord', '*', 'sessionjoinrecord'),
+    ('terminal', 'applet', 'view', 'applet'),
     ('rbac', 'menupermission', 'view', 'audit'),
     ('rbac', 'systemrole', 'add,delete,change', '*'),
     ('rbac', 'orgrole', 'add,delete,change', '*'),
     ('ops', '*', '*', '*'),
-    ('settings', 'setting', 'change', 'sms'),
+    ('settings', 'setting', 'change', 'sms|email|auth|terminal|interface|license|feature'),
+    ('settings', 'setting', 'view', 'basic|tools'),
 )
 authorized_admin_perms = (
     ('perms', '*', '*', '*'),

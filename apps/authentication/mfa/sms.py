@@ -41,7 +41,7 @@ class MFASms(BaseMFA):
 
     @staticmethod
     def global_enabled():
-        return settings.SMS_ENABLED
+        return False
 
     def get_enable_url(self) -> str:
         return '/ui/#/profile/setting?activeTab=ProfileUpdate'
