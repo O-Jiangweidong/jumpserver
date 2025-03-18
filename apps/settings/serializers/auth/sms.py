@@ -14,7 +14,7 @@ __all__ = [
 
 
 class SMSSettingSerializer(serializers.Serializer):
-    SMS_ENABLED = serializers.BooleanField(default=False, label=_('Enable SMS'))
+    # SMS_ENABLED = serializers.BooleanField(default=False, label=_('Enable SMS'))
     SMS_BACKEND = serializers.ChoiceField(
         choices=BACKENDS.choices, default=BACKENDS.ALIBABA, label=_('SMS provider / Protocol')
     )
