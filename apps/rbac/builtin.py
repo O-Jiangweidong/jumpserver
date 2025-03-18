@@ -54,7 +54,6 @@ security_admin_exclude_perms = (
     ('audits', '*', '*', '*'),
     ('perms', '*', '*', '*'),
     ('acls', '*', '*', '*'),
-    ('orgs', 'organization', '*', '*'),
     ('terminal', 'command', '*', 'command'),
     ('terminal', 'session', '*', 'session'),
     ('terminal', 'session', 'add', 'supersessionsharing'),
@@ -67,8 +66,6 @@ security_admin_exclude_perms = (
     ('rbac', 'systemrole', 'add,delete,change', '*'),
     ('rbac', 'orgrole', 'add,delete,change', '*'),
     ('ops', '*', '*', '*'),
-    ('settings', 'setting', 'change', 'sms|email|auth|terminal|interface|license|feature'),
-    ('settings', 'setting', 'view', 'basic|tools'),
 )
 authorized_admin_perms = (
     ('perms', '*', '*', '*'),
@@ -82,6 +79,8 @@ authorized_admin_perms = (
     ('audits', 'userloginlog', 'view', 'userloginlog'),
     ('rbac', 'menupermission', 'view', 'console|audit'),
     ('audits', '*', 'view', 'loginlog|passwordchangelog'),
+    ('settings', 'setting', 'view', 'setting'),
+    ('settings', 'setting', 'change', 'security'),
 )
 auditor_admin_perms = _auditor_perms + _view_root_perms
 
