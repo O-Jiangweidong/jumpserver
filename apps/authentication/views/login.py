@@ -324,10 +324,6 @@ class UserLoginGuardView(mixins.AuthMixin, RedirectView):
 
     def login_it(self, user):
         auth_login(self.request, user)
-        # 如果设置了自动登录，那需要设置 session_id cookie 的有效期
-        if self.request.session.get('auto_login'):
-            age = self.request.session.get_expiry_age()
-            self.request.session.set_expiry(age)
 
     def get_redirect_url(self, *args, **kwargs):
         try:

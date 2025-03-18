@@ -491,7 +491,7 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
         request.session['auth_password'] = 1
         request.session['auth_password_expired_at'] = time.time() + settings.AUTH_EXPIRED_SECONDS
         request.session['user_id'] = str(user.id)
-        request.session['auto_login'] = auto_login
+        request.session['auto_login'] = False
         if not auth_backend:
             auth_backend = getattr(user, 'backend', settings.AUTH_BACKEND_MODEL)
 

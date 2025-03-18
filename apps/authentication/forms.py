@@ -28,17 +28,6 @@ class UserLoginForm(forms.Form):
         label=_('Password'), widget=forms.PasswordInput,
         max_length=1024, strip=False
     )
-    auto_login = forms.BooleanField(
-        required=False, initial=False,
-        widget=forms.CheckboxInput()
-    )
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        auto_login_field = self.fields['auto_login']
-        auto_login_field.label = _("Auto login")
-        if settings.SESSION_EXPIRE_AT_BROWSER_CLOSE:
-            auto_login_field.widget = forms.HiddenInput()
 
     def confirm_login_allowed(self, user):
         if not user.is_staff:
