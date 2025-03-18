@@ -138,7 +138,8 @@ class AuthMixin:
 
     @property
     def date_password_expired(self):
-        interval = settings.SECURITY_PASSWORD_EXPIRATION_TIME
+        interval = int(settings.SECURITY_PASSWORD_EXPIRATION_TIME)
+        interval = 7 if interval > 7 or interval <=0 else interval
         date_expired = self.date_password_last_updated + timezone.timedelta(
             days=int(interval))
         return date_expired

@@ -13,7 +13,7 @@ __all__ = [
 
 class SecurityPasswordRuleSerializer(serializers.Serializer):
     SECURITY_PASSWORD_EXPIRATION_TIME = serializers.IntegerField(
-        min_value=1, max_value=99999, required=True,
+        min_value=1, max_value=7, required=True,
         label=_('User password expiration (day)'),
         help_text=_(
             'If the user does not update the password during the time, '
@@ -30,21 +30,21 @@ class SecurityPasswordRuleSerializer(serializers.Serializer):
         )
     )
     SECURITY_PASSWORD_MIN_LENGTH = serializers.IntegerField(
-        min_value=6, max_value=30, required=True,
+        min_value=8, max_value=30, required=True,
         label=_('Password minimum length')
     )
     SECURITY_ADMIN_USER_PASSWORD_MIN_LENGTH = serializers.IntegerField(
-        min_value=6, max_value=30, required=True,
+        min_value=8, max_value=30, required=True,
         label=_('Admin user password minimum length')
     )
     SECURITY_PASSWORD_UPPER_CASE = serializers.BooleanField(
-        required=False, label=_('Must contain capital')
+        label=_('Must contain capital'), read_only=True,
     )
     SECURITY_PASSWORD_LOWER_CASE = serializers.BooleanField(
-        required=False, label=_('Must contain lowercase')
+        label=_('Must contain lowercase'), read_only=True,
     )
     SECURITY_PASSWORD_NUMBER = serializers.BooleanField(
-        required=False, label=_('Must contain numeric')
+        label=_('Must contain numeric'), read_only=True,
     )
     SECURITY_PASSWORD_SPECIAL_CHAR = serializers.BooleanField(
         required=False, label=_('Must contain special')
