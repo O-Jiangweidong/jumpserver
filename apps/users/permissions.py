@@ -16,6 +16,9 @@ class UserObjectPermission(permissions.IsAuthenticated):
         if view.action not in ['update', 'partial_update', 'destroy']:
             return True
 
+        if obj.is_special_admin:
+            return False
+
         if not request.user.is_superuser and obj.is_superuser:
             return False
 

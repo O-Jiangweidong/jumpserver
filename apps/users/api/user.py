@@ -53,6 +53,12 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         'bulk_remove': 'users.remove_user',
     }
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        if self.request._request.path.endswith('suggestions/'):
+            qs = qs.exclude(username__in=User.admin_usernames)
+        return qs
+
     def allow_bulk_destroy(self, qs, filtered):
         is_valid = filtered.count() < qs.count()
         if not is_valid:
@@ -135,13 +141,11 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         return super().perform_bulk_update(serializer)
 
     def perform_destroy(self, instance):
-        if instance.username in instance.admin_usernames:
-            raise PermissionDenied()
+        self.check_object_permissions(self.request, instance)
         instance.delete()
 
     def perform_bulk_destroy(self, objects):
         for obj in objects:
-            self.check_object_permissions(self.request, obj)
             self.perform_destroy(obj)
 
     @action(methods=['post'], detail=False)
@@ -167,6 +171,8 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
     @action(methods=['post'], detail=True)
     def remove(self, request, *args, **kwargs):
         instance = self.get_object()
+        if instance.is_special_admin:
+            raise PermissionDenied()
         instance.remove()
         return Response(status=204)
 
