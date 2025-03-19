@@ -45,6 +45,9 @@ class UserResetPKApi(UserQuerysetMixin, generics.UpdateAPIView):
 
     def perform_update(self, serializer):
         user = self.get_object()
+        if user.is_special_admin:
+            raise PermissionDenied()
+
         user.public_key = None
         user.save()
         ResetSSHKeyMsg(user).publish_async()

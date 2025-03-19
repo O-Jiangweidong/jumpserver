@@ -55,8 +55,8 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
     }
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        if self.request._request.path.endswith('suggestions/'):
+        qs = super().get_queryset().exclude(username='admin')
+        if self.request._request.path.endswith('suggestions/'): # noqa
             qs = qs.exclude(username__in=User.admin_usernames)
         return qs
 
