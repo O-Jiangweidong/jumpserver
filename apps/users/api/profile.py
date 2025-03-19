@@ -1,6 +1,7 @@
 # ~*~ coding: utf-8 ~*~
 import uuid
 
+from django.core.exceptions import PermissionDenied
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 
@@ -31,6 +32,9 @@ class UserResetPasswordApi(UserQuerysetMixin, generics.UpdateAPIView):
         # Note: we are not updating the user object here.
         # We just do the reset-password stuff.
         user = self.get_object()
+        if user.is_special_admin:
+            raise PermissionDenied()
+
         user.password_raw = str(uuid.uuid4())
         user.save()
         ResetPasswordMsg(user).publish_async()
