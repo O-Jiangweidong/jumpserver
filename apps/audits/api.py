@@ -54,6 +54,7 @@ class JobAuditViewSet(OrgReadonlyModelViewSet):
     filterset_fields = ['creator__name', 'material']
     serializer_class = JobLogSerializer
     ordering = ['-date_start']
+    export_as_zip = True
 
 
 class FTPLogViewSet(OrgModelViewSet):
@@ -70,6 +71,7 @@ class FTPLogViewSet(OrgModelViewSet):
     rbac_perms = {
         'download': 'audits.view_ftplog',
     }
+    export_as_zip = True
 
     def get_storage(self):
         return FTPFileStorageHandler(self.get_object())
@@ -125,6 +127,7 @@ class UserLoginCommonMixin:
 
 class UserLoginLogViewSet(SpecialAuditMixin, UserLoginCommonMixin, OrgReadonlyModelViewSet):
     filter_key = 'username'
+    export_as_zip = True
 
     @staticmethod
     def get_org_member_usernames():
@@ -209,6 +212,7 @@ class OperateLogViewSet(OrgReadonlyModelViewSet):
     filterset_class = OperateLogFilterSet
     search_fields = ['resource', 'user']
     ordering = ['-datetime']
+    export_as_zip = True
 
     @lazyproperty
     def is_action_detail(self):
@@ -243,6 +247,7 @@ class PasswordChangeLogViewSet(SpecialAuditMixin, OrgReadonlyModelViewSet):
     search_fields = filterset_fields
     ordering = ['-datetime']
     filter_key = 'user'
+    export_as_zip = True
 
     def get_queryset(self):
         queryset = super().get_queryset()

@@ -108,6 +108,7 @@ class CommandViewSet(JMSBulkModelViewSet):
     model = Command
     search_fields = ('input',)
     ordering_fields = ('timestamp', 'risk_level')
+    export_as_zip = True
 
     def merge_all_storage_list(self, request, *args, **kwargs):
         merged_commands = []

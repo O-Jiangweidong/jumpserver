@@ -96,6 +96,7 @@ class SessionViewSet(RecordViewLogMixin, OrgBulkModelViewSet):
         'download': ['terminal.download_sessionreplay'],
     }
     permission_classes = [RBACPermission]
+    export_as_zip = True
 
     def get_permissions(self):
         if self.action == 'retrieve':
