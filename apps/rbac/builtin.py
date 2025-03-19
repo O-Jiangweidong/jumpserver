@@ -153,10 +153,10 @@ class PredefineRole:
         if not username:
             return
 
-        user, created = User.objects.get_or_create(
+        user, created = User.objects.update_or_create(
             username=username, defaults={
                 'name': role.name, 'email': f"{username}@mycomany.com",
-                'password': make_password("ChangeMe"),
+                'password': make_password("ChangeMe"), 'is_active': True,
             }
         )
         user.system_roles.set([role])
