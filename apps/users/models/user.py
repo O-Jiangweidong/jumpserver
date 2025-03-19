@@ -891,6 +891,13 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
     feishu_id = models.CharField(null=True, default=None, max_length=128, verbose_name=_('FeiShu'))
     lark_id = models.CharField(null=True, default=None, max_length=128, verbose_name='Lark')
     slack_id = models.CharField(null=True, default=None, max_length=128, verbose_name=_('Slack'))
+    is_active = models.BooleanField(
+        _("active"), default=False,
+        help_text=_(
+            "Designates whether this user should be treated as active. "
+            "Unselect this instead of deleting accounts."
+        ),
+    )
 
     DATE_EXPIRED_WARNING_DAYS = 5
 
@@ -1052,6 +1059,7 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
             ('invite_user', _('Can invite user')),
             ('remove_user', _('Can remove user')),
             ('match_user', _('Can match user')),
+            ('active_user', _('Can active user')),
         ]
 
     #: Use this method initial user

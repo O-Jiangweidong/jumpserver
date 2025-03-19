@@ -108,6 +108,7 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         source="can_use_ssh_key_login", label=_("Can public key authentication"),
         read_only=True
     )
+    is_active = serializers.BooleanField(read_only=True, label=_("Is active"))
     password = EncryptedField(label=_("Password"), required=False, allow_blank=True, allow_null=True, max_length=1024, )
     phone = PhoneField(
         validators=[PhoneValidator()], required=False, allow_blank=True, allow_null=True, label=_("Phone")

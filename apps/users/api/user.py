@@ -51,6 +51,7 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         'invite': 'users.invite_user',
         'remove': 'users.remove_user',
         'bulk_remove': 'users.remove_user',
+        'change_status': 'users.active_user',
     }
 
     def get_queryset(self):
@@ -64,6 +65,13 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         if not is_valid:
             raise UnableToDeleteAllUsers()
         return True
+
+    @action(methods=['patch'], detail=False, url_path='status')
+    def change_status(self, request, *args, **kwargs):
+        is_active = request.data.get('is_active', False)
+        user_ids = request.data.get('user_ids', [])
+        self.get_queryset().filter(id__in=user_ids).update(is_active=is_active)
+        return Response(status=204)
 
     @action(methods=['get'], detail=False, url_path='suggestions')
     def match(self, request, *args, **kwargs):

@@ -66,11 +66,13 @@ security_admin_exclude_perms = (
     ('rbac', 'systemrole', 'add,delete,change', '*'),
     ('rbac', 'orgrole', 'add,delete,change', '*'),
     ('ops', '*', '*', '*'),
+    ('users', 'user', 'active', 'user'),
 )
 authorized_admin_perms = (
     ('perms', '*', '*', '*'),
     ('acls', '*', '*', '*'),
     ('users', 'user', 'view', 'user'),
+    ('users', 'user', 'active', 'user'),
     ('users', 'usergroup', 'view', 'usergroup'),
     ('assets', 'asset', 'match|view', 'asset'),
     ('assets', 'node', 'match|view', 'node'),
