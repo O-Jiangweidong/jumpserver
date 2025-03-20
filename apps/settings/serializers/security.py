@@ -59,7 +59,7 @@ login_ip_limit_time_help_text = _(
 
 class SecurityLoginLimitSerializer(serializers.Serializer):
     SECURITY_LOGIN_LIMIT_COUNT = serializers.IntegerField(
-        min_value=3, max_value=99999,
+        min_value=0, max_value=5,
         label=_('Limit the number of user login failures')
     )
     SECURITY_LOGIN_LIMIT_TIME = serializers.IntegerField(
