@@ -68,6 +68,7 @@ security_admin_exclude_perms = (
     ('rbac', 'menupermission', 'view', 'audit'),
     ('rbac', 'menupermission', 'view', 'filemanager'),
     ('rbac', 'menupermission', 'view', 'webterminal'),
+    ('rbac', 'menupermission', 'view', 'systemtools'),
     ('rbac', 'systemrole', 'add,delete,change', '*'),
     ('rbac', 'orgrole', 'add,delete,change', '*'),
     ('ops', '*', '*', '*'),
