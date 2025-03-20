@@ -9,7 +9,7 @@ ADD . .
 RUN echo > /opt/jumpserver/config.yml \
     && cd utils && bash -ixeu build.sh
 
-FROM python:3.11-slim-bullseye as stage-2
+FROM python:3.11-slim-bullseye AS stage-2
 ARG TARGETARCH
 
 ARG BUILD_DEPENDENCIES="              \
@@ -57,7 +57,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=core-apt \
 
 WORKDIR /opt/jumpserver
 
-ARG PIP_MIRROR=https://pypi.tuna.tsinghua.edu.cn/simple
+ARG PIP_MIRROR=https://mirrors.163.com/pypi/simple/
 RUN --mount=type=cache,target=/root/.cache \
     --mount=type=bind,source=poetry.lock,target=/opt/jumpserver/poetry.lock \
     --mount=type=bind,source=pyproject.toml,target=/opt/jumpserver/pyproject.toml \
