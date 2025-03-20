@@ -78,6 +78,7 @@ authorized_admin_perms = (
     ('assets', 'asset', 'match|view', 'asset'),
     ('assets', 'node', 'match|view', 'node'),
     ('assets', 'platform', 'view', 'platform'),
+    ('audits', '*', '*', '*'),
     ('audits', 'passwordchangelog', 'view', 'passwordchangelog'),
     ('audits', 'userloginlog', 'view', 'userloginlog'),
     ('rbac', 'menupermission', 'view', 'console|audit'),
@@ -85,7 +86,11 @@ authorized_admin_perms = (
     ('settings', 'setting', 'view', 'setting'),
     ('settings', 'setting', 'change', 'security'),
 )
-auditor_admin_perms = _auditor_perms + _view_root_perms
+
+auditor_admin_perms = (
+    ('rbac', 'menupermission', 'view', 'audit'),
+    ('audits', 'operatelog', '*', 'operatelog'),
+) + _view_root_perms
 
 app_exclude_perms = [
     ('users', 'user', 'add,delete', 'user'),
@@ -153,7 +158,7 @@ class PredefineRole:
         if not username:
             return
 
-        user, created = User.objects.update_or_create(
+        user, created = User.objects.get_or_create(
             username=username, defaults={
                 'name': role.name, 'email': f"{username}@mycomany.com",
                 'password': make_password("ChangeMe"), 'is_active': True,

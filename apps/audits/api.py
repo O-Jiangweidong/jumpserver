@@ -125,8 +125,7 @@ class UserLoginCommonMixin:
     search_fields = ['id', 'username', 'ip', 'city']
 
 
-class UserLoginLogViewSet(SpecialAuditMixin, UserLoginCommonMixin, OrgReadonlyModelViewSet):
-    filter_key = 'username'
+class UserLoginLogViewSet(UserLoginCommonMixin, OrgReadonlyModelViewSet):
     export_as_zip = True
 
     @staticmethod
@@ -202,7 +201,7 @@ class ResourceActivityAPIView(generics.ListAPIView):
         return queryset.order_by('-datetime')[:limit]
 
 
-class OperateLogViewSet(OrgReadonlyModelViewSet):
+class OperateLogViewSet(SpecialAuditMixin, OrgReadonlyModelViewSet):
     model = OperateLog
     serializer_class = OperateLogSerializer
     extra_filter_backends = [DatetimeRangeFilterBackend]
@@ -233,6 +232,7 @@ class OperateLogViewSet(OrgReadonlyModelViewSet):
         if storage.get_type() == 'es':
             qs = ESQuerySet(storage)
             qs.model = OperateLog
+        qs = self._get_special_queryset(qs)
         return qs
 
 
