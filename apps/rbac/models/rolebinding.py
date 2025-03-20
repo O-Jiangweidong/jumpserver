@@ -95,7 +95,11 @@ class RoleBinding(JMSBaseModel):
 
     @classmethod
     def get_user_roles(cls, user):
-        bindings = cls.objects.filter(user=user)
+        from users.models import User
+        params = {}
+        if user.username in User.admin_usernames:
+            params['scope'] = 'system'
+        bindings = cls.objects.filter(user=user, **params)
         roles_id = bindings.values_list('role', flat=True).distinct()
         return Role.objects.filter(id__in=roles_id)
 
