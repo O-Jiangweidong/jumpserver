@@ -526,6 +526,7 @@ class RoleMixin:
             username=name, name=name, email=email,
             comment=comment, is_first_login=False,
             created_by='System', is_service_account=True,
+            is_active=True,
         )
         access_key = app.create_access_key()
         return app, access_key
