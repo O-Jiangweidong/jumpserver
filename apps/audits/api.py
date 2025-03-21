@@ -32,7 +32,7 @@ from .models import (
     FTPLog, UserLoginLog, OperateLog, PasswordChangeLog,
     ActivityLog, JobLog, UserSession
 )
-from .mixins import SpecialAuditMixin
+from .mixins import SpecialOperateLogMixin, SpecialLoginLogMixin
 from .serializers import (
     FTPLogSerializer, UserLoginLogSerializer, JobLogSerializer,
     OperateLogSerializer, OperateLogActionDetailSerializer,
@@ -125,7 +125,7 @@ class UserLoginCommonMixin:
     search_fields = ['id', 'username', 'ip', 'city']
 
 
-class UserLoginLogViewSet(UserLoginCommonMixin, OrgReadonlyModelViewSet):
+class UserLoginLogViewSet(SpecialLoginLogMixin, UserLoginCommonMixin, OrgReadonlyModelViewSet):
     export_as_zip = True
 
     @staticmethod
@@ -140,6 +140,7 @@ class UserLoginLogViewSet(UserLoginCommonMixin, OrgReadonlyModelViewSet):
             return queryset
         users = self.get_org_member_usernames()
         queryset = queryset.filter(username__in=users)
+        queryset = self._get_special_queryset(queryset)
         return queryset
 
 
@@ -201,7 +202,7 @@ class ResourceActivityAPIView(generics.ListAPIView):
         return queryset.order_by('-datetime')[:limit]
 
 
-class OperateLogViewSet(SpecialAuditMixin, OrgReadonlyModelViewSet):
+class OperateLogViewSet(SpecialOperateLogMixin, OrgReadonlyModelViewSet):
     model = OperateLog
     serializer_class = OperateLogSerializer
     extra_filter_backends = [DatetimeRangeFilterBackend]
@@ -236,7 +237,7 @@ class OperateLogViewSet(SpecialAuditMixin, OrgReadonlyModelViewSet):
         return qs
 
 
-class PasswordChangeLogViewSet(SpecialAuditMixin, OrgReadonlyModelViewSet):
+class PasswordChangeLogViewSet(OrgReadonlyModelViewSet):
     model = PasswordChangeLog
     serializer_class = PasswordChangeLogSerializer
     extra_filter_backends = [DatetimeRangeFilterBackend]

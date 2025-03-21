@@ -96,6 +96,7 @@ authorized_admin_perms = (
 auditor_admin_perms = (
     ('rbac', 'menupermission', 'view', 'audit'),
     ('audits', 'operatelog', '*', 'operatelog'),
+    ('audits', 'userloginlog', '*', 'userloginlog'),
 ) + _view_root_perms
 
 app_exclude_perms = [
