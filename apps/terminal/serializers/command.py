@@ -24,11 +24,16 @@ class SimpleSessionCommandSerializer(serializers.ModelSerializer):
     org_id = serializers.CharField(
         max_length=36, required=False, default='', allow_null=True, allow_blank=True
     )
+    encrypt_value = serializers.CharField(read_only=True, label=_('Encrypt value'))
+    hmac_verify = serializers.BooleanField(default=False, label=_('HMac verify'))
 
     class Meta:
         # 继承 ModelSerializer 解决 swagger risk_level type 为 object 的问题
         model = Command
-        fields = ['user', 'asset', 'input', 'session', 'risk_level', 'org_id']
+        fields = [
+            'user', 'asset', 'input', 'session', 'risk_level',
+            'org_id', 'encrypt_value', 'hmac_verify'
+        ]
 
     def validate_user(self, value):
         if len(value) > 64:

@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 #
+import base64
 import inspect
 import time
+
 from functools import partial
 from typing import Callable
 
@@ -24,6 +26,8 @@ from users.models import User
 from users.utils import LoginBlockUtil, MFABlockUtils, LoginIpBlockUtil
 from . import errors
 from .signals import post_auth_success, post_auth_failed
+from .utils import ECCCryptoHandler
+
 
 logger = get_logger(__name__)
 
@@ -151,12 +155,12 @@ class CommonMixin:
     def get_auth_data(self, data):
         request = self.request
 
-        items = ['username', 'password', 'challenge', 'public_key', 'auto_login']
-        username, password, challenge, public_key, auto_login = bulk_get(data, items, default='')
+        items = ['username', 'password', 'challenge', 'public_key', 'auto_login', 'usb_key']
+        username, password, challenge, public_key, auto_login, u_key_token = bulk_get(data, items, default='')
         ip = self.get_request_ip()
         self._set_partial_credential_error(username=username, ip=ip, request=request)
         password = password + challenge.strip()
-        return username, password, public_key, ip, auto_login
+        return username, password, public_key, ip, auto_login, u_key_token
 
 
 class AuthPreCheckMixin:
@@ -433,7 +437,24 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
 
     key_prefix_captcha = "_LOGIN_INVALID_{}"
 
-    def _check_auth_user_is_valid(self, username, password, public_key):
+    def _check_u_key_is_valid(self, user, u_key_token):
+        block_list = u_key_token.split('$')
+        # block_list -> [sm2, u_key_serial, sign_r, sign_s]
+        sm2_raw, *u_key_serial_list, sign_r, sign_s = block_list
+        u_key_serial = ''.join(u_key_serial_list)
+
+        if u_key_serial != user.usb_key_serial:
+            self.raise_credential_error(errors.reason_usb_key_cert_verify_failed)
+        eh = ECCCryptoHandler()
+        ok = eh.verify_ecc(
+            user.usb_key_public_key, base64.b64decode(sm2_raw),
+            base64.b64decode(sign_r), base64.b64decode(sign_s)
+        )
+        if not ok:
+            self.raise_credential_error(errors.reason_usb_key_failed)
+        return True
+
+    def _check_auth_user_is_valid(self, username, password, public_key, u_key_token):
         user = authenticate(
             self.request, username=username,
             password=password, public_key=public_key
@@ -447,6 +468,8 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
             self.raise_credential_error(errors.reason_user_expired)
         elif not user.is_active:
             self.raise_credential_error(errors.reason_user_inactive)
+
+        self._check_u_key_is_valid(user, u_key_token)
         return user
 
     def set_login_failed_mark(self):
@@ -462,11 +485,11 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
     def check_user_auth(self, valid_data=None):
         # pre check
         self.check_is_block()
-        username, password, public_key, ip, auto_login = self.get_auth_data(valid_data)
+        username, password, public_key, ip, auto_login, u_key_token = self.get_auth_data(valid_data)
         self._check_only_allow_exists_user_auth(username)
 
         # check auth
-        user = self._check_auth_user_is_valid(username, password, public_key)
+        user = self._check_auth_user_is_valid(username, password, public_key, u_key_token)
 
         # 校验login-acl规则
         self._check_login_acl(user, ip)

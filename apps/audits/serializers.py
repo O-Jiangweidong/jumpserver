@@ -3,6 +3,7 @@
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 
+from audits.encrypt import audit_crypto_handler
 from audits.backends import get_operate_log_storage
 from common.serializers.fields import LabeledChoiceField, ObjectRelatedField
 from common.utils import reverse, i18n_trans
@@ -17,6 +18,11 @@ from .const import (
     MFAChoices, LoginStatusChoices,
     LoginTypeChoices, ActivityChoices,
 )
+
+
+class AuditEncryptMixin:
+    hmac_verify = serializers.BooleanField(default=False, label=_('HMac verify'))
+    encrypt_value = serializers.CharField(read_only=True, label=_('Encrypt value'))
 
 
 class JobLogSerializer(JobExecutionSerializer):
@@ -34,7 +40,7 @@ class JobLogSerializer(JobExecutionSerializer):
         }
 
 
-class FTPLogSerializer(serializers.ModelSerializer):
+class FTPLogSerializer(AuditEncryptMixin, serializers.ModelSerializer):
     operate = LabeledChoiceField(choices=OperateChoices.choices, label=_("Operate"))
 
     class Meta:
@@ -43,12 +49,17 @@ class FTPLogSerializer(serializers.ModelSerializer):
         fields_small = fields_mini + [
             "user", "remote_addr", "asset", "account",
             "org_id", "operate", "filename", "date_start",
-            "is_success", "has_file", "session"
+            "is_success", "has_file", "session",
+            'hmac_verify', 'encrypt_value',
         ]
         fields = fields_small
 
+    def save(self, **kwargs):
+        data = audit_crypto_handler.fill_data(kwargs)
+        return super().save(**data)
 
-class UserLoginLogSerializer(serializers.ModelSerializer):
+
+class UserLoginLogSerializer(AuditEncryptMixin, serializers.ModelSerializer):
     mfa = LabeledChoiceField(choices=MFAChoices.choices, label=_("MFA"))
     type = LabeledChoiceField(choices=LoginTypeChoices.choices, label=_("Type"))
     status = LabeledChoiceField(choices=LoginStatusChoices.choices, label=_("Status"))
@@ -62,6 +73,7 @@ class UserLoginLogSerializer(serializers.ModelSerializer):
             "reason", "reason_display",
             "backend", "backend_display",
             "status", "datetime",
+            'hmac_verify', 'encrypt_value',
         ]
         fields = fields_small
         extra_kwargs = {
@@ -80,7 +92,7 @@ class OperateLogActionDetailSerializer(serializers.ModelSerializer):
         return {'diff': get_operate_log_storage().convert_diff_friendly(instance)}
 
 
-class OperateLogSerializer(BulkOrgResourceModelSerializer):
+class OperateLogSerializer(AuditEncryptMixin, BulkOrgResourceModelSerializer):
     action = LabeledChoiceField(choices=ActionChoices.choices, label=_("Action"))
     resource = serializers.SerializerMethodField(label=_("Resource"))
     resource_type = serializers.SerializerMethodField(label=_('Resource Type'))
@@ -91,7 +103,7 @@ class OperateLogSerializer(BulkOrgResourceModelSerializer):
         fields_small = fields_mini + [
             "user", "action", "resource_type",
             "resource", "remote_addr", "datetime",
-            "org_id",
+            "org_id", 'hmac_verify', 'encrypt_value',
         ]
         fields = fields_small
 
@@ -104,10 +116,13 @@ class OperateLogSerializer(BulkOrgResourceModelSerializer):
         return i18n_trans(instance.resource)
 
 
-class PasswordChangeLogSerializer(serializers.ModelSerializer):
+class PasswordChangeLogSerializer(AuditEncryptMixin, serializers.ModelSerializer):
     class Meta:
         model = models.PasswordChangeLog
-        fields = ("id", "user", "change_by", "remote_addr", "datetime")
+        fields = (
+            "id", "user", "change_by", "remote_addr",
+            "datetime", 'hmac_verify', 'encrypt_value'
+        )
 
 
 class SessionAuditSerializer(serializers.ModelSerializer):

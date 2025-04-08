@@ -1,0 +1,105 @@
+{% extends '_base_only_content.html' %}
+ {% load static %}
+ {% load i18n %}
+ {% block custom_head_css_js %}
+     <style>
+         .margin-bottom {
+             margin-bottom: 15px;
+         }
+         .input-style {
+             width: 100%;
+             display: inline-block;
+         }
+
+         .challenge-required .input-style {
+             width: calc(100% - 120px);
+             display: inline-block;
+         }
+
+         .btn-challenge {
+             width: 110px !important;
+             height: 100%;
+             vertical-align: top;
+         }
+     </style>
+ {% endblock %}
+
+ {% block title %}
+     {% trans 'Administrator initialization' %}
+ {% endblock %}
+
+ {% block content %}
+     <hr>
+     <form class="m-t" role="form" method="post" action="">
+         {% csrf_token %}
+         {% if 'code' in form.errors %}
+             <p class="red-fonts">{{ form.code.errors.as_text }}</p>
+         {% endif %}
+         <input id="usb-key-public-key" name="usb_key_public_key" type="text" style="display:none" value="{{ RB }}">
+         <div class="form-group {% if form.usb_key_public_key.errors %} has-error {% endif %}">
+             <input type="file" id="fileInput" style="display: none">
+             <div class="margin-bottom challenge-required">
+                 <input type="text" id="filenameInput" class="form-control input-style" style="cursor: pointer;" readonly
+                        placeholder="{% trans 'Select cert file' %}" onclick="clickUploadKeyFile(this)">
+                 <button class="btn btn-primary fulsl-width btn-challenge"
+                         type='button' onclick="clickUploadKeyFile(this)">
+                     {% trans 'Select cert' %}
+                 </button>
+             </div>
+             {% if form.usb_key_public_key.errors %}
+                 <p class="help-block" style="text-align: left">
+                     {{ form.usb_key_public_key.errors.as_text }}
+                 </p>
+             {% endif %}
+         </div>
+         <div class="form-group {% if form.usb_key_serial.errors %} has-error {% endif %}">
+             <div class="margin-bottom challenge-required">
+                 <input type="text" id="u-key-serial" name="usb_key_serial" class="form-control input-style"
+                        placeholder="{% trans 'Initialize administrator key' %}">
+                 <button class="btn btn-primary full-width btn-challenge"
+                         type='button' onclick="getUKeySerial()">
+                     {% trans 'UKey' %}
+                 </button>
+             </div>
+             {% if form.usb_key_serial.errors %}
+                 <p class="help-block" style="text-align: left">
+                     {{ form.usb_key_serial.errors.as_text }}
+                 </p>
+             {% endif %}
+         </div>
+         <button id='submit_button' type="submit" class="btn btn-primary block full-width m-b">
+             {% trans 'Next' %}
+         </button>
+     </form>
+     <script>
+         const filenameInput = document.getElementById('filenameInput');
+         const fileInput = document.getElementById('fileInput');
+         fileInput.addEventListener("change", function () {
+             const file = fileInput.files[0]
+             filenameInput.value = file.name;
+             const reader = new FileReader();
+             reader.onload = function() {
+                 $('#usb-key-public-key').val(btoa(String.fromCharCode.apply(null, new Uint8Array(reader.result))))
+             }
+             reader.readAsArrayBuffer(file)
+         });
+
+         function clickUploadKeyFile() {
+             fileInput.click()
+         }
+
+         function getUKeySerial() {
+             const devname = getDevName()
+             if (!devname) {
+                 alertError('devname')
+                 return false
+             }
+             const serial = getSerial(devname)
+             if (!serial) {
+                 alertError('serial')
+                 return false
+             }
+             $('#u-key-serial').val(serial)
+         }
+     </script>
+ {% endblock %}

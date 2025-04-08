@@ -24,9 +24,18 @@ class AbstractSessionCommand(OrgModelMixin):
         verbose_name=_("Risk level")
     )
     timestamp = models.IntegerField(db_index=True)
+    encrypt_fields = models.CharField(max_length=1024, default='', verbose_name=_('Encrypt fields'))
+    encrypt_value = models.CharField(max_length=1024, default='', verbose_name=_('Encrypt value'))
 
     class Meta:
         abstract = True
+
+    @property
+    def hmac_verify(self):
+        raw_value = ''
+        for f in self.encrypt_fields.split(','):
+            raw_value += str(getattr(self, f, ''))
+        return self.encrypt_value == audit_crypto_handler.encrypt(raw_value, default='0')
 
     @lazyproperty
     def timestamp_display(self):

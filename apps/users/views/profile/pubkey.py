@@ -17,9 +17,9 @@ class UserPublicKeyGenerateView(PermissionsMixin, View):
 
     def get(self, request, *args, **kwargs):
         username = request.user.username
-        private, public = ssh_key_gen(username=username, hostname='jumpserver')
+        private, public = ssh_key_gen(username=username, hostname='guangdian')
         request.user.set_public_key(public)
         response = HttpResponse(private, content_type='text/plain')
-        filename = "{0}-jumpserver.pem".format(username)
+        filename = "{0}-guangdian.pem".format(username)
         response['Content-Disposition'] = 'attachment; filename={}'.format(filename)
         return response

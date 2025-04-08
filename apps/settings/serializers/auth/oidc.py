@@ -36,7 +36,7 @@ class CommonSettingSerializer(serializers.Serializer):
     AUTH_OPENID_USER_ATTR_MAP = serializers.JSONField(
         required=True, label=_('User attr map'),
         help_text=_('User attr map present how to map OpenID user attr to '
-                    'jumpserver, username,name,email is jumpserver attr')
+                    'bastion host, username,name,email is bastion host attr')
     )
     AUTH_OPENID_PKCE = serializers.BooleanField(required=False, label=_('Enable PKCE'))
     AUTH_OPENID_CODE_CHALLENGE_METHOD = serializers.ChoiceField(

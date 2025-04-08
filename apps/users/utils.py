@@ -4,7 +4,10 @@ import base64
 import logging
 import os
 import re
+import subprocess
 import time
+
+from hashlib import md5
 
 import pyotp
 from django.conf import settings
@@ -56,7 +59,7 @@ def redirect_user_first_login_or_index(request, redirect_field_name):
     return url
 
 
-def generate_otp_uri(username, otp_secret_key=None, issuer="JumpServer"):
+def generate_otp_uri(username, otp_secret_key=None, issuer="Toecsec"):
     if otp_secret_key is None:
         otp_secret_key = base64.b32encode(os.urandom(10)).decode('utf-8')
     totp = pyotp.TOTP(otp_secret_key)
@@ -273,3 +276,22 @@ def is_confirm_time_valid(session, key):
 
 def is_auth_confirm_time_valid(session):
     return is_confirm_time_valid(session, 'MFA_VERIFY_TIME')
+
+
+def get_ukey_public_key(ukey_public_key):
+    project_dir = settings.PROJECT_DIR
+    filename = md5(ukey_public_key).hexdigest()
+    tmp_path = os.path.join(os.path.join(project_dir, 'tmp'), filename)
+    with open(tmp_path, 'wb') as f:
+        f.write(ukey_public_key)
+
+    cert_types = ['DER', 'PEM']
+    x_y_hex = ''
+    for t in cert_types:
+        command = f'openssl x509 -in {tmp_path} -inform {t} -pubkey -noout | openssl pkey -pubin -text -noout'
+        res = subprocess.run([command], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        res = res.stdout.decode()
+        x_y_hex = ''.join(res.split('\n')[2:7]).replace(':', '').replace(' ', '')[2:]
+        if x_y_hex:
+            break
+    return x_y_hex

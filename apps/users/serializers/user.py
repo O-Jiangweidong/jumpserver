@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+import base64
 
 from functools import partial
 
@@ -18,6 +19,7 @@ from rbac.builtin import BuiltinRole
 from rbac.models import OrgRoleBinding, SystemRoleBinding, Role
 from rbac.permissions import RBACPermission
 from users.signals import post_user_change_password
+from users.utils import get_ukey_public_key
 from ..const import PasswordStrategy
 from ..models import User
 
@@ -108,6 +110,7 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         source="can_use_ssh_key_login", label=_("Can public key authentication"),
         read_only=True
     )
+    usb_key_public_key = serializers.CharField(write_only=True, required=False)
     password = EncryptedField(label=_("Password"), required=False, allow_blank=True, allow_null=True, max_length=1024, )
     phone = PhoneField(
         validators=[PhoneValidator()], required=False, allow_blank=True, allow_null=True, label=_("Phone")
@@ -123,7 +126,7 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         fields_mini = ["id", "name", "username"]
         # 只能写的字段, 这个虽然无法在框架上生效，但是更多对我们是提醒
         fields_write_only = [
-            "password", "public_key",
+            "password", "public_key", "usb_key_serial", "usb_key_public_key"
         ]
         # xpack 包含的字段
         fields_xpack = ["wecom_id", "dingtalk_id", "feishu_id", "lark_id", "slack_id"]
@@ -194,6 +197,17 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         if not current_org.is_root():
             for f in self.Meta.fields_only_root_org:
                 fields.pop(f, None)
+
+    @staticmethod
+    def validate_usb_key_public_key(usb_key_public_key):
+        if not usb_key_public_key:
+            return
+        ukey_data = base64.b64decode(usb_key_public_key)
+        x_y = get_ukey_public_key(ukey_data)
+        if not x_y or len(x_y) != 128:
+            error = _('Certificate resolution failure')
+            raise serializers.ValidationError(error)
+        return x_y
 
     def validate_password(self, password):
         password_strategy = self.initial_data.get("password_strategy")

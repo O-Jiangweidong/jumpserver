@@ -50,11 +50,11 @@ class CustomSwaggerAutoSchema(SwaggerAutoSchema):
 
 
 api_info = openapi.Info(
-    title="JumpServer API Docs",
+    title="Toecsec API Docs",
     default_version='v1',
-    description="JumpServer Restful api docs",
-    terms_of_service="https://www.jumpserver.org",
-    contact=openapi.Contact(email="support@fit2cloud.com"),
+    description="Toecsec Restful api docs",
+    terms_of_service="https://www.toecsec.org",
+    contact=openapi.Contact(email="support@toecsec.com"),
     license=openapi.License(name="GPLv3 License"),
 )
 

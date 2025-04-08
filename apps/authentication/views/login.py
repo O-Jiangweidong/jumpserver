@@ -3,8 +3,11 @@
 
 from __future__ import unicode_literals
 
+import base64
 import datetime
 import os
+import secrets
+
 from typing import Callable
 from urllib.parse import urlparse
 
@@ -25,15 +28,16 @@ from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.edit import FormView
 
 from common.utils import FlashMessageUtil, static_or_direct, safe_next_url
+from users.models import User
 from users.utils import (
-    redirect_user_first_login_or_index
+    redirect_user_first_login_or_index, get_ukey_public_key
 )
 from .. import mixins, errors
 from ..const import RSA_PRIVATE_KEY, RSA_PUBLIC_KEY
-from ..forms import get_user_login_form_cls
+from ..forms import get_user_login_form_cls, FirstBindUKeyForm
 
 __all__ = [
-    'UserLoginView', 'UserLogoutView',
+    'UserLoginView', 'UserLogoutView', 'FirstBindUKeyView',
     'UserLoginGuardView', 'UserLoginWaitConfirmView',
 ]
 
@@ -113,33 +117,6 @@ class UserLoginContextMixin:
         return [method for method in auth_methods if method['enabled']]
 
     @staticmethod
-    def get_support_langs():
-        langs = [
-            {
-                'title': '中文(简体)',
-                'code': 'zh-hans'
-            },
-            {
-                'title': '中文(繁體)',
-                'code': 'zh-hant'
-            },
-            {
-                'title': 'English',
-                'code': 'en'
-            },
-            {
-                'title': '日本語',
-                'code': 'ja'
-            }
-        ]
-        return langs
-
-    def get_current_lang(self):
-        langs = self.get_support_langs()
-        matched_lang = filter(lambda x: x['code'] == get_language(), langs)
-        return next(matched_lang, langs[0])
-
-    @staticmethod
     def get_forgot_password_url():
         forgot_password_url = reverse('authentication:forgot-previewing')
         forgot_password_url = settings.FORGOT_PASSWORD_URL or forgot_password_url
@@ -157,6 +134,10 @@ class UserLoginContextMixin:
         if form.errors or form.non_field_errors():
             count += 1
         return count
+
+    @staticmethod
+    def get_rb():
+        return secrets.token_bytes(16).hex()
 
     def set_csrf_error_if_need(self, context):
         if not self.request.GET.get('csrf_failure'):
@@ -182,10 +163,9 @@ class UserLoginContextMixin:
         context.update({
             'demo_mode': os.environ.get("DEMO_MODE"),
             'auth_methods': self.get_support_auth_methods(),
-            'langs': self.get_support_langs(),
-            'current_lang': self.get_current_lang(),
             'forgot_password_url': self.get_forgot_password_url(),
             'extra_fields_count': self.get_extra_fields_count(context),
+            'RB': self.get_rb(), # 光电客户端UKey签名使用
             **self.get_user_mfa_context(self.request.user)
         })
         return context
@@ -235,6 +215,12 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
         return redirect_url
 
     def get(self, request, *args, **kwargs):
+        admin_user = User.objects.get(username='admin')
+        # TODO 改回去
+        if admin_user.usb_key_public_key:
+            first_bind_usb_key_url = reverse('authentication:first-bind-u-key')
+            return redirect(first_bind_usb_key_url)
+
         if request.user.is_staff:
             first_login_url = redirect_user_first_login_or_index(
                 request, self.redirect_field_name
@@ -420,3 +406,27 @@ class UserLogoutView(TemplateView):
         }
         kwargs.update(context)
         return super().get_context_data(**kwargs)
+
+
+class FirstBindUKeyView(FormView):
+    template_name = 'authentication/first_bind_usb_key.html'
+    form_class = FirstBindUKeyForm
+
+    def get(self, request, *args, **kwargs):
+        user = User.objects.get(username='admin')
+        if user.usb_key_public_key:
+            return redirect(reverse('authentication:login'))
+        return super().get(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        usb_key_public_key_base64 = form.cleaned_data.get('usb_key_public_key')
+        usb_key_serial = form.cleaned_data.get('usb_key_serial')
+        admin_user = User.objects.get(username='admin')
+        x_y = get_ukey_public_key(base64.b64decode(usb_key_public_key_base64))
+        if not x_y or len(x_y) != 128:
+            form.add_error("usb_key_public_key", _(f"Certificate resolution failure"))
+            return self.form_invalid(form)
+        admin_user.usb_key_serial = usb_key_serial
+        admin_user.usb_key_public_key = x_y
+        admin_user.save()
+        return redirect(reverse('authentication:login'))

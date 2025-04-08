@@ -153,7 +153,7 @@ def kill_progress_tree(pid=None):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description="""
-           Jumpserver receptor service control tools;
+           Toecsec receptor service control tools;
            """
     )
     parser.add_argument(

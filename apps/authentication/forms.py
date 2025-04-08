@@ -32,6 +32,10 @@ class UserLoginForm(forms.Form):
         required=False, initial=False,
         widget=forms.CheckboxInput()
     )
+    usb_key = forms.CharField(
+        label=_('USB Key'), max_length=1024,
+        widget=forms.PasswordInput(attrs={'placeholder': _("USB Key")})
+    )
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -46,6 +50,11 @@ class UserLoginForm(forms.Form):
                 self.error_messages['inactive'],
                 code='inactive',
             )
+
+
+class FirstBindUKeyForm(forms.Form):
+    usb_key_public_key = forms.CharField(label=_('UKey public key'), max_length=4096, required=True)
+    usb_key_serial = forms.CharField(label=_('UKey Serial'), max_length=128, required=True)
 
 
 class UserCheckOtpCodeForm(forms.Form):

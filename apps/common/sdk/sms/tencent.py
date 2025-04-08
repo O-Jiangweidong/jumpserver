@@ -62,7 +62,7 @@ class TencentSMS(BaseSMSClient):
             # 短信码号扩展号: 默认未开通，如需开通请联系 [sms helper]
             req.ExtendCode = ""
             # 用户的 session 内容: 可以携带用户侧 ID 等上下文信息，server 会原样返回
-            req.SessionContext = "Jumpserver"
+            req.SessionContext = "Toecsec"
             # 国际/港澳台短信 senderid: 国内短信填空，默认未开通，如需开通请联系 [sms helper]
             req.SenderId = ""
             # 下发手机号码，采用 E.164 标准，+[国家或地区码][手机号]

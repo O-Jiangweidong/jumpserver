@@ -44,7 +44,7 @@ class OperateLogStore(BaseOperateStorage, ES):
             'id', 'user', 'action', 'resource_type', 'org_id'
         }
         if not config.get('INDEX'):
-            config['INDEX'] = 'jumpserver_operate_log'
+            config['INDEX'] = 'guangdian_operate_log'
         super().__init__(config, properties, keyword_fields, exact_fields, match_fields)
         self.pre_use_check()
 

@@ -125,7 +125,7 @@ class ES(object):
             kwargs['verify_certs'] = None
         self.client = ESClient(hosts=hosts, max_retries=0, **kwargs)
         self.es = self.client.es
-        self.index_prefix = self.config.get('INDEX') or 'jumpserver'
+        self.index_prefix = self.config.get('INDEX') or 'guangdian'
         self.is_index_by_date = bool(self.config.get('INDEX_BY_DATE', False))
 
         self.index = None
@@ -154,8 +154,8 @@ class ES(object):
             self.index = '%s-%s' % (self.index_prefix, date)
             self.query_index = '%s-alias' % self.index_prefix
         else:
-            self.index = self.config.get("INDEX") or 'jumpserver'
-            self.query_index = self.config.get("INDEX") or 'jumpserver'
+            self.index = self.config.get("INDEX") or 'guangdian'
+            self.query_index = self.config.get("INDEX") or 'guangdian'
 
     def is_new_index_type(self):
         if not self.ping(timeout=2):

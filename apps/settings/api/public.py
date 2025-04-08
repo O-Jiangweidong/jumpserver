@@ -26,7 +26,8 @@ class OpenPublicSettingApi(generics.RetrieveAPIView):
         return {
             "XPACK_ENABLED": settings.XPACK_ENABLED,
             "INTERFACE": self.interface_setting,
-            "COUNTRY_CALLING_CODES": COUNTRY_CALLING_CODES
+            "COUNTRY_CALLING_CODES": COUNTRY_CALLING_CODES,
+            "SHOW_VPN_MENU": settings.SHOW_VPN_MENU,
         }
 
 

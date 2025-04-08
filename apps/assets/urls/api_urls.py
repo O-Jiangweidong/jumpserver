@@ -8,6 +8,7 @@ from .. import api
 app_name = 'assets'
 
 router = BulkRouter()
+router.register(r'vpns', api.VPNViewSet, 'vpn')
 router.register(r'categories', api.CategoryViewSet, 'category')
 router.register(r'assets', api.AssetViewSet, 'asset')
 router.register(r'hosts', api.HostViewSet, 'host')

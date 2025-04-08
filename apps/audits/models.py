@@ -10,6 +10,7 @@ from django.db.models import Q
 from django.utils import timezone
 from django.utils.translation import gettext, gettext_lazy as _
 
+from audits.encrypt import audit_crypto_handler
 from common.db.encoder import ModelJSONFieldEncoder
 from common.sessions.cache import user_session_manager
 from common.utils import lazyproperty, i18n_trans
@@ -33,8 +34,24 @@ __all__ = [
     "PasswordChangeLog",
     "UserLoginLog",
     "JobLog",
-    "UserSession"
+    "UserSession",
+    "AuditEncryptModel"
 ]
+
+
+class AuditEncryptModel(models.Model):
+    encrypt_fields = models.CharField(max_length=1024, default='', verbose_name=_('Encrypt fields'))
+    encrypt_value = models.CharField(max_length=1024, default='', verbose_name=_('Encrypt value'))
+
+    class Meta:
+        abstract = True
+
+    @property
+    def hmac_verify(self):
+        raw_value = ''
+        for f in self.encrypt_fields.split(','):
+            raw_value += str(getattr(self, f, ''))
+        return self.encrypt_value == audit_crypto_handler.encrypt(raw_value, default='0')
 
 
 class JobLog(JobExecution):
@@ -47,7 +64,7 @@ class JobLog(JobExecution):
         verbose_name = _("Job audit log")
 
 
-class FTPLog(OrgModelMixin):
+class FTPLog(AuditEncryptModel, OrgModelMixin):
     upload_to = 'FTP_FILES'
 
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -85,7 +102,7 @@ class FTPLog(OrgModelMixin):
         return name, None
 
 
-class OperateLog(OrgModelMixin):
+class OperateLog(AuditEncryptModel, OrgModelMixin):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     user = models.CharField(max_length=128, verbose_name=_("User"))
     action = models.CharField(
@@ -109,6 +126,16 @@ class OperateLog(OrgModelMixin):
         return gettext(self.resource_type)
 
     def save(self, *args, **kwargs):
+        encrypt_fields = [
+            'id', 'user', 'action', 'resource_type',
+            'resource', 'remote_addr', 'org_id'
+        ]
+        if not getattr(self, 'id', None):
+            self.id = uuid.uuid4()
+        raw_value = ''.join(map(lambda x: str(getattr(self, x, '')), encrypt_fields))
+        encrypt_value = audit_crypto_handler.encrypt(raw_value)
+        self.encrypt_fields = ','.join(encrypt_fields)
+        self.encrypt_value = encrypt_value
         if current_org.is_root() and not self.org_id:
             self.org_id = Organization.ROOT_ID
         return super(OperateLog, self).save(*args, **kwargs)
@@ -167,7 +194,7 @@ class ActivityLog(OrgModelMixin):
         return super(ActivityLog, self).save(*args, **kwargs)
 
 
-class PasswordChangeLog(models.Model):
+class PasswordChangeLog(AuditEncryptModel, models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     user = models.CharField(max_length=128, verbose_name=_("User"))
     change_by = models.CharField(max_length=128, verbose_name=_("Change by"))
@@ -183,7 +210,7 @@ class PasswordChangeLog(models.Model):
         verbose_name = _("Password change log")
 
 
-class UserLoginLog(models.Model):
+class UserLoginLog(AuditEncryptModel, models.Model):
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     username = models.CharField(max_length=128, verbose_name=_("Username"))
     type = models.CharField(

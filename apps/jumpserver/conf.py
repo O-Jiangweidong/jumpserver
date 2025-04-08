@@ -271,9 +271,9 @@ class Config(dict):
         # Auth LDAP settings
         'AUTH_LDAP': False,
         'AUTH_LDAP_SERVER_URI': 'ldap://localhost:389',
-        'AUTH_LDAP_BIND_DN': 'cn=admin,dc=jumpserver,dc=org',
+        'AUTH_LDAP_BIND_DN': 'cn=admin,dc=toecsec,dc=org',
         'AUTH_LDAP_BIND_PASSWORD': '',
-        'AUTH_LDAP_SEARCH_OU': 'ou=tech,dc=jumpserver,dc=org',
+        'AUTH_LDAP_SEARCH_OU': 'ou=tech,dc=toecsec,dc=org',
         'AUTH_LDAP_SEARCH_FILTER': '(cn=%(user)s)',
         'AUTH_LDAP_START_TLS': False,
         'AUTH_LDAP_USER_ATTR_MAP': {"username": "cn", "name": "sn", "email": "mail"},
@@ -356,9 +356,9 @@ class Config(dict):
         'SAML2_SP_ADVANCED_SETTINGS': {
             "organization": {
                 "en": {
-                    "name": "JumpServer",
-                    "displayname": "JumpServer",
-                    "url": "https://jumpserver.org/"
+                    "name": "Toecsec",
+                    "displayname": "Toecsec",
+                    "url": "https://toecsec.org/"
                 }
             },
             "strict": True,
@@ -467,7 +467,7 @@ class Config(dict):
         'EMAIL_CUSTOM_USER_CREATED_BODY': _('Your account has been created successfully'),
 
         'OTP_VALID_WINDOW': 2,
-        'OTP_ISSUER_NAME': 'JumpServer',
+        'OTP_ISSUER_NAME': 'Toecsec',
         'EMAIL_SUFFIX': 'example.com',
 
         # Terminal配置
@@ -622,8 +622,14 @@ class Config(dict):
         'ANSIBLE_RECEPTOR_GATEWAY_PROXY_HOST': 'jms_celery',
         'ANSIBLE_RECEPTOR_TCP_LISTEN_ADDRESS': 'receptor:7521',
 
-        'FILE_UPLOAD_TEMP_DIR': None
+        'FILE_UPLOAD_TEMP_DIR': None,
 
+        # 天津光电 配置
+        'VPN_RPC_ADDRESS': '127.0.0.1:5690',
+        'SERVICE_IP': None,
+        'SERVICE_GATEWAY': None,
+        'SERVICE_SUBNET_MASK': None,
+        'SHOW_VPN_MENU': False,
     }
 
     old_config_map = {

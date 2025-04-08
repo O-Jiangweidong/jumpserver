@@ -21,11 +21,7 @@ you should run a redis instance
 
 #### Run redis
 
-	$ yum -y install redis 
-	
-	or
-	
-	$ docker run -name jumpserver-redis -d -p 6379:6379 redis redis-server
+	$ yum -y install redis
 
 
 #### Write tasks in app_name/tasks.py

@@ -34,9 +34,9 @@ BOOTSTRAP_TOKEN:
 DB_ENGINE: mysql
 DB_HOST: 127.0.0.1
 DB_PORT: 3306
-DB_USER: jumpserver
+DB_USER: toecsec
 DB_PASSWORD:
-DB_NAME: jumpserver
+DB_NAME: toecsec
 
 # When Django start it will bind this host and port
 # ./manage.py runserver 127.0.0.1:8080
@@ -75,7 +75,7 @@ REDIS_PORT: 6379
 # OTP settings
 # OTP/MFA 配置
 # OTP_VALID_WINDOW: 0
-# OTP_ISSUER_NAME: Jumpserver
+# OTP_ISSUER_NAME: Toecsec
 
 # 启用定时任务
 # PERIOD_TASK_ENABLED: True

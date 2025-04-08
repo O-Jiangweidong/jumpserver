@@ -13,6 +13,8 @@ reason_user_expired = 'user_expired'
 reason_backend_not_match = 'backend_not_match'
 reason_acl_not_allow = 'acl_not_allow'
 only_local_users_are_allowed = 'only_local_users_are_allowed'
+reason_usb_key_failed = 'usb_key_failed'
+reason_usb_key_cert_verify_failed = 'usb_key_cert_verify_failed'
 
 reason_choices = {
     reason_password_failed: _('Username/password check failed'),
@@ -26,7 +28,9 @@ reason_choices = {
     reason_user_expired: _("This account is expired"),
     reason_backend_not_match: _("Auth backend not match"),
     reason_acl_not_allow: _("ACL is not allowed"),
-    only_local_users_are_allowed: _("Only local users are allowed")
+    only_local_users_are_allowed: _("Only local users are allowed"),
+    reason_usb_key_failed: _('UKey check failed'),
+    reason_usb_key_cert_verify_failed: _('UKey public key check failed'),
 }
 old_reason_choices = {
     '0': '-',

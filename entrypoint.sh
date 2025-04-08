@@ -22,5 +22,8 @@ elif [[ "$action" == "sleep" ]];then
 elif [[ "$service" == "receptor" ]];then
     python receptor "$action"
 else
+    cd /opt/jumpserver/PCI-E/tool/
+    bash confdrv.sh
+    cd /opt/jumpserver/
     python jms "$action" "$service"
 fi

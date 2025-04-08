@@ -17,87 +17,87 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-#: static/js/jumpserver.js:264
+#: static/js/toecsec.js:264
 msgid "Update is successful!"
 msgstr ""
 
-#: static/js/jumpserver.js:266
+#: static/js/toecsec.js:266
 msgid "An unknown error occurred while updating.."
 msgstr ""
 
-#: static/js/jumpserver.js:339
+#: static/js/toecsec.js:339
 msgid "Not found"
 msgstr ""
 
-#: static/js/jumpserver.js:341
+#: static/js/toecsec.js:341
 msgid "Server error"
 msgstr ""
 
-#: static/js/jumpserver.js:343 static/js/jumpserver.js:381
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:343 static/js/toecsec.js:381
+#: static/js/toecsec.js:383
 msgid "Error"
 msgstr ""
 
-#: static/js/jumpserver.js:349 static/js/jumpserver.js:390
+#: static/js/toecsec.js:349 static/js/toecsec.js:390
 msgid "Delete the success"
 msgstr ""
 
-#: static/js/jumpserver.js:356
+#: static/js/toecsec.js:356
 msgid "Are you sure about deleting it?"
 msgstr ""
 
-#: static/js/jumpserver.js:360 static/js/jumpserver.js:401
+#: static/js/toecsec.js:360 static/js/toecsec.js:401
 msgid "Cancel"
 msgstr ""
 
-#: static/js/jumpserver.js:362 static/js/jumpserver.js:403
+#: static/js/toecsec.js:362 static/js/toecsec.js:403
 msgid "Confirm"
 msgstr ""
 
-#: static/js/jumpserver.js:381
+#: static/js/toecsec.js:381
 msgid ""
 "The organization contains undeleted information. Please try again after "
 "deleting"
 msgstr ""
 
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:383
 msgid ""
 "Do not perform this operation under this organization. Try again after "
 "switching to another organization"
 msgstr ""
 
-#: static/js/jumpserver.js:397
+#: static/js/toecsec.js:397
 msgid ""
 "Please ensure that the following information in the organization has been "
 "deleted"
 msgstr ""
 
-#: static/js/jumpserver.js:398
+#: static/js/toecsec.js:398
 msgid ""
 "User list、User group、Asset list、Domain list、Admin user、System user、"
 "Labels、Asset permission"
 msgstr ""
 
-#: static/js/jumpserver.js:647
+#: static/js/toecsec.js:647
 msgid "Unknown error occur"
 msgstr ""
 
-#: static/js/jumpserver.js:899
+#: static/js/toecsec.js:899
 msgid "Password minimum length {N} bits"
 msgstr ""
 
-#: static/js/jumpserver.js:900
+#: static/js/toecsec.js:900
 msgid "Must contain capital letters"
 msgstr ""
 
-#: static/js/jumpserver.js:901
+#: static/js/toecsec.js:901
 msgid "Must contain lowercase letters"
 msgstr ""
 
-#: static/js/jumpserver.js:902
+#: static/js/toecsec.js:902
 msgid "Must contain numeric characters"
 msgstr ""
 
-#: static/js/jumpserver.js:903
+#: static/js/toecsec.js:903
 msgid "Must contain special characters"
 msgstr ""

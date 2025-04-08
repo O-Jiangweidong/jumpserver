@@ -14,7 +14,6 @@
     <!-- Stylesheets -->
     <link href="{% static 'css/login-style.css' %}" rel="stylesheet">
     <link href="{% static 'css/jumpserver.css' %}" rel="stylesheet">
-    <script src="{% static "js/jumpserver.js" %}?_=9"></script>
 
     <style>
         .login-content {
@@ -69,7 +68,7 @@
         }
 
         .login-content {
-            height: 500px;
+            height: 490px;
             width: 1000px;
             margin-right: auto;
             margin-left: auto;
@@ -134,17 +133,6 @@
 
         .mfa-div {
             width: 100%;
-        }
-
-        .login-page-language {
-            font-size: 12px !important;
-            margin-right: -32px !important;
-            padding-top: 12px !important;
-            padding-left: 0 !important;
-            padding-bottom: 8px !important;
-            color: #8F959E !important;
-            font-weight: 350 !important;
-            min-height: auto !important;
         }
 
         .right-image {
@@ -295,24 +283,6 @@
                 <h2 style='font-weight: 400;display: inline'>
                     {% trans 'Login' %}
                 </h2>
-                <ul class=" nav navbar-top-links navbar-right">
-                    <li class="dropdown">
-                        <a class="dropdown-toggle login-page-language" data-toggle="dropdown" href="#"
-                           target="_blank">
-                            <i class="fa fa-globe fa-lg" style="margin-right: 2px"></i>
-                            <span>{{ current_lang.title }}<b class="caret"></b></span>
-                        </a>
-                        <ul class="dropdown-menu profile-dropdown dropdown-menu-right">
-                            {% for lang in langs %}
-                                <li>
-                                <a href="{% url 'i18n-switch' lang=lang.code %}">
-                                    <span>{{ lang.title }}</span>
-                                </a>
-                            </li>
-                            {% endfor %}
-                        </ul>
-                    </li>
-                </ul>
             </div>
             <div class="contact-form col-md-10 col-md-offset-1" style='float: none; overflow: hidden'>
                 <form id="login-form" action="" method="post" role="form" novalidate="novalidate">
@@ -337,6 +307,10 @@
                         </p>
                         {% endif %}
                     </div>
+
+                    {% bootstrap_field form.usb_key show_label=False %}
+                     <input id="rb-hidden" type="text" style="display:none" value="{{ RB }}">
+
                     {% if form.challenge %}
                         {% bootstrap_field form.challenge show_label=False %}
                     {% elif form.mfa_type %}
@@ -399,9 +373,72 @@
 <script type="text/javascript" src="/static/js/plugins/jsencrypt/jsencrypt.min.js"></script>
 <script type="text/javascript" src="/static/js/plugins/cryptojs/crypto-js.min.js"></script>
 <script type="text/javascript" src="/static/js/plugins/buffer/buffer.min.js"></script>
+<script type="text/javascript" src="{% static "js/mybase64.js" %}"></script>
+<script src="{% static "js/toecsec.js" %}?_=9"></script>
 <script>
+    function pinErr() {
+         const usbKeyEle = $("#id_usb_key")
+         const errEle = $("#pin-err")
+         if (errEle) {
+           errEle.remove()
+         }
+         usbKeyEle.parent().removeClass("has-error").addClass("has-error");
+         usbKeyEle.parent().append("<div class='help-block' id='pin-err'>{% trans 'The UKey code is incorrect' %}</div>");
+     }
+
+     function getRaRbBase64() {
+         const ra_bytes = new Uint8Array(16);
+         window.crypto.getRandomValues(ra_bytes)
+         const ra = Array.from(ra_bytes).map(b => ('00' + b.toString(16)).slice(-2)).join('');
+         const rb = $("#rb-hidden").val()
+         return hexToBase64(ra + rb)
+     }
+
+     function preLogin() {
+         const devname = getDevName()
+         if (!devname) {
+             alertError('devname')
+             return false
+         }
+         const appname = getAppName(devname)
+         if (!appname) {
+             alertError('appname')
+             return false
+         }
+         const serial = getSerial(devname)
+         if (!serial) {
+             alertError('serial')
+             return false
+         }
+         const container = getContainer(devname, appname)
+         if (!container) {
+             alertError('container')
+             return false
+         }
+         if (!verifyPin(devname, appname)) {
+             pinErr()
+             return false
+         }
+         const raRbBase64 = getRaRbBase64()
+         const digest = getDigest(devname, raRbBase64)
+         if (!digest) {
+             alertError('digest')
+             return false
+         }
+         const sign = getSignature(devname, appname, container, digest)
+         if (!sign) {
+             alertError('sign')
+             return false
+         }
+         const token = [digest, serial, sign['r'], sign['s']].join('$')
+         $('#id_usb_key').val(token);
+         return true
+     }
     function doLogin() {
         //公钥加密
+        if (!preLogin()) {
+            return false
+        }
         var password = $('#password').val(); //明文密码
         var passwordEncrypted = encryptPassword(password)
         $('#password-hidden').val(passwordEncrypted); //返回给密码输入input

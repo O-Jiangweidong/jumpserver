@@ -18,51 +18,51 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
-#: static/js/jumpserver.js:264
+#: static/js/toecsec.js:264
 msgid "Update is successful!"
 msgstr "アップデートは成功しました!"
 
-#: static/js/jumpserver.js:266
+#: static/js/toecsec.js:266
 msgid "An unknown error occurred while updating.."
 msgstr "更新中に不明なエラーが発生しました。"
 
-#: static/js/jumpserver.js:339
+#: static/js/toecsec.js:339
 msgid "Not found"
 msgstr "見つかりません"
 
-#: static/js/jumpserver.js:341
+#: static/js/toecsec.js:341
 msgid "Server error"
 msgstr "サーバーエラー"
 
-#: static/js/jumpserver.js:343 static/js/jumpserver.js:381
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:343 static/js/toecsec.js:381
+#: static/js/toecsec.js:383
 msgid "Error"
 msgstr "エラー"
 
-#: static/js/jumpserver.js:349 static/js/jumpserver.js:390
+#: static/js/toecsec.js:349 static/js/toecsec.js:390
 msgid "Delete the success"
 msgstr "成功を削除する"
 
-#: static/js/jumpserver.js:356
+#: static/js/toecsec.js:356
 msgid "Are you sure about deleting it?"
 msgstr "削除してもよろしいですか?"
 
-#: static/js/jumpserver.js:360 static/js/jumpserver.js:401
+#: static/js/toecsec.js:360 static/js/toecsec.js:401
 msgid "Cancel"
 msgstr "キャンセル"
 
-#: static/js/jumpserver.js:362 static/js/jumpserver.js:403
+#: static/js/toecsec.js:362 static/js/toecsec.js:403
 msgid "Confirm"
 msgstr "確認"
 
-#: static/js/jumpserver.js:381
+#: static/js/toecsec.js:381
 msgid ""
 "The organization contains undeleted information. Please try again after "
 "deleting"
 msgstr ""
 "組織には削除されていない情報が含まれています。削除後にもう一度お試しください"
 
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:383
 msgid ""
 "Do not perform this operation under this organization. Try again after "
 "switching to another organization"
@@ -70,13 +70,13 @@ msgstr ""
 "この組織ではこの操作を実行しないでください。別の組織に切り替えた後にもう一度"
 "お試しください"
 
-#: static/js/jumpserver.js:397
+#: static/js/toecsec.js:397
 msgid ""
 "Please ensure that the following information in the organization has been "
 "deleted"
 msgstr "組織内の次の情報が削除されていることを確認してください"
 
-#: static/js/jumpserver.js:398
+#: static/js/toecsec.js:398
 msgid ""
 "User list、User group、Asset list、Domain list、Admin user、System user、"
 "Labels、Asset permission"
@@ -84,15 +84,15 @@ msgstr ""
 "ユーザーリスト、ユーザーグループ、資産リスト、ドメインリスト、管理ユーザー、"
 "システムユーザー、ラベル、資産権限"
 
-#: static/js/jumpserver.js:647
+#: static/js/toecsec.js:647
 msgid "Unknown error occur"
 msgstr "不明なエラーが発生"
 
-#: static/js/jumpserver.js:899
+#: static/js/toecsec.js:899
 msgid "Password minimum length {N} bits"
 msgstr "最小パスワード長 {N} ビット"
 
-#: static/js/jumpserver.js:900
+#: static/js/toecsec.js:900
 msgid "Must contain capital letters"
 msgstr "大文字を含める必要があります"
 

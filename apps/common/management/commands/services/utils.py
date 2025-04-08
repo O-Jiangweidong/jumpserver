@@ -26,7 +26,6 @@ class ServicesUtil(object):
 
     def start_and_watch(self):
         logging.info(time.ctime())
-        logging.info(f'JumpServer version {__version__}, more see https://www.jumpserver.org')
         self.start()
         if self.run_daemon:
             self.show_status()

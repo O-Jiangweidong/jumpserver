@@ -1429,3 +1429,148 @@ function testEncrypt() {
 }
 
 window.encryptPassword = encryptPassword
+
+let uKeyBaseUrl = 'http://127.0.0.1:10081';
+
+function getDevName() {
+    let ret = false
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumdev',
+        type: 'POST', async: false,
+        success: function (data) {
+            if (data['serial']) {
+                 ret = data['serial']
+             }
+        }
+    })
+    return ret
+}
+
+function getAppName(devName) {
+    let ret = false
+    const data = {'devname': devName}
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumapp',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            if (data['applist'].length >= 1) {
+                ret = data['applist'][0]
+            }
+        }
+    })
+    return ret
+}
+
+function getContainer(devName, appName) {
+    let ret = false
+    const data = {'devname': devName, 'appname': appName}
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumcon',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            if (data['conlist'].length >= 1) {
+                ret = data['conlist'][0]
+            }
+        }
+    })
+    return ret
+}
+
+function getSerial(devName) {
+    let ret = false
+    const data = {'devname': devName}
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/getinfo',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            if (data['serial'].length >= 1) {
+                ret = data['serial'][0]
+            }
+        }
+    })
+    return ret
+}
+
+function verifyPin(devName, appName) {
+    let ret = false;
+    const pin = $('#id_usb_key').val()
+    const data = {
+        'devname': devName, 'appname': appName,
+        'pintype': 'user', 'pin': pin
+    }
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/access/verifypin',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            ret = data['result']
+        }
+    })
+    return ret
+}
+
+function getSignature(devName, appName, conName, rawData) {
+    let ret = false
+    const data = {
+        'devname': devName, 'appname': appName,
+        'conname': conName, 'data': rawData
+    }
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/eccsign',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            ret = data
+        }
+    })
+    return ret
+}
+
+function getDigest(devName, rawData) {
+    console.log('Digest raw data: ', rawData)
+    let ret = false
+    const data = {
+        'devname': devName, 'algid': 'sgd-sm3', 'data': rawData
+    }
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/digest',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            ret = data['hashdata']
+            console.log('sm3: ', ret)
+        }
+    })
+    return ret
+}
+
+function verifyECC(devName, pubkey, rawData, sign) {
+    let ret = false
+    const data = {
+        'devname': devName, 'pubkey': pubkey, 'data': rawData, 'signature': sign
+    }
+    $.ajax({
+        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/eccverify',
+        contentType: "application/json", dataType: "json",
+        type: 'POST', async: false,
+        data: JSON.stringify(data),
+        success: function (data) {
+            console.log('verifyEcc: ', data)
+            ret = data['hashdata']
+        }
+    })
+    return ret
+}
+
+function alertError(field) {
+    alert('Failed to obtain UKey information(' + field + '). Please refresh and try again')
+}

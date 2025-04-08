@@ -16,62 +16,62 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: static/js/jumpserver.js:264
+#: static/js/toecsec.js:264
 msgid "Update is successful!"
 msgstr "更新成功"
 
-#: static/js/jumpserver.js:266
+#: static/js/toecsec.js:266
 msgid "An unknown error occurred while updating.."
 msgstr "更新时发生未知错误"
 
-#: static/js/jumpserver.js:339
+#: static/js/toecsec.js:339
 msgid "Not found"
 msgstr ""
 
-#: static/js/jumpserver.js:341
+#: static/js/toecsec.js:341
 msgid "Server error"
 msgstr ""
 
-#: static/js/jumpserver.js:343 static/js/jumpserver.js:381
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:343 static/js/toecsec.js:381
+#: static/js/toecsec.js:383
 msgid "Error"
 msgstr "错误"
 
-#: static/js/jumpserver.js:349 static/js/jumpserver.js:390
+#: static/js/toecsec.js:349 static/js/toecsec.js:390
 msgid "Delete the success"
 msgstr "删除成功"
 
-#: static/js/jumpserver.js:356
+#: static/js/toecsec.js:356
 msgid "Are you sure about deleting it?"
 msgstr "你确定删除吗 ?"
 
-#: static/js/jumpserver.js:360 static/js/jumpserver.js:401
+#: static/js/toecsec.js:360 static/js/toecsec.js:401
 msgid "Cancel"
 msgstr "取消"
 
-#: static/js/jumpserver.js:362 static/js/jumpserver.js:403
+#: static/js/toecsec.js:362 static/js/toecsec.js:403
 msgid "Confirm"
 msgstr "确认"
 
-#: static/js/jumpserver.js:381
+#: static/js/toecsec.js:381
 msgid ""
 "The organization contains undeleted information. Please try again after "
 "deleting"
 msgstr "组织中包含未删除信息，请删除后重试"
 
-#: static/js/jumpserver.js:383
+#: static/js/toecsec.js:383
 msgid ""
 "Do not perform this operation under this organization. Try again after "
 "switching to another organization"
 msgstr "请勿在此组织下执行此操作，切换到其他组织后重试"
 
-#: static/js/jumpserver.js:397
+#: static/js/toecsec.js:397
 msgid ""
 "Please ensure that the following information in the organization has been "
 "deleted"
 msgstr "请确保组织内的以下信息已删除"
 
-#: static/js/jumpserver.js:398
+#: static/js/toecsec.js:398
 msgid ""
 "User list、User group、Asset list、Domain list、Admin user、System user、"
 "Labels、Asset permission"
@@ -79,27 +79,27 @@ msgstr ""
 "用户列表、用户组、资产列表、网域列表、特权用户、系统用户、标签管理、资产授权"
 "规则"
 
-#: static/js/jumpserver.js:647
+#: static/js/toecsec.js:647
 msgid "Unknown error occur"
 msgstr "出现未知错误"
 
-#: static/js/jumpserver.js:899
+#: static/js/toecsec.js:899
 msgid "Password minimum length {N} bits"
 msgstr "密码最小长度 {N} 位"
 
-#: static/js/jumpserver.js:900
+#: static/js/toecsec.js:900
 msgid "Must contain capital letters"
 msgstr "必须包含大写字母"
 
-#: static/js/jumpserver.js:901
+#: static/js/toecsec.js:901
 msgid "Must contain lowercase letters"
 msgstr "必须包含小写字母"
 
-#: static/js/jumpserver.js:902
+#: static/js/toecsec.js:902
 msgid "Must contain numeric characters"
 msgstr "必须包含数字字符"
 
-#: static/js/jumpserver.js:903
+#: static/js/toecsec.js:903
 msgid "Must contain special characters"
 msgstr "必须包含特殊字符"
 

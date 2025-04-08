@@ -18,12 +18,20 @@ class AbsConnectivity(models.Model):
         choices=Connectivity.choices, default=Connectivity.UNKNOWN,
         max_length=16, verbose_name=_('Connectivity')
     )
+    vpn_connectivity = models.CharField(
+        choices=Connectivity.choices, default=Connectivity.UNKNOWN,
+        max_length=16, verbose_name=_('Connectivity')
+    )
     date_verified = models.DateTimeField(null=True, verbose_name=_("Date verified"))
 
-    def set_connectivity(self, val):
-        self.connectivity = val
+    def set_connectivity(self, val, connect_type='asset'):
+        if connect_type == 'vpn':
+            update_field = 'vpn_connectivity'
+        else:
+            update_field = 'connectivity'
+        setattr(self, update_field, val)
         self.date_verified = timezone.now()
-        self.save(update_fields=['connectivity', 'date_verified'])
+        self.save(update_fields=[update_field, 'date_verified'])
 
     @property
     def is_connective(self):
@@ -32,12 +40,16 @@ class AbsConnectivity(models.Model):
         return False
 
     @classmethod
-    def bulk_set_connectivity(cls, queryset_or_id, connectivity):
+    def bulk_set_connectivity(cls, queryset_or_id, connectivity, connect_type='asset'):
         if not isinstance(queryset_or_id, models.QuerySet):
             queryset = cls.objects.filter(id__in=queryset_or_id)
         else:
             queryset = queryset_or_id
-        queryset.update(connectivity=connectivity, date_verified=timezone.now())
+        if connect_type == 'vpn':
+            update_field = {'vpn_connectivity': connectivity}
+        else:
+            update_field = {'connectivity': connectivity}
+        queryset.update(**update_field, date_verified=timezone.now())
 
     class Meta:
         abstract = True

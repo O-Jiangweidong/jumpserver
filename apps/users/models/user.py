@@ -4,6 +4,7 @@
 import base64
 import datetime
 import uuid
+
 from typing import Callable
 from collections import defaultdict
 
@@ -888,6 +889,13 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
     feishu_id = models.CharField(null=True, default=None, max_length=128, verbose_name=_('FeiShu'))
     lark_id = models.CharField(null=True, default=None, max_length=128, verbose_name='Lark')
     slack_id = models.CharField(null=True, default=None, max_length=128, verbose_name=_('Slack'))
+    usb_key_serial = models.CharField(
+        max_length=1024, blank=True, null=True, unique=True, verbose_name=_('UKey Serial')
+    )
+    # 保存的是公钥的x+y值，16进制的32位
+    usb_key_public_key = models.CharField(
+        max_length=128, blank=True, null=True, verbose_name=_('UKey public key')
+    )
 
     DATE_EXPIRED_WARNING_DAYS = 5
 
@@ -1052,7 +1060,7 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
     def initial(cls):
         from .group import UserGroup
         user = cls(username='admin',
-                   email='admin@jumpserver.org',
+                   email='admin@exapmple.org',
                    name=_('Administrator'),
                    password_raw='admin',
                    role='Admin',

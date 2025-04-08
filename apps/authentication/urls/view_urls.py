@@ -11,6 +11,7 @@ app_name = 'authentication'
 
 urlpatterns = [
     # login
+    path('first-bind-u-key/', views.FirstBindUKeyView.as_view(), name='first-bind-u-key'),
     path('login/', non_atomic_requests(views.UserLoginView.as_view()), name='login'),
     path('login/mfa/', views.UserLoginMFAView.as_view(), name='login-mfa'),
     path('login/wait-confirm/', views.UserLoginWaitConfirmView.as_view(), name='login-wait-confirm'),

@@ -5,6 +5,7 @@ from django.db import transaction
 from django.db.utils import OperationalError
 from django.utils import timezone
 
+from audits.encrypt import audit_crypto_handler
 from common.utils.common import pretty_string
 from .base import CommandBase
 
@@ -20,13 +21,15 @@ class CommandStore(CommandBase):
         保存命令到数据库
         """
         cmd_input = pretty_string(command['input'])
-        self.model.objects.create(
-            user=command["user"], asset=command["asset"],
-            account=command["account"], input=cmd_input,
-            output=command["output"], session=command["session"],
-            risk_level=command.get("risk_level", 0), org_id=command["org_id"],
-            timestamp=command["timestamp"]
-        )
+        data = {
+            'user': command["user"], 'asset': command["asset"],
+            'account': command["account"], 'input': cmd_input,
+            'output': command["output"], 'session': command["session"],
+            'risk_level': command.get("risk_level", 0), 'org_id': command["org_id"],
+            'timestamp': command["timestamp"]
+        }
+        data = audit_crypto_handler.fill_data(data)
+        self.model.objects.create(**data)
 
     def bulk_save(self, commands):
         """
@@ -36,12 +39,15 @@ class CommandStore(CommandBase):
         for c in commands:
             cmd_input = pretty_string(c['input'])
             cmd_output = pretty_string(c['output'], max_length=1024)
-            _commands.append(self.model(
-                user=c["user"], asset=c["asset"], account=c["account"],
-                input=cmd_input, output=cmd_output, session=c["session"],
-                risk_level=c.get("risk_level", 0), org_id=c["org_id"],
-                timestamp=c["timestamp"]
-            ))
+            data = {
+                'user': c["user"], 'asset': c["asset"],
+                'account': c["account"], 'input': cmd_input,
+                'output': cmd_output, 'session': c["session"],
+                'risk_level': c.get("risk_level", 0), 'org_id': c["org_id"],
+                'timestamp': c["timestamp"]
+            }
+            data = audit_crypto_handler.fill_data(data)
+            _commands.append(self.model(**data))
         error = False
         try:
             with transaction.atomic():

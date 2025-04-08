@@ -95,7 +95,13 @@ ARG TOOLS="                           \
         telnet                        \
         vim                           \
         bubblewrap                    \
-        wget"
+        wget                          \
+        kmod                          \
+        pciutils"
+
+
+COPY ./PCI-E /opt/jumpserver/PCI-E/
+ ENV LD_LIBRARY_PATH=/opt/jumpserver/PCI-E/lib:${LD_LIBRARY_PATH}
 
 ARG APT_MIRROR=http://mirrors.ustc.edu.cn
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=core-apt \

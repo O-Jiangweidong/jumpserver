@@ -103,8 +103,8 @@ class PrepareRequestMixin:
         request_attribute_template = {
             "attributeConsumingService": {
                 "isDefault": False,
-                "serviceName": "JumpServer",
-                "serviceDescription": "JumpServer",
+                "serviceName": "Toecsec",
+                "serviceDescription": "Toecsec",
                 "requestedAttributes": attr_list
             }
         }
@@ -129,9 +129,9 @@ class PrepareRequestMixin:
         default = {
             "organization": {
                 "en": {
-                    "name": "JumpServer",
-                    "displayname": "JumpServer",
-                    "url": "https://jumpserver.org/"
+                    "name": "Toecsec",
+                    "displayname": "Toecsec",
+                    "url": "https://toecsec.org/"
                 }
             },
         }

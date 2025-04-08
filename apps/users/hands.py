@@ -6,7 +6,7 @@
 
     Other module of this app shouldn't connect with other app.
 
-    :copyright: (c) 2014-2018 by JumpServer Team.
+    :copyright: (c) 2014-2018 by Toecsec Team.
     :license: GPL v2, see LICENSE for more details.
 """
 
