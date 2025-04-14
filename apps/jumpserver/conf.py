@@ -588,8 +588,8 @@ class Config(dict):
         'TERMINAL_TELNET_REGEX': '',
 
         # 导航栏 帮助
-        'HELP_DOCUMENT_URL': 'https://docs.jumpserver.org/zh/v3/',
-        'HELP_SUPPORT_URL': 'http://www.jumpserver.org/support/',
+        'HELP_DOCUMENT_URL': '',
+        'HELP_SUPPORT_URL': '',
 
         'FORGOT_PASSWORD_URL': '',
         'HEALTH_CHECK_TOKEN': '',

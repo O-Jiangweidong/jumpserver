@@ -1430,7 +1430,7 @@ function testEncrypt() {
 
 window.encryptPassword = encryptPassword
 
-let uKeyBaseUrl = 'http://127.0.0.1:10081';
+const uKeyBaseUrl = 'http://127.0.0.1:10081';
 
 function getDevName() {
     let ret = false
@@ -1535,7 +1535,6 @@ function getSignature(devName, appName, conName, rawData) {
 }
 
 function getDigest(devName, rawData) {
-    console.log('Digest raw data: ', rawData)
     let ret = false
     const data = {
         'devname': devName, 'algid': 'sgd-sm3', 'data': rawData

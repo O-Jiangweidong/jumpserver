@@ -20,7 +20,7 @@ EXAMPLES = '''
     Ping Oracle server using non-default credentials and SSL
     registering the return values into the result variable for future use
   oracle_ping:
-    login_host: jumpserver
+    login_host: toecses
     login_port: 1521
     login_user: jms
     login_password: secret_pass

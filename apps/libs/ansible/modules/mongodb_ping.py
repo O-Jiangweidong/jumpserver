@@ -21,7 +21,7 @@ EXAMPLES = '''
     registering the return values into the result variable for future use
   mongodb_ping:
     login_db: test_db
-    login_host: jumpserver
+    login_host: todcsec
     login_user: jms
     login_password: secret_pass
     ssl: True

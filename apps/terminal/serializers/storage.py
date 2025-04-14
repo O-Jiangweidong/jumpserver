@@ -189,8 +189,7 @@ def command_storage_es_host_format_validator(host):
 
 class CommandStorageTypeESSerializer(serializers.Serializer):
     hosts_help_text = '''
-        Tip: If there are multiple hosts, use a comma (,) to separate them. <br>
-        (eg: http://www.jumpserver.a.com:9100, http://www.jumpserver.b.com:9100)
+        Tip: If there are multiple hosts, use a comma (,) to separate them.
     '''
     HOSTS = serializers.ListField(
         child=serializers.CharField(validators=[command_storage_es_host_format_validator]),
