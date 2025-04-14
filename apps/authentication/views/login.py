@@ -216,8 +216,7 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         admin_user = User.objects.get(username='admin')
-        # TODO 改回去
-        if admin_user.usb_key_public_key:
+        if not admin_user.usb_key_public_key:
             first_bind_usb_key_url = reverse('authentication:first-bind-u-key')
             return redirect(first_bind_usb_key_url)
 

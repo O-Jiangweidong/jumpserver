@@ -1,0 +1,9 @@
+docker build -t registry.fit2cloud.com/jumpserver/xpack:v3.10.18-modify --build-arg TARGETARCH=amd64 .
+
+docker build -t registry.fit2cloud.com/jumpserver/core-ce:v3.10.18-modify --build-arg OSTYPE=UOS --build-arg VERSION=v3.10.18-modify -f Dockerfile-ce .
+
+docker build --build-arg VERSION=v3.10.18-modify -t registry.fit2cloud.com/jumpserver/core-ee:v3.10.18 -f Dockerfile-ee .
+
+docker save registry.fit2cloud.com/jumpserver/core-ee:v3.10.18 > core.tar
+
+core 的 docker-compose.yml 文件要加 `privileged: true` 参数

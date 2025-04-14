@@ -17,9 +17,9 @@ class AuditCryptoHandler(object):
 
     def __init__(self):
         so_path = os.path.join(PROJECT_DIR, 'PCI-E/lib/libsdf.so')
-        # self._sdf_lib = cdll.LoadLibrary(so_path)
-        # self._session, self._device = None, None
-        # self._init()
+        self._sdf_lib = cdll.LoadLibrary(so_path)
+        self._session, self._device = None, None
+        self._init()
 
     def _init(self):
         self._open_device()
