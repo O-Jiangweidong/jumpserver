@@ -28,12 +28,10 @@ class BasicSettingSerializer(serializers.Serializer):
         help_text=_('The name of global organization to display')
     )
     HELP_DOCUMENT_URL = serializers.URLField(
-        required=False, allow_blank=True, allow_null=True, label=_("Help Docs URL"),
-        help_text=_('default: http://docs.jumpserver.org')
+        required=False, allow_blank=True, allow_null=True, label=_("Help Docs URL")
     )
     HELP_SUPPORT_URL = serializers.URLField(
-        required=False, allow_blank=True, allow_null=True, label=_("Help Support URL"),
-        help_text=_('default: http://www.jumpserver.org/support/')
+        required=False, allow_blank=True, allow_null=True, label=_("Help Support URL")
     )
     SERVICE_IP = serializers.IPAddressField(
         required=False, max_length=16, allow_blank=True, allow_null=True, label=_("Service IP")

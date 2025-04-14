@@ -3,6 +3,7 @@
 from django.dispatch import receiver
 from django.db import transaction
 
+from audits.encrypt import audit_crypto_handler
 from audits.models import (
     PasswordChangeLog, UserLoginLog, FTPLog, OperateLog
 )
@@ -34,9 +35,11 @@ def on_user_change_password(sender, user=None, **kwargs):
         else:
             change_by = str(current_request.user)
     with transaction.atomic():
+        encrypt_fields = 'user,change_by,remote_addr'
+        encrypt_value = audit_crypto_handler.encrypt(f'{user}{change_by}{remote_addr}')
         PasswordChangeLog.objects.create(
-            user=str(user), change_by=change_by,
-            remote_addr=remote_addr,
+            user=str(user), change_by=change_by, remote_addr=remote_addr,
+            encrypt_fields=encrypt_fields, encrypt_value=encrypt_value
         )
 
 

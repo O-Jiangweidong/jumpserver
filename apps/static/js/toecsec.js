@@ -1430,7 +1430,7 @@ function testEncrypt() {
 
 window.encryptPassword = encryptPassword
 
-let uKeyBaseUrl = 'http://127.0.0.1:10081';
+const uKeyBaseUrl = 'http://127.0.0.1:10081';
 
 function getDevName() {
     let ret = false
