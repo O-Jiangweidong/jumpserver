@@ -70,6 +70,7 @@ RUN --mount=type=cache,target=/root/.cache \
 
 FROM python:3.11-slim-bullseye
 ARG TARGETARCH
+ARG OSTYPE
 ENV LANG=zh_CN.UTF-8 \
     PATH=/opt/py3/bin:$PATH
 
@@ -95,7 +96,12 @@ ARG TOOLS="                           \
         telnet                        \
         vim                           \
         bubblewrap                    \
-        wget"
+        wget                          \
+        kmod                          \
+        pciutils"
+
+COPY ./libs/PCI-E-${OSTYPE}/ /opt/jumpserver/PCI-E/
+ENV LD_LIBRARY_PATH=/opt/jumpserver/PCI-E/lib:${LD_LIBRARY_PATH}
 
 ARG APT_MIRROR=http://mirrors.ustc.edu.cn
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked,id=core-apt \

@@ -1438,9 +1438,9 @@ function getDevName() {
         url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumdev',
         type: 'POST', async: false,
         success: function (data) {
-            if (data['serial']) {
-                 ret = data['serial']
-             }
+            if (data['devlist'].length >= 1) {
+                ret = data['devlist'][0]
+            }
         }
     })
     return ret
@@ -1489,8 +1489,8 @@ function getSerial(devName) {
         type: 'POST', async: false,
         data: JSON.stringify(data),
         success: function (data) {
-            if (data['serial'].length >= 1) {
-                ret = data['serial'][0]
+            if (data['serial']) {
+                ret = data['serial']
             }
         }
     })
@@ -1544,9 +1544,8 @@ function getDigest(devName, rawData) {
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
-        success: function (data) {
+        success: function(data) {
             ret = data['hashdata']
-            console.log('sm3: ', ret)
         }
     })
     return ret
@@ -1562,8 +1561,7 @@ function verifyECC(devName, pubkey, rawData, sign) {
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
-        success: function (data) {
-            console.log('verifyEcc: ', data)
+        success: function(data) {
             ret = data['hashdata']
         }
     })
@@ -1571,5 +1569,5 @@ function verifyECC(devName, pubkey, rawData, sign) {
 }
 
 function alertError(field) {
-    alert('Failed to obtain UKey information(' + field + '). Please refresh and try again')
+    alert(gettext('Failed to obtain UKey information(') + field + gettext('). Please refresh and try again'))
 }
