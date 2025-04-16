@@ -1430,144 +1430,144 @@ function testEncrypt() {
 
 window.encryptPassword = encryptPassword
 
-const uKeyBaseUrl = 'http://127.0.0.1:10081';
+const uKeyServiceUrl = 'https://127.0.0.1:30723/keyserver_plugin';
+const tableStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+const table = tableStr.split("");
 
-function getDevName() {
-    let ret = false
-    $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumdev',
-        type: 'POST', async: false,
-        success: function (data) {
-            if (data['devlist'].length >= 1) {
-                ret = data['devlist'][0]
-            }
-        }
-    })
-    return ret
+function myBtoa (bin) {
+    for (var i = 0, j = 0, len = bin.length / 3, base64 = []; i < len; ++i) {
+        var a = bin.charCodeAt(j++), b = bin.charCodeAt(j++), c = bin.charCodeAt(j++);
+        if ((a | b | c) > 255) throw new Error("String contains an invalid character");
+        base64[base64.length] = table[a >> 2] + table[((a << 4) & 63) | (b >> 4)] +
+            (isNaN(b) ? "=" : table[((b << 2) & 63) | (c >> 6)]) +
+            (isNaN(b + c) ? "=" : table[c & 63]);
+    }
+    return base64.join("");
 }
 
-function getAppName(devName) {
-    let ret = false
-    const data = {'devname': devName}
+function hexToBase64(str) {
+    return myBtoa(String.fromCharCode.apply(null,
+        str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
+    );
+}
+
+function base64ToHex(base64Str) {
+    const decodedStr = atob(base64Str);
+    const bytesArray = new Uint8Array(decodedStr.length);
+    for (let i = 0; i < decodedStr.length; i++) {
+        bytesArray[i] = decodedStr.charCodeAt(i);
+    }
+    return Buffer.from(bytesArray).toString('hex');
+}
+
+function pinErr(msg) {
+    const usbKeyEle = $("#id_usb_key")
+    const errEle = $("#pin-err")
+    if (errEle) {
+        errEle.remove()
+    }
+    usbKeyEle.parent().removeClass("has-error").addClass("has-error");
+    usbKeyEle.parent().append("<div class='help-block' id='pin-err'>" + msg + "</div>");
+}
+
+function getSerial() {
+    let ret = ""
+    const data = {
+        "exec_name": "UKey_GetDevInfo",
+        "exec_arg_real_list": [2]
+    }
     $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumapp',
+        url: uKeyServiceUrl,
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
         success: function (data) {
-            if (data['applist'].length >= 1) {
-                ret = data['applist'][0]
-            }
+            ret = data["exec_result"]
         }
     })
     return ret
 }
 
-function getContainer(devName, appName) {
-    let ret = false
-    const data = {'devname': devName, 'appname': appName}
-    $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/enumcon',
-        contentType: "application/json", dataType: "json",
-        type: 'POST', async: false,
-        data: JSON.stringify(data),
-        success: function (data) {
-            if (data['conlist'].length >= 1) {
-                ret = data['conlist'][0]
-            }
-        }
-    })
-    return ret
-}
-
-function getSerial(devName) {
-    let ret = false
-    const data = {'devname': devName}
-    $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/dev/getinfo',
-        contentType: "application/json", dataType: "json",
-        type: 'POST', async: false,
-        data: JSON.stringify(data),
-        success: function (data) {
-            if (data['serial']) {
-                ret = data['serial']
-            }
-        }
-    })
-    return ret
-}
-
-function verifyPin(devName, appName) {
-    let ret = false;
+function verifyPin() {
+    let error_msg = "";
     const pin = $('#id_usb_key').val()
     const data = {
-        'devname': devName, 'appname': appName,
-        'pintype': 'user', 'pin': pin
+        "exec_name": "UKey_VerifyPIN",
+        "exec_arg_real_list": [pin]
     }
     $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/access/verifypin',
+        url: uKeyServiceUrl,
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
         success: function (data) {
-            ret = data['result']
+            if (data["exec_result"] !== 0) {
+                error_msg = "PIN 码验证失败，剩余次数: " + data["retry_cnt"]
+                if (data["locked"] === true) {
+                    error_msg += ", 设备已被锁定"
+                }
+            }
+        },
+        error: function (XMLHttpRequest, textStatus, errorThrown) {
+            error_msg = "PIN 码验证失败，" + XMLHttpRequest.responseJSON.error_msg
         }
     })
-    return ret
+    return error_msg
 }
 
-function getSignature(devName, appName, conName, rawData) {
-    let ret = false
+function getCertData() {
+    let result = ""
     const data = {
-        'devname': devName, 'appname': appName,
-        'conname': conName, 'data': rawData
+        "exec_name": "UKey_GetCert",
+        "exec_arg_real_list": [1]
     }
     $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/eccsign',
+        url: uKeyServiceUrl,
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
         success: function (data) {
-            ret = data
+            result = data["exec_result"]
         }
     })
-    return ret
+    return result
 }
 
-function getDigest(devName, rawData) {
-    let ret = false
+function getRSValue() {
+    let rSResult = ""
+    const ra_bytes = new Uint8Array(16);
+    window.crypto.getRandomValues(ra_bytes)
+    const ra = Array.from(ra_bytes).map(b => ('00' + b.toString(16)).slice(-2)).join('');
+    const rb = $("#rb-hidden").val()
+    const rabBase64 = hexToBase64(ra + rb)
     const data = {
-        'devname': devName, 'algid': 'sgd-sm3', 'data': rawData
+        "exec_name": "UKey_SignData",
+        "exec_arg_real_list": [1, rabBase64]
     }
     $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/digest',
+        url: uKeyServiceUrl,
         contentType: "application/json", dataType: "json",
         type: 'POST', async: false,
         data: JSON.stringify(data),
-        success: function(data) {
-            ret = data['hashdata']
+        success: function (data) {
+            rSResult = data["exec_result"]
         }
     })
-    return ret
-}
 
-function verifyECC(devName, pubkey, rawData, sign) {
-    let ret = false
-    const data = {
-        'devname': devName, 'pubkey': pubkey, 'data': rawData, 'signature': sign
+    const rs = base64ToHex(rSResult)
+    let r, s
+    if (rs.substring(6, 8) === '21') {
+        r = rs.substring(10, 74)
+        s = rs.substring(rs.length-64)
+    } else if (rs.substring(6, 8) === '20') {
+        r = rs.substring(8, 72)
+        s = rs.substring(rs.length-64)
+    } else {
+        alert('无效的 RS 值')
     }
-    $.ajax({
-        url: uKeyBaseUrl + '/api/tsecsdk/v1/crypto/eccverify',
-        contentType: "application/json", dataType: "json",
-        type: 'POST', async: false,
-        data: JSON.stringify(data),
-        success: function(data) {
-            ret = data['hashdata']
-        }
-    })
-    return ret
+    return [ra+rb, r, s]
 }
 
 function alertError(field) {
-    alert(gettext('Failed to obtain UKey information(') + field + gettext('). Please refresh and try again'))
+    alert('获取 UKey ' + field + ' 失败，请检查 UKey 是否插入')
 }

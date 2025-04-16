@@ -13,6 +13,7 @@ class PublicSettingSerializer(serializers.Serializer):
     INTERFACE = serializers.DictField()
     COUNTRY_CALLING_CODES = serializers.ListField()
     SHOW_VPN_MENU = serializers.BooleanField()
+    UKEY_ENABLE = serializers.BooleanField()
 
 
 class PrivateSettingSerializer(PublicSettingSerializer):

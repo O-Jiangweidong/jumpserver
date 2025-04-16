@@ -3,6 +3,7 @@
 import base64
 import inspect
 import time
+import OpenSSL
 
 from functools import partial
 from typing import Callable
@@ -438,16 +439,25 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
     key_prefix_captcha = "_LOGIN_INVALID_{}"
 
     def _check_u_key_is_valid(self, user, u_key_token):
-        block_list = u_key_token.split('$')
-        # block_list -> [sm2, u_key_serial, sign_r, sign_s]
-        sm2_raw, *u_key_serial_list, sign_r, sign_s = block_list
-        u_key_serial = ''.join(u_key_serial_list)
+        if not settings.UKEY_ENABLE:
+            return True
 
+        block_list = u_key_token.split('$')
+        # block_list -> [ra_rb_raw, u_key_serial, sign_r, sign_s, cert_data]
+        ra_rb_raw, u_key_serial, sign_r, sign_s, cert_data = block_list
         if u_key_serial != user.usb_key_serial:
             self.raise_credential_error(errors.reason_usb_key_cert_verify_failed)
+
+        cert_obj = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
+        public_key_perm = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, cert_obj.get_pubkey())
+        pem_prefix, pem_suffix = b'-----BEGIN PUBLIC KEY-----\n', b'\n-----END PUBLIC KEY-----\n'
+        if public_key_perm.startswith(pem_prefix) and public_key_perm.endswith(pem_suffix):
+            public_key_perm = public_key_perm[len(pem_prefix):-len(pem_suffix)]
+            public_key_perm = public_key_perm.replace(b'\n', b'')
+        usb_key_public_key = base64.b64encode(public_key_perm)
         eh = ECCCryptoHandler()
         ok = eh.verify_ecc(
-            user.usb_key_public_key, base64.b64decode(sm2_raw),
+            usb_key_public_key, base64.b64decode(ra_rb_raw),
             base64.b64decode(sign_r), base64.b64decode(sign_s)
         )
         if not ok:

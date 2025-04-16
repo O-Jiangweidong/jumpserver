@@ -28,6 +28,7 @@ class OpenPublicSettingApi(generics.RetrieveAPIView):
             "INTERFACE": self.interface_setting,
             "COUNTRY_CALLING_CODES": COUNTRY_CALLING_CODES,
             "SHOW_VPN_MENU": settings.SHOW_VPN_MENU,
+            "UKEY_ENABLE": settings.UKEY_ENABLE
         }
 
 

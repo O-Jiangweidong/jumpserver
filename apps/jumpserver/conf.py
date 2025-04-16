@@ -630,6 +630,7 @@ class Config(dict):
         'SERVICE_GATEWAY': None,
         'SERVICE_SUBNET_MASK': None,
         'SHOW_VPN_MENU': False,
+        'UKEY_ENABLE': False,
     }
 
     old_config_map = {

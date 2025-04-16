@@ -274,8 +274,8 @@
     </div>
     <div class="left-form-box {% if not form.challenge and not form.captcha %} no-captcha-challenge {% endif %}">
         <div class="mobile-logo">
-	        <div class="jms-title">
-		        <span style="">{{ INTERFACE.login_title }}</span>
+            <div class="jms-title">
+                <span style="">{{ INTERFACE.login_title }}</span>
             </div>
         </div>
         <div style="position: relative;top: 50%;transform: translateY(-50%);">
@@ -288,11 +288,11 @@
                 <form id="login-form" action="" method="post" role="form" novalidate="novalidate">
                     {% csrf_token %}
                     <div style="line-height: 17px;margin-bottom: 20px;color: #999999;">
-                    {% if form.non_field_errors %}
-                        <p class="help-block red-fonts">
-                            {{ form.non_field_errors.as_text }}
-                        </p>
-                    {% endif %}
+                        {% if form.non_field_errors %}
+                            <p class="help-block red-fonts">
+                                {{ form.non_field_errors.as_text }}
+                            </p>
+                        {% endif %}
                     </div>
 
                     {% bootstrap_field form.username show_label=False %}
@@ -303,19 +303,22 @@
                                name="{{ form.password.html_name }}">
                         {% if form.password.errors %}
                             <p class="help-block" style="text-align: left">
-                            {{ form.password.errors.as_text }}
-                        </p>
+                                {{ form.password.errors.as_text }}
+                            </p>
                         {% endif %}
                     </div>
 
-                    {% bootstrap_field form.usb_key show_label=False %}
-                     <input id="rb-hidden" type="text" style="display:none" value="{{ RB }}">
+                    {% if form.usb_key %}
+                        {% bootstrap_field form.usb_key show_label=False %}
+                    {% endif %}
+                    <input id="rb-hidden" type="text" style="display:none" value="{{ RB }}">
+                    <input id="ukey-enable-hidden" type="text" style="display:none" value="{{ UKEY_ENABLE }}">
 
                     {% if form.challenge %}
                         {% bootstrap_field form.challenge show_label=False %}
                     {% elif form.mfa_type %}
                         <div class="form-group" style="display: flex">
-                        {% include '_mfa_login_field.html' %}
+                            {% include '_mfa_login_field.html' %}
                         </div>
                     {% elif form.captcha %}
                         <div class="captcha-field">
@@ -347,15 +350,15 @@
                     <div class="more-login">
                         {% if auth_methods %}
                             <div class="more-methods-title {{ current_lang.code }}">
-                                    {% trans "More login options" %}
+                                {% trans "More login options" %}
                             </div>
                             <div class="more-login-items">
-                            {% for method in auth_methods %}
-                                <a href="{{ method.url }}" class="more-login-item">
-                                    <i class="fa">
-                                        <img src="{{ method.logo }}" height="15" width="15"></i> {{ method.name }}
-                                </a>
-                            {% endfor %}
+                                {% for method in auth_methods %}
+                                    <a href="{{ method.url }}" class="more-login-item">
+                                        <i class="fa">
+                                            <img src="{{ method.logo }}" height="15" width="15"></i> {{ method.name }}
+                                    </a>
+                                {% endfor %}
                             </div>
                         {% else %}
                             <div class="text-center" style="display: inline-block;">
@@ -373,67 +376,31 @@
 <script type="text/javascript" src="/static/js/plugins/jsencrypt/jsencrypt.min.js"></script>
 <script type="text/javascript" src="/static/js/plugins/cryptojs/crypto-js.min.js"></script>
 <script type="text/javascript" src="/static/js/plugins/buffer/buffer.min.js"></script>
-<script type="text/javascript" src="{% static "js/mybase64.js" %}"></script>
 <script src="{% static "js/toecsec.js" %}?_=9"></script>
 <script>
-    function pinErr() {
-         const usbKeyEle = $("#id_usb_key")
-         const errEle = $("#pin-err")
-         if (errEle) {
-           errEle.remove()
-         }
-         usbKeyEle.parent().removeClass("has-error").addClass("has-error");
-         usbKeyEle.parent().append("<div class='help-block' id='pin-err'>{% trans 'The UKey code is incorrect' %}</div>");
-     }
+    function preLogin() {
+        const enable = $("#ukey-enable-hidden").val()
+        if (enable === 'False' || enable === 'false') {
+            return true
+        }
 
-     function getRaRbBase64() {
-         const ra_bytes = new Uint8Array(16);
-         window.crypto.getRandomValues(ra_bytes)
-         const ra = Array.from(ra_bytes).map(b => ('00' + b.toString(16)).slice(-2)).join('');
-         const rb = $("#rb-hidden").val()
-         return hexToBase64(ra + rb)
-     }
+        const serial = getSerial()
+        if (!serial) {
+            alertError('serial')
+            return false
+        }
+        const error_msg = verifyPin()
+        if (error_msg !== "") {
+            pinErr(error_msg)
+            return false
+        }
+        const certData = getCertData()
+        const [raRb, r, s] = getRSValue()
+        const token = [raRb, serial, r, s, certData].join('$')
+        $('#id_usb_key').val(token);
+        return true
+    }
 
-     function preLogin() {
-         const devname = getDevName()
-         if (!devname) {
-             alertError('devname')
-             return false
-         }
-         const appname = getAppName(devname)
-         if (!appname) {
-             alertError('appname')
-             return false
-         }
-         const serial = getSerial(devname)
-         if (!serial) {
-             alertError('serial')
-             return false
-         }
-         const container = getContainer(devname, appname)
-         if (!container) {
-             alertError('container')
-             return false
-         }
-         if (!verifyPin(devname, appname)) {
-             pinErr()
-             return false
-         }
-         const raRbBase64 = getRaRbBase64()
-         const digest = getDigest(devname, raRbBase64)
-         if (!digest) {
-             alertError('digest')
-             return false
-         }
-         const sign = getSignature(devname, appname, container, digest)
-         if (!sign) {
-             alertError('sign')
-             return false
-         }
-         const token = [digest, serial, sign['r'], sign['s']].join('$')
-         $('#id_usb_key').val(token);
-         return true
-     }
     function doLogin() {
         //公钥加密
         if (!preLogin()) {
@@ -444,14 +411,16 @@
         $('#password-hidden').val(passwordEncrypted); //返回给密码输入input
         $('#login-form').submit(); //post提交
     }
+
     function checkHealth() {
-        let url =  "{% url 'health' %}";
+        let url = "{% url 'health' %}";
         requestApi({
             url: url,
             method: "GET",
             flash_message: false,
         })
     }
+
     setInterval(checkHealth, 30 * 1000);
 </script>
 </html>

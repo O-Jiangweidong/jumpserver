@@ -12,11 +12,6 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='user',
-            name='usb_key_public_key',
-            field=models.CharField(blank=True, max_length=128, null=True, verbose_name='UKey public key'),
-        ),
-        migrations.AddField(
-            model_name='user',
             name='usb_key_serial',
             field=models.CharField(blank=True, max_length=1024, null=True, unique=True, verbose_name='UKey Serial'),
         ),

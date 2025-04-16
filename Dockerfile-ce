@@ -98,6 +98,7 @@ ARG TOOLS="                           \
         bubblewrap                    \
         wget                          \
         kmod                          \
+        gettext                       \
         pciutils"
 
 COPY ./libs/PCI-E-${OSTYPE}/ /opt/jumpserver/PCI-E/

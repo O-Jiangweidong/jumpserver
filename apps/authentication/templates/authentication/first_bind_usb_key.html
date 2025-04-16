@@ -36,22 +36,6 @@
              <p class="red-fonts">{{ form.code.errors.as_text }}</p>
          {% endif %}
          <input id="usb-key-public-key" name="usb_key_public_key" type="text" style="display:none" value="{{ RB }}">
-         <div class="form-group {% if form.usb_key_public_key.errors %} has-error {% endif %}">
-             <input type="file" id="fileInput" style="display: none">
-             <div class="margin-bottom challenge-required">
-                 <input type="text" id="filenameInput" class="form-control input-style" style="cursor: pointer;" readonly
-                        placeholder="{% trans 'Select cert file' %}" onclick="clickUploadKeyFile(this)">
-                 <button class="btn btn-primary fulsl-width btn-challenge"
-                         type='button' onclick="clickUploadKeyFile(this)">
-                     {% trans 'Select cert' %}
-                 </button>
-             </div>
-             {% if form.usb_key_public_key.errors %}
-                 <p class="help-block" style="text-align: left">
-                     {{ form.usb_key_public_key.errors.as_text }}
-                 </p>
-             {% endif %}
-         </div>
          <div class="form-group {% if form.usb_key_serial.errors %} has-error {% endif %}">
              <div class="margin-bottom challenge-required">
                  <input type="text" id="u-key-serial" name="usb_key_serial" class="form-control input-style"
@@ -72,29 +56,8 @@
          </button>
      </form>
      <script>
-         const filenameInput = document.getElementById('filenameInput');
-         const fileInput = document.getElementById('fileInput');
-         fileInput.addEventListener("change", function () {
-             const file = fileInput.files[0]
-             filenameInput.value = file.name;
-             const reader = new FileReader();
-             reader.onload = function() {
-                 $('#usb-key-public-key').val(btoa(String.fromCharCode.apply(null, new Uint8Array(reader.result))))
-             }
-             reader.readAsArrayBuffer(file)
-         });
-
-         function clickUploadKeyFile() {
-             fileInput.click()
-         }
-
          function getUKeySerial() {
-             const devname = getDevName()
-             if (!devname) {
-                 alertError('devname')
-                 return false
-             }
-             const serial = getSerial(devname)
+             const serial = getSerial()
              if (!serial) {
                  alertError('serial')
                  return false

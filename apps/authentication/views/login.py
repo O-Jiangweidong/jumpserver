@@ -4,6 +4,7 @@
 from __future__ import unicode_literals
 
 import base64
+import binascii
 import datetime
 import os
 import secrets
@@ -27,14 +28,16 @@ from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.edit import FormView
 
+from authentication.utils import ECCCryptoHandler
 from common.utils import FlashMessageUtil, static_or_direct, safe_next_url
 from users.models import User
 from users.utils import (
-    redirect_user_first_login_or_index, get_ukey_public_key
+    redirect_user_first_login_or_index
 )
 from .. import mixins, errors
 from ..const import RSA_PRIVATE_KEY, RSA_PUBLIC_KEY
 from ..forms import get_user_login_form_cls, FirstBindUKeyForm
+
 
 __all__ = [
     'UserLoginView', 'UserLogoutView', 'FirstBindUKeyView',
@@ -166,6 +169,7 @@ class UserLoginContextMixin:
             'forgot_password_url': self.get_forgot_password_url(),
             'extra_fields_count': self.get_extra_fields_count(context),
             'RB': self.get_rb(), # 光电客户端UKey签名使用
+            'UKEY_ENABLE': settings.UKEY_ENABLE, # 天津光电是否使用 UKey 登陆
             **self.get_user_mfa_context(self.request.user)
         })
         return context
@@ -216,7 +220,7 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         admin_user = User.objects.get(username='admin')
-        if not admin_user.usb_key_public_key:
+        if not admin_user.usb_key_serial:
             first_bind_usb_key_url = reverse('authentication:first-bind-u-key')
             return redirect(first_bind_usb_key_url)
 
@@ -418,14 +422,8 @@ class FirstBindUKeyView(FormView):
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
-        usb_key_public_key_base64 = form.cleaned_data.get('usb_key_public_key')
         usb_key_serial = form.cleaned_data.get('usb_key_serial')
         admin_user = User.objects.get(username='admin')
-        x_y = get_ukey_public_key(base64.b64decode(usb_key_public_key_base64))
-        if not x_y or len(x_y) != 128:
-            form.add_error("usb_key_public_key", _(f"Certificate resolution failure"))
-            return self.form_invalid(form)
         admin_user.usb_key_serial = usb_key_serial
-        admin_user.usb_key_public_key = x_y
         admin_user.save()
         return redirect(reverse('authentication:login'))

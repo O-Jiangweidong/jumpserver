@@ -98,6 +98,16 @@ class ECCCryptoHandler(object):
         session_ret = self._open_session()
         return device_ret or session_ret
 
+    def generate_random(self, length):
+        # 定义参数类型
+        SDF_GenerateRandom = self._sdf_lib.SDF_GenerateRandom
+        SDF_GenerateRandom.argtypes = [ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ctypes.c_ubyte)]
+        SDF_GenerateRandom.restype = ctypes.c_int
+        # 调用函数
+        random_data = (ctypes.c_ubyte * length)()
+        SDF_GenerateRandom(self._session, length, random_data)
+        return bytes(random_data)
+
     def _open_device(self):
         # 定义参数类型
         SDF_OpenDevice = self._sdf_lib.SDF_OpenDevice

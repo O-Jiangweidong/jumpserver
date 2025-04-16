@@ -16,6 +16,12 @@ class EncryptedField(forms.CharField):
         return decrypt_password(value)
 
 
+class UsbKeyForm(forms.Form):
+    usb_key = forms.CharField(
+        label=_('USB Key'), widget=forms.PasswordInput(attrs={'placeholder': _("USB Key")})
+    )
+
+
 class UserLoginForm(forms.Form):
     username = forms.CharField(
         label=_('Username'), max_length=100,
@@ -31,10 +37,6 @@ class UserLoginForm(forms.Form):
     auto_login = forms.BooleanField(
         required=False, initial=False,
         widget=forms.CheckboxInput()
-    )
-    usb_key = forms.CharField(
-        label=_('USB Key'), max_length=1024,
-        widget=forms.PasswordInput(attrs={'placeholder': _("USB Key")})
     )
 
     def __init__(self, *args, **kwargs):
@@ -53,7 +55,6 @@ class UserLoginForm(forms.Form):
 
 
 class FirstBindUKeyForm(forms.Form):
-    usb_key_public_key = forms.CharField(label=_('UKey public key'), max_length=4096, required=True)
     usb_key_serial = forms.CharField(label=_('UKey Serial'), max_length=128, required=True)
 
 
@@ -82,6 +83,8 @@ class ChallengeMixin(forms.Form):
 
 def get_user_login_form_cls(*, captcha=False):
     bases = []
+    if settings.UKEY_ENABLE:
+        bases.append(UsbKeyForm)
     if settings.SECURITY_LOGIN_CHALLENGE_ENABLED:
         bases.append(ChallengeMixin)
     elif settings.SECURITY_MFA_IN_LOGIN_PAGE:
