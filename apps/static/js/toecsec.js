@@ -1431,24 +1431,15 @@ function testEncrypt() {
 window.encryptPassword = encryptPassword
 
 const uKeyServiceUrl = 'https://127.0.0.1:30723/keyserver_plugin';
-const tableStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-const table = tableStr.split("");
 
-function myBtoa (bin) {
-    for (var i = 0, j = 0, len = bin.length / 3, base64 = []; i < len; ++i) {
-        var a = bin.charCodeAt(j++), b = bin.charCodeAt(j++), c = bin.charCodeAt(j++);
-        if ((a | b | c) > 255) throw new Error("String contains an invalid character");
-        base64[base64.length] = table[a >> 2] + table[((a << 4) & 63) | (b >> 4)] +
-            (isNaN(b) ? "=" : table[((b << 2) & 63) | (c >> 6)]) +
-            (isNaN(b + c) ? "=" : table[c & 63]);
-    }
-    return base64.join("");
-}
-
-function hexToBase64(str) {
-    return myBtoa(String.fromCharCode.apply(null,
-        str.replace(/\r|\n/g, "").replace(/([\da-fA-F]{2}) ?/g, "0x$1 ").replace(/ +$/, "").split(" "))
-    );
+function hexToBase64(hex_str){
+    // 将 16 进制字符串转化为 Uint8Array 对象
+    const uint8Array = new Uint8Array(hex_str.match(/[\da-f]{2}/gi).map(function (h) {
+        return parseInt(h, 16)
+    }));
+    // 将 Uint8Array 对象转化为 base64 编码的字符串
+    const str_base64 = btoa(String.fromCharCode.apply(null, uint8Array));
+    return str_base64;
 }
 
 function base64ToHex(base64Str) {
@@ -1502,7 +1493,10 @@ function verifyPin() {
         data: JSON.stringify(data),
         success: function (data) {
             if (data["exec_result"] !== 0) {
-                error_msg = "PIN 码验证失败，剩余次数: " + data["retry_cnt"]
+                error_msg = "PIN 码验证失败 "
+                if (data["retry_cnt"] !== undefined) {
+                    error_msg += "，剩余次数: " + data["retry_cnt"]
+                }
                 if (data["locked"] === true) {
                     error_msg += ", 设备已被锁定"
                 }

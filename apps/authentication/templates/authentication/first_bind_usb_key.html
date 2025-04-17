@@ -35,7 +35,6 @@
          {% if 'code' in form.errors %}
              <p class="red-fonts">{{ form.code.errors.as_text }}</p>
          {% endif %}
-         <input id="usb-key-public-key" name="usb_key_public_key" type="text" style="display:none" value="{{ RB }}">
          <div class="form-group {% if form.usb_key_serial.errors %} has-error {% endif %}">
              <div class="margin-bottom challenge-required">
                  <input type="text" id="u-key-serial" name="usb_key_serial" class="form-control input-style"

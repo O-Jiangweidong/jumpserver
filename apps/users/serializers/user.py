@@ -109,7 +109,6 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         source="can_use_ssh_key_login", label=_("Can public key authentication"),
         read_only=True
     )
-    usb_key_public_key = serializers.CharField(write_only=True, required=False)
     password = EncryptedField(label=_("Password"), required=False, allow_blank=True, allow_null=True, max_length=1024, )
     phone = PhoneField(
         validators=[PhoneValidator()], required=False, allow_blank=True, allow_null=True, label=_("Phone")
@@ -125,7 +124,7 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         fields_mini = ["id", "name", "username"]
         # 只能写的字段, 这个虽然无法在框架上生效，但是更多对我们是提醒
         fields_write_only = [
-            "password", "public_key", "usb_key_serial", "usb_key_public_key"
+            "password", "public_key", "usb_key_serial",
         ]
         # xpack 包含的字段
         fields_xpack = ["wecom_id", "dingtalk_id", "feishu_id", "lark_id", "slack_id"]

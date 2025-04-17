@@ -448,17 +448,25 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, MFAMixin, AuthPost
         if u_key_serial != user.usb_key_serial:
             self.raise_credential_error(errors.reason_usb_key_cert_verify_failed)
 
-        cert_obj = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data)
-        public_key_perm = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, cert_obj.get_pubkey())
-        pem_prefix, pem_suffix = b'-----BEGIN PUBLIC KEY-----\n', b'\n-----END PUBLIC KEY-----\n'
-        if public_key_perm.startswith(pem_prefix) and public_key_perm.endswith(pem_suffix):
-            public_key_perm = public_key_perm[len(pem_prefix):-len(pem_suffix)]
-            public_key_perm = public_key_perm.replace(b'\n', b'')
-        usb_key_public_key = base64.b64encode(public_key_perm)
+        public_x, public_y = '', ''
+        try:
+            cert_data = f'-----BEGIN CERTIFICATE-----\n{cert_data}\n-----END CERTIFICATE-----\n'
+            cert_obj = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert_data.encode('ascii'))
+            public_key_perm = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_PEM, cert_obj.get_pubkey())
+            pem_prefix, pem_suffix = b'-----BEGIN PUBLIC KEY-----\n', b'\n-----END PUBLIC KEY-----\n'
+            if public_key_perm.startswith(pem_prefix) and public_key_perm.endswith(pem_suffix):
+                public_key_perm = public_key_perm[len(pem_prefix):-len(pem_suffix)]
+                public_key_perm = public_key_perm.replace(b'\n', b'')
+            usb_key_public_key = base64.b64decode(public_key_perm).hex()
+            public_x = usb_key_public_key[-128:-64]
+            public_y = usb_key_public_key[-64:]
+        except Exception as error:
+            logger.error('Verify cert failed: {}'.format(error))
+            self.raise_credential_error(errors.reason_usb_key_cert_verify_failed)
+
         eh = ECCCryptoHandler()
         ok = eh.verify_ecc(
-            usb_key_public_key, base64.b64decode(ra_rb_raw),
-            base64.b64decode(sign_r), base64.b64decode(sign_s)
+            public_x, public_y, ra_rb_raw, sign_r, sign_s,
         )
         if not ok:
             self.raise_credential_error(errors.reason_usb_key_failed)

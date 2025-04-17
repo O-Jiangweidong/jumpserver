@@ -417,7 +417,7 @@ class FirstBindUKeyView(FormView):
 
     def get(self, request, *args, **kwargs):
         user = User.objects.get(username='admin')
-        if user.usb_key_public_key:
+        if user.usb_key_serial:
             return redirect(reverse('authentication:login'))
         return super().get(request, *args, **kwargs)
 

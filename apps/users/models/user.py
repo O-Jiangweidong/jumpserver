@@ -892,10 +892,6 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
     usb_key_serial = models.CharField(
         max_length=1024, blank=True, null=True, unique=True, verbose_name=_('UKey Serial')
     )
-    # 保存的是公钥的x+y值，16进制的32位
-    usb_key_public_key = models.CharField(
-        max_length=128, blank=True, null=True, verbose_name=_('UKey public key')
-    )
 
     DATE_EXPIRED_WARNING_DAYS = 5
 

@@ -129,8 +129,8 @@ class ECCCryptoHandler(object):
         self._session = session_handle
         return ret
 
-    def verify_ecc(self, public_key_data, raw_data, sign_r, sign_s):
-        info_msg = (f'Public key x+y: {public_key_data}'
+    def verify_ecc(self, public_x, public_y, raw_data, sign_r, sign_s):
+        info_msg = (f'Public key x+y: {public_x} + {public_y}'
                     f'Token AB: {raw_data}, R: {sign_r}, S: {sign_s}')
         logger.debug(info_msg)
         ret = self._pre_check()
@@ -138,23 +138,36 @@ class ECCCryptoHandler(object):
             logger.error('Pre check error: %s' % ret)
             return
 
+        raw_data = bytes.fromhex(raw_data)
         try:
-            public_key_data = bytes.fromhex(public_key_data)
-            plain_text = (ctypes.c_ubyte * len(raw_data))(*raw_data)
-
             # 创建ECCrefPublicKey和ECCSignature结构体实例
-            k1 = bytes([0] * 32) + public_key_data[0:32]
-            k2 = bytes([0] * 32) + public_key_data[32:64]
+            k1 = bytes.fromhex('00' * 32 + public_x)
+            k2 = bytes.fromhex('00' * 32 + public_y)
             pk = ECCrefPublicKey(ctypes.c_uint(0x100), (UByte64Array)(*k1), (UByte64Array)(*k2))
 
-            r = bytes([0] * 32) + sign_r
-            s = bytes([0] * 32) + sign_s
+            r = bytes.fromhex('00' * 32 + sign_r)
+            s = bytes.fromhex('00' * 32 + sign_s)
             signature = ECCSignature((UByte64Array)(*r), (UByte64Array)(*s))
 
+            puc_hash = (ctypes.c_ubyte * 32)()
+            raw_data_ptr = ctypes.cast(raw_data, ctypes.POINTER(ctypes.c_ubyte))
+            input_str = '1234567812345678'
+            puc_id = (ctypes.c_ubyte * len(input_str))(*map(ord, input_str))
+            self._sdf_lib.SDF_HashInit(
+                self._session, 0x00000001, ctypes.byref(pk), ctypes.byref(puc_id), len(puc_id)
+            )
+            self._sdf_lib.SDF_HashUpdate(self._session, raw_data_ptr, len(raw_data))
+            self._sdf_lib.SDF_HashFinal(self._session, puc_hash, ctypes.byref(ctypes.c_uint()))
+
             # 调用函数
+            self._sdf_lib.SDF_ExternalVerify_ECC.argtypes = [
+                ctypes.c_void_p, ctypes.c_uint, ctypes.POINTER(ECCrefPublicKey),
+                ctypes.POINTER(ctypes.c_ubyte), ctypes.c_uint, ctypes.POINTER(ECCSignature)
+            ]
+            self._sdf_lib.SDF_ExternalVerify_ECC.restype = ctypes.c_int
             ret = self._sdf_lib.SDF_ExternalVerify_ECC(
-                self._session, ctypes.c_uint(0x00020100), ctypes.pointer(pk), plain_text,
-                ctypes.c_uint(len(plain_text)), ctypes.pointer(signature)
+                self._session, 0x00020100, ctypes.byref(pk), puc_hash,
+                len(raw_data), ctypes.byref(signature)
             )
             logger.debug('SDF_ExternalVerify_ECC code: %s' % ret)
         except Exception as err:
