@@ -3,8 +3,6 @@
 
 from __future__ import unicode_literals
 
-import base64
-import binascii
 import datetime
 import os
 import secrets
@@ -21,14 +19,13 @@ from django.shortcuts import reverse, redirect
 from django.templatetags.static import static
 from django.urls import reverse_lazy
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext as _, get_language
+from django.utils.translation import gettext as _
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect
 from django.views.decorators.debug import sensitive_post_parameters
 from django.views.generic.base import TemplateView, RedirectView
 from django.views.generic.edit import FormView
 
-from authentication.utils import ECCCryptoHandler
 from common.utils import FlashMessageUtil, static_or_direct, safe_next_url
 from users.models import User
 from users.utils import (
@@ -168,8 +165,8 @@ class UserLoginContextMixin:
             'auth_methods': self.get_support_auth_methods(),
             'forgot_password_url': self.get_forgot_password_url(),
             'extra_fields_count': self.get_extra_fields_count(context),
-            'RB': self.get_rb(), # 光电客户端UKey签名使用
-            'UKEY_ENABLE': settings.UKEY_ENABLE, # 天津光电是否使用 UKey 登陆
+            'RB': self.get_rb(),  # 光电客户端UKey签名使用
+            'UKEY_ENABLE': settings.UKEY_ENABLE,  # 天津光电是否使用 UKey 登陆
             **self.get_user_mfa_context(self.request.user)
         })
         return context
@@ -220,7 +217,7 @@ class UserLoginView(mixins.AuthMixin, UserLoginContextMixin, FormView):
 
     def get(self, request, *args, **kwargs):
         admin_user = User.objects.get(username='admin')
-        if not admin_user.usb_key_serial:
+        if settings.UKEY_ENABLE and not admin_user.usb_key_serial:
             first_bind_usb_key_url = reverse('authentication:first-bind-u-key')
             return redirect(first_bind_usb_key_url)
 

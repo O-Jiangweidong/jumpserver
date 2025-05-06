@@ -108,6 +108,9 @@ class SecurityLoginLimitSerializer(serializers.Serializer):
             "they can log in directly"
         )
     )
+    UKEY_ENABLE = serializers.BooleanField(
+        required=False, default=False, label="UKey " + _("Authentication")
+    )
 
 
 class SecurityAuthSerializer(serializers.Serializer):
