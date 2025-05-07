@@ -58,12 +58,11 @@ class AuditCryptoHandler(object):
                 self._session, _key, ui_key_len, data, len(data),
                 return_value, pointer(hash_len)
             )
-            logger.debug('AuditCryptoHandler SDFE_Hmac %s' % ret)
-            array = bytes(return_value)
-            b_c_text = binascii.hexlify(array)  # b2a_hex
+            b_c_text = binascii.hexlify(bytes(return_value))  # b2a_hex
             encrypt_data = str(b_c_text, encoding="utf-8").upper()
+            logger.debug('AuditCryptoHandler SDFE_Hmac ret code: %s, result: %s' % (ret, encrypt_data))
         except Exception as e:
-            logger.error('Audit Models Exception: %s' % e)
+            logger.error('AuditCryptoHandler encrypt failed: %s' % e)
         return encrypt_data
 
     def fill_data(self, data):
