@@ -6,6 +6,7 @@ from datetime import datetime
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
+from audits.encrypt import audit_crypto_handler
 from common.utils.common import lazyproperty
 from orgs.mixins.models import OrgModelMixin
 from terminal.const import RiskLevelChoices
