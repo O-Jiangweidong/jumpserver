@@ -8,6 +8,7 @@ from users.models.user import User
 
 
 class UserFilter(BaseFilterSet):
+    username = filters.CharFilter(method='filter_usernames')
     system_roles = filters.CharFilter(method='filter_system_roles')
     org_roles = filters.CharFilter(method='filter_org_roles')
     groups = filters.CharFilter(field_name="groups__name", lookup_expr='exact')
@@ -23,6 +24,11 @@ class UserFilter(BaseFilterSet):
             'groups', 'group_id', 'exclude_group_id',
             'source', 'org_roles', 'system_roles', 'is_active',
         )
+
+    @staticmethod
+    def filter_usernames(queryset, name, value):
+        usernames = value.split(',')
+        return queryset.filter(username__in=usernames)
 
     @staticmethod
     def get_role(value):

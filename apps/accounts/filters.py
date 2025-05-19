@@ -13,15 +13,20 @@ class AccountFilterSet(BaseFilterSet):
     hostname = drf_filters.CharFilter(field_name='name', lookup_expr='exact')
     username = drf_filters.CharFilter(field_name="username", lookup_expr='exact')
     address = drf_filters.CharFilter(field_name="asset__address", lookup_expr='exact')
-    asset_id = drf_filters.CharFilter(field_name="asset", lookup_expr='exact')
-    asset = drf_filters.CharFilter(field_name='asset', lookup_expr='exact')
-    assets = drf_filters.CharFilter(field_name='asset_id', lookup_expr='exact')
+    asset_id = drf_filters.CharFilter(method='filter_assets')
+    asset = drf_filters.CharFilter(method='filter_assets')
+    assets = drf_filters.CharFilter(method='filter_assets')
     nodes = drf_filters.CharFilter(method='filter_nodes')
     node_id = drf_filters.CharFilter(method='filter_nodes')
     has_secret = drf_filters.BooleanFilter(method='filter_has_secret')
     platform = drf_filters.CharFilter(field_name='asset__platform_id', lookup_expr='exact')
     category = drf_filters.CharFilter(field_name='asset__platform__category', lookup_expr='exact')
     type = drf_filters.CharFilter(field_name='asset__platform__type', lookup_expr='exact')
+
+    @staticmethod
+    def filter_assets(queryset, name, value):
+        asset_ids = value.split(',')
+        return queryset.filter(asset_id__in=asset_ids)
 
     @staticmethod
     def filter_has_secret(queryset, name, has_secret):

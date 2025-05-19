@@ -64,7 +64,7 @@ class BaseAccountSerializer(AuthValidateMixin, BulkOrgResourceModelSerializer):
 
     class Meta:
         model = BaseAccount
-        fields_mini = ['id', 'name', 'username']
+        fields_mini = ['id', 'name', 'username', 'asset_id']
         fields_small = fields_mini + [
             'secret_type', 'secret', 'passphrase',
             'privileged', 'is_active', 'spec_info',
