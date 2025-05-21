@@ -622,7 +622,15 @@ class Config(dict):
         'ANSIBLE_RECEPTOR_GATEWAY_PROXY_HOST': 'jms_celery',
         'ANSIBLE_RECEPTOR_TCP_LISTEN_ADDRESS': 'receptor:7521',
 
-        'FILE_UPLOAD_TEMP_DIR': None
+        'FILE_UPLOAD_TEMP_DIR': None,
+
+        # LiXiang
+        'MIDDLEMAN_ENDPOINT': '',
+        'MIDDLEMAN_SERVICE_NAME': '',
+        'MIDDLEMAN_SERVICE_DISPLAY': '',
+        'MIDDLEMAN_SERVICE_ROLE_NAME': '',
+        'MIDDLEMAN_AUTH_TOKEN': '',
+        'MIDDLEMAN_IGNORE_SAME_NAME': False,
 
     }
 
