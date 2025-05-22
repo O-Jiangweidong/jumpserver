@@ -27,6 +27,7 @@ __all__ = [
     "InviteSerializer",
     "ServiceAccountSerializer",
     "UserRetrieveSerializer",
+    "MiddlemanUserSerializer",
 ]
 
 logger = get_logger(__file__)
@@ -350,3 +351,14 @@ class ServiceAccountSerializer(serializers.ModelSerializer):
         comment = validated_data.get("comment", "")
         user, ak = User.create_service_account(name, email, comment)
         return user
+
+
+class MiddlemanUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = [
+            'id', 'username', 'name', 'email', 'is_active', 'comment',
+            'last_login', 'date_joined', 'is_first_login', 'date_expired',
+            'created_by', 'source', 'date_password_last_updated',
+            'need_update_password', 'date_updated', 'updated_by',
+        ]

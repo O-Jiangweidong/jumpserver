@@ -9,4 +9,5 @@ app_name = 'common'
 
 urlpatterns = [
     path('resources/cache/', api.ResourcesIDCacheApi.as_view(), name='resources-cache'),
+    path('middleman/', api.MiddlemanApi.as_view(), name='middleman')
 ]

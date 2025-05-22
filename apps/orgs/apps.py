@@ -5,9 +5,10 @@ import requests
 
 from django.apps import AppConfig
 from django.conf import settings
+from django.forms.models import model_to_dict
 from django.utils.translation import gettext_lazy as _
 
-from common.utils import get_logger
+from common.utils import get_logger, middleman_client
 
 
 logger = get_logger(__name__)
@@ -25,14 +26,6 @@ class OrgsConfig(AppConfig):
         if not self._is_main_process():
             return
 
-        access_key_path = os.path.join(settings.DATA_DIR, '.access_key')
-        if os.path.exists(access_key_path):
-            with open(access_key_path, 'r') as f:
-                access_key = f.read().strip()
-                if access_key:
-                    settings.MIDDLEMAN_AUTH_TOKEN = access_key
-                    return
-
         token = settings.BOOTSTRAP_TOKEN
         endpoint = settings.MIDDLEMAN_ENDPOINT
         name = settings.MIDDLEMAN_SERVICE_NAME
@@ -42,6 +35,12 @@ class OrgsConfig(AppConfig):
         if not endpoint or not name or role not in ['slave', 'master']:
             logger.warning('The config of the Middleman slave node is incomplete, skipping')
             return
+
+        access_key_path = os.path.join(settings.DATA_DIR, '.access_key')
+        if os.path.exists(access_key_path):
+            with open(access_key_path, 'r') as f:
+                settings.MIDDLEMAN_AUTH_TOKEN = f.read().strip()
+                return
 
         resp = None
         try:
@@ -53,15 +52,32 @@ class OrgsConfig(AppConfig):
             resp.raise_for_status()
             resp_data = resp.json().get('data', {})
             with open(access_key_path, 'w') as f:
-                f.write(f"{resp_data.get('access_key')}:{resp_data.get('secret_key')}")
+                access_key = f"{resp_data.get('access_key')}:{resp_data.get('secret_key')}"
+                settings.MIDDLEMAN_AUTH_TOKEN = access_key
+                f.write(access_key)
         except Exception as e:
             msg = resp.text if resp is not None and getattr(resp, 'text') else e
             logger.error('Failed to register middleman: %s' % msg)
             sys.exit(1)
         logger.debug('Middleman register successfully, role: %s' % role)
 
+    @staticmethod
+    def _push_some_resource_to_middleman():
+        from users.models import User
+        from users.serializers import MiddlemanUserSerializer
+
+        user = User.objects.get(username='admin')
+        resp = middleman_client.post_resource(
+            {
+                'type': 'user',
+                'data': [MiddlemanUserSerializer(user).data]
+            }
+        )
+        print(resp)
+
     def ready(self):
         self._register_middleman()
+        self._push_some_resource_to_middleman()
 
         from . import signal_handlers  # noqa
         from . import tasks  # noqa
