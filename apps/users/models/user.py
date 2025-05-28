@@ -520,6 +520,19 @@ class RoleMixin:
     service_account_email_suffix = '@local.domain'
 
     @classmethod
+    def get_or_create_middleman(cls, username, name):
+        middleman, __ = cls.objects.get_or_create(
+            username=username, defaults={
+                'name': name, 'username': username,
+                'email': f'{username}@middleman.com',
+                'is_first_login': False, 'created_by': 'System',
+                'is_service_account': True,
+            }
+        )
+        middleman.is_superuser = True
+        return middleman
+
+    @classmethod
     def create_service_account(cls, name, email, comment):
         app = cls.objects.create(
             username=name, name=name, email=email,

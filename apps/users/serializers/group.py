@@ -11,8 +11,19 @@ from .. import utils
 from ..models import User, UserGroup
 
 __all__ = [
-    'UserGroupSerializer', 'UserGroupListSerializer',
+    'UserGroupSerializer',
+    'UserGroupListSerializer',
+    'MiniUserGroupSerializer',
 ]
+
+
+class MiniUserGroupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserGroup
+        fields = [
+            'id', 'name', 'comment', 'created_by', 'org_id',
+            'updated_by', 'date_created', 'date_updated',
+        ]
 
 
 class UserGroupSerializer(ResourceLabelsMixin, BulkOrgResourceModelSerializer):

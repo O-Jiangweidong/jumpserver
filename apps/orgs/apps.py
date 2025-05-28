@@ -23,16 +23,22 @@ class OrgsConfig(AppConfig):
         return os.environ.get('RUN_MAIN') == 'true'
 
     def _register_middleman(self):
+        from users.models import User
+
         if not self._is_main_process():
             return
 
         token = settings.BOOTSTRAP_TOKEN
-        endpoint = settings.MIDDLEMAN_ENDPOINT
+        md_endpoint = settings.MIDDLEMAN_ENDPOINT
+        self_endpoint = settings.MIDDLEMAN_SELF_ENDPOINT
         name = settings.MIDDLEMAN_SERVICE_NAME
         role = settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower()
         display = settings.MIDDLEMAN_SERVICE_DISPLAY
         ignore_same_name = settings.MIDDLEMAN_IGNORE_SAME_NAME
-        if not endpoint or not name or role not in ['slave', 'master']:
+        if (not md_endpoint or
+                not name or
+                not self_endpoint or
+                role not in ['slave', 'master']):
             logger.warning('The config of the Middleman slave node is incomplete, skipping')
             return
 
@@ -43,12 +49,15 @@ class OrgsConfig(AppConfig):
                 return
 
         resp = None
+        user = User.get_or_create_middleman(username=name, name=display)
         try:
             data = {
                 'bootstrap_token': token, 'name': name,
-                'role': role, 'display': display, 'ignore_same_name': ignore_same_name
+                'private_token': str(user.private_token),
+                'role': role, 'display': display, 'ignore_same_name': ignore_same_name,
+                'endpoint': self_endpoint
             }
-            resp = requests.post(f'{endpoint}/register/', json=data)
+            resp = requests.post(f'{md_endpoint}/register/', json=data)
             resp.raise_for_status()
             resp_data = resp.json().get('data', {})
             with open(access_key_path, 'w') as f:
@@ -62,18 +71,64 @@ class OrgsConfig(AppConfig):
         logger.debug('Middleman register successfully, role: %s' % role)
 
     @staticmethod
-    def _push_some_resource_to_middleman():
-        from users.models import User
-        from users.serializers import MiddlemanUserSerializer
+    def __push_rbac():
+        from rbac.models import Role
+        from rbac.serializers import RoleSerializer
 
-        user = User.objects.get(username='admin')
+        data = []
+        for d in RoleSerializer(Role.objects.all(), many=True).data:
+            data.append({
+                'id': d['id'], 'name': d['name'], 'scope': d['scope']['value'],
+                'date_created': d['date_created'], 'date_updated': d['date_updated'],
+                'created_by': d['created_by'], 'updated_by': d['updated_by'],
+                'comment': d['comment'],
+            })
         resp = middleman_client.post_resource(
-            {
-                'type': 'user',
-                'data': [MiddlemanUserSerializer(user).data]
-            }
+            'role', data, settings.MIDDLEMAN_SERVICE_NAME
         )
-        print(resp)
+        print('Push rbac: ', resp)
+
+    @staticmethod
+    def __push_platforms():
+        from assets.models import Platform
+        from assets.serializers import PlatformSerializer
+
+        platforms = Platform.objects.all()
+        resp = middleman_client.post_resource(
+            'platform', PlatformSerializer(platforms, many=True).data,
+            settings.MIDDLEMAN_SERVICE_NAME
+        )
+        print('Push platform: ', resp)
+
+    @staticmethod
+    def __push_user_groups():
+        from users.models import UserGroup
+        from users.serializers import MiniUserGroupSerializer
+
+        user_groups = UserGroup.objects.all()
+        resp = middleman_client.post_resource(
+            'user_group', MiniUserGroupSerializer(user_groups, many=True).data,
+            settings.MIDDLEMAN_SERVICE_NAME
+        )
+        print('Push user group: ', resp)
+
+    def _push_some_resource_to_middleman(self):
+        if not self._is_main_process():
+            return
+
+        # TODO 这里后边需要放开
+        # slave_name = settings.MIDDLEMAN_SERVICE_NAME
+        # user = User.objects.get(username='admin')
+        # resp = middleman_client.post_resource(
+        #     {
+        #         'type': 'user',
+        #         'data': [MiddlemanUserSerializer(user).data]
+        #     }, slave_name
+        # )
+        # print(resp)
+        self.__push_rbac()
+        self.__push_user_groups()
+        # self.__push_platforms()
 
     def ready(self):
         self._register_middleman()

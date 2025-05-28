@@ -12,7 +12,11 @@ from common.utils import lazyproperty
 from ..const import Category, AllTypes, Protocol, SuMethodChoices
 from ..models import Platform, PlatformProtocol, PlatformAutomation
 
-__all__ = ["PlatformSerializer", "PlatformOpsMethodSerializer", "PlatformProtocolSerializer"]
+__all__ = [
+    "PlatformSerializer",
+    "PlatformOpsMethodSerializer",
+    "PlatformProtocolSerializer",
+]
 
 
 class PlatformAutomationSerializer(serializers.ModelSerializer):

@@ -7,13 +7,13 @@ from collections import defaultdict
 from django.conf import settings
 from django.core.signals import request_finished
 from django.db import connection
-from django.db.models.signals import pre_save
+from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
 from jumpserver.utils import get_current_request
 from .local import thread_local
 from .signals import django_ready
-from .utils import get_logger
+from .utils import get_logger, middleman_client
 
 pattern = re.compile(r'FROM `(\w+)`')
 logger = get_logger(__name__)
@@ -185,3 +185,42 @@ def check_migrations_file_prefix_conflict(*args, **kwargs):
         print(f'{msg_left}{msg_right1}\n{msg_right2}\n')
 
     print('=' * 80)
+
+
+# @receiver(post_save)
+def resource_created(sender, instance, created, **kwargs):
+    from users.serializers import MiddlemanWriteUserSerializer
+    from rbac.serializers import MiddlemanRoleSerializer
+
+    serializers = {
+        'User': MiddlemanWriteUserSerializer,
+        'Host': MiddlemanHostSerializer,
+        'Role': MiddlemanRoleSerializer,
+        'Device': '',
+        'Database': '',
+        'Custom': '',
+        'GPT': '',
+        'Web': '',
+        'Cloud': '',
+        'AssetPermission': '',
+    }
+    if not instance:
+        return
+
+    if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
+        return
+
+    obj_name = instance._meta.object_name
+    serializer_class = serializers.get(obj_name)
+    if not serializer_class:
+        return
+
+    # TODO 这里发送失败要有失败机制，重试、失败检查
+    slave_name = settings.MIDDLEMAN_SERVICE_NAME
+    resp = middleman_client.post_resource(
+        {
+            'type': serializer_class.TYPE,
+            'data': [serializer_class(instance).data]
+        }, slave_name
+    )
+    print(resp.text)

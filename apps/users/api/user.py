@@ -70,7 +70,8 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
             queryset = self.set_users_roles_for_cache(args[0])
             queryset = self.set_users_orgs_roles(args[0])
             args = (queryset,)
-        return super().get_serializer(*args, **kwargs)
+        serializer = super().get_serializer(*args, **kwargs)
+        return serializer
 
     @staticmethod
     def set_users_roles_for_cache(queryset):

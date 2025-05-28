@@ -626,6 +626,7 @@ class Config(dict):
 
         # LiXiang
         'MIDDLEMAN_ENDPOINT': '',
+        'MIDDLEMAN_SELF_ENDPOINT': '',
         'MIDDLEMAN_SERVICE_NAME': '',
         'MIDDLEMAN_SERVICE_DISPLAY': '',
         'MIDDLEMAN_SERVICE_ROLE_NAME': '',
