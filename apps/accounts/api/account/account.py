@@ -12,6 +12,7 @@ from assets.models import Asset, Node
 from authentication.permissions import UserConfirmation, ConfirmType
 from common.api.mixin import ExtraFilterFieldsMixin
 from common.permissions import IsValidUser
+from common.utils import middleman_client
 from orgs.mixins.api import OrgBulkModelViewSet
 from rbac.permissions import RBACPermission
 
@@ -35,6 +36,19 @@ class AccountViewSet(OrgBulkModelViewSet):
         'clear_secret': 'accounts.change_account',
     }
     export_as_zip = True
+
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
+    def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return super().list(request, *args, **kwargs)
+
+        resp = middleman_client.get_accounts(
+            slave_name=self.slave_name, query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
 
     @action(methods=['get'], detail=False, url_path='su-from-accounts')
     def su_from_accounts(self, request, *args, **kwargs):

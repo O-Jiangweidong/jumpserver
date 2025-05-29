@@ -58,8 +58,8 @@ class MiddlemanClient(object):
         )
         return resp.json()
 
-    def get_assets(self, slave_name='', query_params=None, **kwargs):
-        url = f'/middleman/resources/?m_type=asset'
+    def get_assets(self, m_type='asset', slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type={m_type}'
         resp = self._request(
             'GET', url, headers={'SLAVE-NAME': slave_name},
             query_params=query_params, **kwargs
@@ -68,6 +68,14 @@ class MiddlemanClient(object):
 
     def get_platforms(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=platform'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
+    def get_accounts(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=account'
         resp = self._request(
             'GET', url, headers={'SLAVE-NAME': slave_name},
             query_params=query_params, **kwargs

@@ -18,7 +18,7 @@ from assets.models import Asset, Gateway, Platform, Protocol
 from assets.tasks import test_assets_connectivity_manual, update_assets_hardware_info_manual
 from common.api import SuggestionMixin
 from common.drf.filters import BaseFilterSet, AttrRulesFilterBackend
-from common.utils import get_logger, is_uuid
+from common.utils import get_logger, is_uuid, middleman_client
 from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -117,6 +117,18 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
     @property
     def slave_name(self):
         return self.request.headers.get('x-slave-name')
+
+    def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return super().list(request, *args, **kwargs)
+
+        serializer = self.get_serializer()
+        m_type = serializer.get_middleman_type() or 'asset'
+        resp = middleman_client.get_assets(
+            m_type=m_type, slave_name=self.slave_name,
+            query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
 
     def get_queryset(self):
         queryset = super().get_queryset()
