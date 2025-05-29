@@ -19,3 +19,7 @@ class HostSerializer(AssetSerializer):
                 'label': _("IP/Host")
             },
         }
+
+    @staticmethod
+    def get_middleman_type():
+        return 'host'

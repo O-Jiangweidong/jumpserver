@@ -13,6 +13,7 @@ from common.serializers.fields import (
 )
 from common.utils import pretty_string, get_logger, middleman_client
 from common.validators import PhoneValidator
+from common.exceptions import JMSException
 from orgs.utils import current_org
 from rbac.builtin import BuiltinRole
 from rbac.models import OrgRoleBinding, SystemRoleBinding, Role
@@ -294,7 +295,9 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
         resp = middleman_client.post_resource(
             type_='user', data=[data], slave_name=slave_name
         )
-        print('push user: ', resp)
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+        self._data = data
         return User(d)
 
     def create(self, validated_data):

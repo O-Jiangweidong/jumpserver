@@ -93,10 +93,17 @@ class OrgsConfig(AppConfig):
         from assets.models import Platform
         from assets.serializers import PlatformSerializer
 
-        platforms = Platform.objects.all()
+        data = []
+        for d in PlatformSerializer(Platform.objects.all(), many=True).data:
+            data.append({
+                'id': d['id'], 'name': d['name'], 'type': d['type']['value'],
+                'date_created': str(d['date_created']), 'date_updated': str(d['date_updated']),
+                'created_by': d['created_by'], 'updated_by': d['updated_by'],
+                'category': d['category']['value'], 'internal': d['internal'],
+                'comment': d['comment'],
+            })
         resp = middleman_client.post_resource(
-            'platform', PlatformSerializer(platforms, many=True).data,
-            settings.MIDDLEMAN_SERVICE_NAME
+            'platform', data, settings.MIDDLEMAN_SERVICE_NAME
         )
         print('Push platform: ', resp)
 
@@ -128,7 +135,7 @@ class OrgsConfig(AppConfig):
         # print(resp)
         self.__push_rbac()
         self.__push_user_groups()
-        # self.__push_platforms()
+        self.__push_platforms()
 
     def ready(self):
         self._register_middleman()

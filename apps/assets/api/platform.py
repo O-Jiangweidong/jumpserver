@@ -9,6 +9,7 @@ from assets.serializers import PlatformSerializer, PlatformProtocolSerializer
 from common.api import JMSModelViewSet
 from common.permissions import IsValidUser
 from common.serializers import GroupedChoiceSerializer
+from common.utils import middleman_client
 
 __all__ = ['AssetPlatformViewSet', 'PlatformAutomationMethodsApi', 'PlatformProtocolViewSet']
 
@@ -28,6 +29,19 @@ class AssetPlatformViewSet(JMSModelViewSet):
         'ops_methods': 'assets.view_platform',
         'filter_nodes_assets': 'assets.view_platform',
     }
+
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
+    def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return super().list(request, *args, **kwargs)
+
+        resp = middleman_client.get_platforms(
+            slave_name=self.slave_name, query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
 
     def get_queryset(self):
         # 因为没有走分页逻辑，所以需要这里 prefetch

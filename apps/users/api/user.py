@@ -9,7 +9,8 @@ from rest_framework_bulk import BulkModelViewSet
 
 from common.api import CommonApiMixin, SuggestionMixin
 from common.drf.filters import AttrRulesFilterBackend
-from common.utils import get_logger
+from common.utils import get_logger, middleman_client
+from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.utils import current_org, tmp_to_root_org
 from rbac.models import Role, RoleBinding
 from rbac.permissions import RBACPermission
@@ -33,7 +34,10 @@ __all__ = [
 ]
 
 
-class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelViewSet):
+class UserViewSet(
+    MiddlemanSerializerMixin, CommonApiMixin, UserQuerysetMixin,
+    SuggestionMixin, BulkModelViewSet
+):
     filterset_class = UserFilter
     extra_filter_backends = [AttrRulesFilterBackend]
     search_fields = ('username', 'email', 'name')
@@ -50,6 +54,19 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         'remove': 'users.remove_user',
         'bulk_remove': 'users.remove_user',
     }
+
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
+    def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return super().list(request, *args, **kwargs)
+
+        resp = middleman_client.get_users(
+            slave_name=self.slave_name, query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
 
     def allow_bulk_destroy(self, qs, filtered):
         is_valid = filtered.count() < qs.count()
@@ -71,6 +88,8 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
             queryset = self.set_users_orgs_roles(args[0])
             args = (queryset,)
         serializer = super().get_serializer(*args, **kwargs)
+        if self.action == 'create' and self.slave_name:
+            serializer = self._clean_serializer_fields(serializer)
         return serializer
 
     @staticmethod

@@ -1,9 +1,8 @@
-import json
+import urllib.parse
 
 import requests
 
 from django.conf import settings
-from rest_framework.utils.encoders import JSONEncoder
 
 from common.utils import lazyproperty
 
@@ -16,10 +15,18 @@ class MiddlemanClient(object):
     def _auth_token(self):
         return f'Bearer {settings.MIDDLEMAN_AUTH_TOKEN}'
 
-    def _request(self, method, url, **kwargs):
+    def _request(self, method, url, query_params=None, **kwargs):
         url = self.endpoint + url
+        query_params = query_params or {}
+        limit = query_params.pop('limit', 100)
+        offset = query_params.pop('offset', 0)
+        sep = '&' if '?' in url else '?'
+        url = f'{url}{sep}limit={limit}&offset={offset}'
+        if query_params:
+            url = f'{url}&{urllib.parse.urlencode(query_params)}'
         kwargs.setdefault('headers', {})
         kwargs['headers']['Authorization'] = self._auth_token
+        print('Request url:', url)
         return requests.request(method, url, **kwargs)
 
     @property
@@ -35,26 +42,36 @@ class MiddlemanClient(object):
         resp = self._request('GET', url)
         return resp.json()
 
-    def get_users(self, limit=100, offset=0, slave_name='', search='', **kwargs):
-        url = f'/middleman/resources/?type=user&limit={limit}&offset={offset}'
-        if search:
-            url += f'&search={search}'
-        resp = self._request('GET', url, headers={'SLAVE-NAME': slave_name})
+    def get_users(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=user'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
         return resp.json()
 
-    def get_roles(self, slave_name='', scope='', **kwargs):
-        url = f'/middleman/resources/?type=role&scope={scope}'
-        resp = self._request('GET', url, headers={'SLAVE-NAME': slave_name})
+    def get_roles(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=role'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
         return resp.json()
 
-    def get_assets(self, limit=100, offset=0, slave_name='', **kwargs):
-        url = f'/middleman/resources/?type=asset&limit={limit}&offset={offset}'
-        resp = self._request('GET', url, headers={'SLAVE-NAME': slave_name})
+    def get_assets(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=asset'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
         return resp.json()
 
-    def get_platforms(self, limit=100, offset=0, slave_name='', **kwargs):
-        url = f'/middleman/resources/?type=platform&limit={limit}&offset={offset}'
-        resp = self._request('GET', url, headers={'SLAVE-NAME': slave_name})
+    def get_platforms(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=platform'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
         return resp.json()
 
     def post_resource(self, type_, data, slave_name, **kwargs):

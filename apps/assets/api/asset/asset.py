@@ -19,6 +19,7 @@ from assets.tasks import test_assets_connectivity_manual, update_assets_hardware
 from common.api import SuggestionMixin
 from common.drf.filters import BaseFilterSet, AttrRulesFilterBackend
 from common.utils import get_logger, is_uuid
+from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
 from ...notifications import BulkUpdatePlatformSkipAssetUserMsg
@@ -86,7 +87,7 @@ class AssetFilterSet(BaseFilterSet):
         return queryset.filter(protocols__name__in=value).distinct()
 
 
-class AssetViewSet(SuggestionMixin, OrgBulkModelViewSet):
+class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet):
     """
     API endpoint that allows Asset to be viewed or edited.
     """
@@ -113,11 +114,21 @@ class AssetViewSet(SuggestionMixin, OrgBulkModelViewSet):
         NodeFilterBackend, AttrRulesFilterBackend
     ]
 
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
     def get_queryset(self):
         queryset = super().get_queryset()
         if queryset.model is not Asset:
             queryset = queryset.select_related('asset_ptr')
         return queryset
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.action == 'create' and self.slave_name:
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
 
     def get_serializer_class(self):
         cls = super().get_serializer_class()

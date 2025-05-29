@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+import uuid
 
 from django.db.models import F
 from django.db.transaction import atomic
@@ -9,13 +10,16 @@ from rest_framework import serializers
 from accounts.models import Account
 from accounts.serializers import AccountSerializer
 from common.const import UUID_PATTERN
+from common.exceptions import JMSException
 from common.serializers import (
     WritableNestedModelSerializer, SecretReadableMixin,
     CommonModelSerializer, MethodSerializer, ResourceLabelsMixin
 )
 from common.serializers.common import DictSerializer
-from common.serializers.fields import LabeledChoiceField
+from common.serializers.fields import LabeledChoiceField, ObjectRelatedField
+from common.utils import middleman_client
 from labels.models import Label
+from jumpserver.utils import get_current_request
 from orgs.mixins.serializers import BulkOrgResourceModelSerializer
 from ...const import Category, AllTypes
 from ...models import Asset, Node, Platform, Protocol
@@ -77,6 +81,10 @@ class AssetAccountSerializer(AccountSerializer):
     def to_internal_value(self, data):
         # 导入时，data有时为str
         if isinstance(data, str):
+            return super().to_internal_value(data)
+
+        request = get_current_request()
+        if request.headers.get('middleman-version'):
             return super().to_internal_value(data)
 
         clone_id = data.pop('id', None)
@@ -156,6 +164,10 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         super().__init__(*args, **kwargs)
         self._init_field_choices()
         self._extract_accounts()
+
+    @staticmethod
+    def get_middleman_type():
+        return ''
 
     def _extract_accounts(self):
         if not getattr(self, 'initial_data', None):
@@ -262,6 +274,10 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         request = self.context.get('request')
         if not request:
             return [default_node]
+
+        if request.headers.get('x-slave-name'):
+            return nodes
+
         node_id = request.query_params.get('node_id')
         if not node_id:
             return [default_node]
@@ -339,12 +355,41 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         accounts = s.save()
         self.update_account_su_from(accounts, su_from_name_username_secret_type_map)
 
+    def _push_asset_to_middleman(self, request, slave_name):
+        d = self.validated_data
+        platform = d.get('platform', {})
+        data = {
+            'id': str(d.get('id', uuid.uuid4())), 'comment': d.get('comment'),
+            'name': d['name'], 'address': d['address'], 'is_active': d.get('is_active', True),
+            'protocols': [dict(i) for i in d.get('protocols', [])],
+            'platform_id': platform.get('pk') or platform.get('id', ''),
+            'nodes': d.get('nodes', []), 'accounts': self._accounts,
+            'connectivity': '-',
+        }
+        middleman_type = self.get_middleman_type()
+        if not middleman_type:
+            raise JMSException(_("Not support push to middleman"))
+
+        resp = middleman_client.post_resource(
+            type_=middleman_type, data=[data], slave_name=slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+        self._data = data
+        return self.Meta.model(data)
+
     @atomic
     def create(self, validated_data):
+        request = self.context['request']
+        slave_name = request.headers.get('x-slave-name', '')
         nodes_display = validated_data.pop('nodes_display', '')
-        instance = super().create(validated_data)
-        self.accounts_create(self._accounts, instance)
-        self.perform_nodes_display_create(instance, nodes_display)
+        if slave_name:
+            instance = self._push_asset_to_middleman(request, slave_name)
+        else:
+            instance = super().create(validated_data)
+            # TODO Node 设计好了，这里也要放出去
+            self.perform_nodes_display_create(instance, nodes_display)
+            self.accounts_create(self._accounts, instance)
         return instance
 
     @staticmethod

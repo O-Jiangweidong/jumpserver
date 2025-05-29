@@ -16,6 +16,7 @@ __all__ = [
     "EncryptedField",
     "LabeledChoiceField",
     "ObjectRelatedField",
+    "ObjectManyRelatedField",
     "BitChoicesField",
     "TreeChoicesField",
     "LabeledMultipleChoiceField",
@@ -27,6 +28,11 @@ __all__ = [
 
 # ReadableHiddenField
 # -------------------
+MANY_RELATION_KWARGS = (
+    'read_only', 'write_only', 'required', 'default', 'initial', 'source',
+    'label', 'help_text', 'style', 'error_messages', 'allow_empty',
+    'html_cutoff', 'html_cutoff_text'
+)
 
 
 class ReadableHiddenField(serializers.HiddenField):
@@ -128,6 +134,13 @@ class LabelRelatedField(serializers.RelatedField):
         return LabeledResource(label=label)
 
 
+class ObjectManyRelatedField(serializers.ManyRelatedField):
+    def to_internal_value(self, data):
+        if getattr(self, 'ignore_to_internal_value', False):
+            return data
+        return super().to_internal_value(data)
+
+
 class ObjectRelatedField(serializers.RelatedField):
     default_error_messages = {
         "required": _("This field is required."),
@@ -140,6 +153,14 @@ class ObjectRelatedField(serializers.RelatedField):
         self.many = kwargs.get("many", False)
         super().__init__(**kwargs)
 
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {'child_relation': cls(*args, **kwargs)}
+        for key in kwargs:
+            if key in MANY_RELATION_KWARGS:
+                list_kwargs[key] = kwargs[key]
+        return ObjectManyRelatedField(**list_kwargs)
+
     def to_representation(self, value):
         data = {}
         for attr in self.attrs:
@@ -149,6 +170,9 @@ class ObjectRelatedField(serializers.RelatedField):
         return data
 
     def to_internal_value(self, data):
+        if getattr(self, 'ignore_to_internal_value', False):
+            return data
+
         queryset = self.get_queryset()
         if isinstance(data, Model):
             return queryset.get(pk=data.pk)
