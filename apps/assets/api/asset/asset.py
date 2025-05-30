@@ -3,6 +3,8 @@
 from collections import defaultdict
 
 import django_filters
+
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from rest_framework import status
@@ -113,6 +115,19 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
         IpInFilterBackend,
         NodeFilterBackend, AttrRulesFilterBackend
     ]
+
+    def destroy(self, request, *args, **kwargs):
+        if not self.slave_name:
+            super().destroy(request, *args, **kwargs)
+        else:
+            id_ = kwargs.get('pk', '')
+            if not id_:
+                raise Http404
+
+            resp = middleman_client.delete_instance(
+                tp='asset', id_=id_, slave_name=self.slave_name
+            )
+            return Response(status=resp.status_code, data=resp.json())
 
     @property
     def slave_name(self):

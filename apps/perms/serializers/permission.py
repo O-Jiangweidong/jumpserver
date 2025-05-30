@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #
+import uuid
+
 from django.db.models import Q, Count
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -9,6 +11,8 @@ from accounts.models import AccountTemplate, Account
 from assets.models import Asset, Node
 from common.serializers import ResourceLabelsMixin
 from common.serializers.fields import BitChoicesField, ObjectRelatedField
+from common.exceptions import JMSException
+from common.utils import middleman_client
 from orgs.mixins.serializers import BulkOrgResourceModelSerializer
 from perms.models import ActionChoices, AssetPermission
 from users.models import User, UserGroup
@@ -163,15 +167,58 @@ class AssetPermissionSerializer(ResourceLabelsMixin, BulkOrgResourceModelSeriali
         )
         return super().validate(attrs)
 
-    def create(self, validated_data):
-        display = {
-            "users_display": validated_data.pop("users_display", ""),
-            "user_groups_display": validated_data.pop("user_groups_display", ""),
-            "assets_display": validated_data.pop("assets_display", ""),
-            "nodes_display": validated_data.pop("nodes_display", ""),
+    @staticmethod
+    def __pk2id(data):
+        result = []
+        for d in data:
+            if isinstance(d, dict):
+                v = d.get('pk', d.get('id', ''))
+            else:
+                v = d
+            result.append(v)
+        return result
+
+    def _push_perm_to_middleman(self, request, slave_name):
+        cur_username = request.user.username
+        d = self.validated_data
+        data = {
+            'id': d.get('id', str(uuid.uuid4())),
+            'name': d['name'], 'comment': d.get('comment', ''),
+            'is_active': d.get('is_active', False),
+            'date_start': str(d.get('date_start', '')),
+            'date_expired': str(d.get('date_expired', '')),
+            'created_by': cur_username, 'updated_by': cur_username,
+            'user_ids': self.__pk2id(d.get('users', [])),
+            'user_group_ids': self.__pk2id(d.get('user_groups', [])),
+            'asset_ids': self.__pk2id(d.get('assets', [])),
+            'node_ids': self.__pk2id(d.get('nodes', [])),
+            'accounts': d.get('accounts', []),
+            'protocols': d.get('protocols', []),
+            'actions': d.get('actions', 127),
+            'actions_display': [a['value'] for a in self.data.get('actions', [])]
         }
-        instance = super().create(validated_data)
-        self.perform_display_create(instance, **display)
+        resp = middleman_client.post_resource(
+            type_='perm', data=[data], slave_name=slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+        self._data = data
+        return AssetPermission(d)
+
+    def create(self, validated_data):
+        request = self.context['request']
+        slave_name = request.headers.get('x-slave-name', '')
+        if slave_name:
+            instance = self._push_perm_to_middleman(request, slave_name)
+        else:
+            display = {
+                "users_display": validated_data.pop("users_display", ""),
+                "user_groups_display": validated_data.pop("user_groups_display", ""),
+                "assets_display": validated_data.pop("assets_display", ""),
+                "nodes_display": validated_data.pop("nodes_display", ""),
+            }
+            instance = super().create(validated_data)
+            self.perform_display_create(instance, **display)
         return instance
 
 

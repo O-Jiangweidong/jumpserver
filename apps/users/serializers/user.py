@@ -277,7 +277,6 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
     def _push_user_to_middleman(self, request, slave_name):
         cur_username = request.user.username
         d = self.validated_data
-        roles = d.get('system_roles', []) + d.get('org_roles', [])
         data = {
             'id': d.get('id', str(uuid.uuid4())), 'is_first_login': True,
             'name': d['name'], 'username': d['username'], 'email': d['email'],
@@ -289,8 +288,8 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
             'password': d.get('password_raw'),
             'password_strategy': self.initial_data.get('password_strategy', 'email'),
             'created_by': cur_username, 'updated_by': cur_username,
-            'groups': [{'id': str(g.id)} for g in d.get('groups', [])],
-            'roles': [{'id': str(r.id), 'scope': str(r.scope)} for r in roles],
+            'groups': [{'id': g.get('pk') or g.get('id', '')} for g in d.get('groups', [])],
+            'roles': d.get('system_roles', []) + d.get('org_roles', []),
         }
         resp = middleman_client.post_resource(
             type_='user', data=[data], slave_name=slave_name

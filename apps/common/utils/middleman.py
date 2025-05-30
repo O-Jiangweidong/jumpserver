@@ -82,13 +82,27 @@ class MiddlemanClient(object):
         )
         return resp.json()
 
+    def get_perms(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=perm'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
+    def delete_instance(self, tp, id_, slave_name=''):
+        url = f'/middleman/resources/{id_}/?m_type={tp}'
+        return self._request(
+            'DELETE', url, headers={'SLAVE-NAME': slave_name},
+        )
+
     def post_resource(self, type_, data, slave_name, **kwargs):
         # TODO 后续这里是异步任务，如果任务失败了，要有重试机制
         if not self.enable:
             return
 
         return self._request(
-            'POST', f'/middleman/resources/?type={type_}',
+            'POST', f'/middleman/resources/?m_type={type_}',
             json=data, headers={'SLAVE-NAME': slave_name}
         )
 
