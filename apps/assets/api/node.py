@@ -9,13 +9,15 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
+from rest_framework.request import Request
 
 from assets.models import Asset
 from common.api import SuggestionMixin
 from common.const.http import POST
 from common.const.signals import PRE_REMOVE, POST_REMOVE
-from common.exceptions import SomeoneIsDoingThis
-from common.utils import get_logger
+from common.exceptions import SomeoneIsDoingThis, JMSException
+from common.utils import get_logger, middleman_client
+from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
 from orgs.utils import current_org
@@ -47,17 +49,41 @@ class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
         'check_assets_amount_task': 'assets.change_node'
     }
 
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
     @action(methods=[POST], detail=False, url_path='check_assets_amount_task')
     def check_assets_amount_task(self, request):
         task = check_node_assets_amount_task.delay(current_org.id)
         return Response(data={'task': task.id})
 
-    def perform_update(self, serializer):
+    def raw_perform_update(self, serializer):
         node = self.get_object()
         if node.is_org_root() and node.value != serializer.validated_data['value']:
             msg = _("You can't update the root node name")
             raise ValidationError({"error": msg})
         return super().perform_update(serializer)
+
+    def _update_node_to_middleman(self, serializer):
+        d = serializer.validated_data
+        id_ = self.kwargs.get('pk', '')
+        data = {
+            'value': d.get('value', ''),
+        }
+        resp = middleman_client.update_resource(
+            type_='node', id_=id_, data=data, slave_name=self.slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+
+        serializer._data = data
+
+    def perform_update(self, serializer):
+        if not self.slave_name:
+            self.raw_perform_update(serializer)
+        else:
+            self._update_node_to_middleman(serializer)
 
     def destroy(self, request, *args, **kwargs):
         node = self.get_object()
@@ -99,7 +125,31 @@ class NodeAddChildrenApi(generics.UpdateAPIView):
         return Response("OK")
 
 
-class NodeAddAssetsApi(generics.UpdateAPIView):
+class NodeWithAssetMiddlemanMixin(MiddlemanSerializerMixin):
+    middleman_action = ''
+    raw_perform_update: callable
+    request: Request
+    kwargs: dict
+
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
+    def perform_update(self, serializer):
+        if not self.slave_name:
+            self.raw_perform_update(serializer)
+        else:
+            data = {
+                'action': self.middleman_action,
+                'node_id': self.kwargs.get('pk'),
+                'asset_ids': serializer.validated_data.get('assets'),
+            }
+            middleman_client.post_resource(
+                'node_with_assets', data, self.slave_name
+            )
+
+
+class NodeAddAssetsApi(MiddlemanSerializerMixin, generics.UpdateAPIView):
     model = Node
     serializer_class = serializers.NodeAssetsSerializer
     instance = None
@@ -107,12 +157,12 @@ class NodeAddAssetsApi(generics.UpdateAPIView):
     rbac_perms = {
         'PUT': 'assets.change_assetnodes',
     }
+    middleman_action = 'remove'
 
-    def perform_update(self, serializer):
+    def raw_perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')
         instance = self.get_object()
         instance.assets.add(*tuple(assets))
-
 
 class NodeRemoveAssetsApi(generics.UpdateAPIView):
     model = Node
@@ -122,8 +172,9 @@ class NodeRemoveAssetsApi(generics.UpdateAPIView):
     rbac_perms = {
         'PUT': 'assets.change_assetnodes',
     }
+    middleman_action = 'remove'
 
-    def perform_update(self, serializer):
+    def raw_perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')
         node = self.get_object()
         node.assets.remove(*assets)

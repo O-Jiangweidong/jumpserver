@@ -5,7 +5,6 @@ import requests
 
 from django.apps import AppConfig
 from django.conf import settings
-from django.forms.models import model_to_dict
 from django.utils.translation import gettext_lazy as _
 
 from common.utils import get_logger, middleman_client
@@ -119,6 +118,19 @@ class OrgsConfig(AppConfig):
         )
         print('Push user group: ', resp)
 
+    @staticmethod
+    def __push_nodes():
+        from assets.models import Node
+        from assets.serializers import NodeCreateSerializer
+
+        __ = Node.default_node()
+        nodes = Node.objects.all()
+        resp = middleman_client.post_resource(
+            'node', NodeCreateSerializer(nodes, many=True).data,
+            settings.MIDDLEMAN_SERVICE_NAME
+        )
+        print('Push node: ', resp)
+
     def _push_some_resource_to_middleman(self):
         if not self._is_main_process():
             return
@@ -136,6 +148,7 @@ class OrgsConfig(AppConfig):
         self.__push_rbac()
         self.__push_user_groups()
         self.__push_platforms()
+        self.__push_nodes()
 
     def ready(self):
         self._register_middleman()

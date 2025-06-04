@@ -7,7 +7,7 @@ from ..models import Asset, Node
 
 __all__ = [
     'NodeSerializer', "NodeAddChildrenSerializer",
-    "NodeAssetsSerializer", "NodeTaskSerializer",
+    "NodeAssetsSerializer", "NodeTaskSerializer", "NodeCreateSerializer",
 ]
 
 
@@ -79,3 +79,14 @@ class NodeTaskSerializer(serializers.Serializer):
     )
     task = serializers.CharField(read_only=True)
     action = serializers.ChoiceField(choices=ACTION_CHOICES, write_only=True)
+
+
+class NodeCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Node
+        fields = [
+            'id', 'key', 'value', 'child_mark', 'org_id',
+            'assets_amount', 'parent_key', 'full_value',
+            'comment', 'created_by', 'updated_by', 'date_create',
+            'date_created', 'date_updated'
+        ]

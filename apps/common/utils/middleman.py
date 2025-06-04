@@ -4,7 +4,10 @@ import requests
 
 from django.conf import settings
 
-from common.utils import lazyproperty
+from common.utils import lazyproperty, get_logger
+
+
+logger = get_logger(__name__)
 
 
 class MiddlemanClient(object):
@@ -26,7 +29,7 @@ class MiddlemanClient(object):
             url = f'{url}&{urllib.parse.urlencode(query_params)}'
         kwargs.setdefault('headers', {})
         kwargs['headers']['Authorization'] = self._auth_token
-        print('Request url:', url)
+        logger.debug('Request url: %s' % url)
         return requests.request(method, url, **kwargs)
 
     @property
@@ -90,7 +93,16 @@ class MiddlemanClient(object):
         )
         return resp.json()
 
+    def get_children_nodes(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=children_node'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
     def delete_instance(self, tp, id_, slave_name=''):
+        # TODO 后续这里是异步任务，如果任务失败了，要有重试机制
         url = f'/middleman/resources/{id_}/?m_type={tp}'
         return self._request(
             'DELETE', url, headers={'SLAVE-NAME': slave_name},
@@ -103,6 +115,15 @@ class MiddlemanClient(object):
 
         return self._request(
             'POST', f'/middleman/resources/?m_type={type_}',
+            json=data, headers={'SLAVE-NAME': slave_name}
+        )
+
+    def update_resource(self, type_, id_, data, slave_name, **kwargs):
+        if not self.enable:
+            return
+
+        return self._request(
+            'PATCH', f'/middleman/resources/{id_}/?m_type={type_}',
             json=data, headers={'SLAVE-NAME': slave_name}
         )
 

@@ -60,7 +60,7 @@ class AssetPermissionViewSet(MiddlemanSerializerMixin, OrgBulkModelViewSet):
             slave_name=self.slave_name, query_params=dict(request.query_params.items())
         )
         permissions = []
-        for perm in resp['results']:
+        for perm in resp.get('results', []):
             perm['actions'] = ActionChoicesField().to_representation(perm['actions'])
             permissions.append(perm)
         resp['results'] = permissions

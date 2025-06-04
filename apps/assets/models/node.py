@@ -124,9 +124,10 @@ class FamilyMixin:
     def all_children(self):
         return self.get_all_children(with_self=False)
 
-    def create_child(self, value=None, _id=None):
+    def create_child(self, value=None, _id=None, child_key=None):
         with atomic(savepoint=False):
-            child_key = self.get_next_child_key()
+            if child_key is None:
+                child_key = self.get_next_child_key()
             if value is None:
                 value = child_key
             child = self.__class__.objects.create(

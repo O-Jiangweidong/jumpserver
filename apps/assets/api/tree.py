@@ -1,4 +1,5 @@
 # ~*~ coding: utf-8 ~*~
+import uuid
 
 from django.db.models import Q
 from django.utils.translation import gettext_lazy as _
@@ -8,7 +9,8 @@ from rest_framework.response import Response
 from assets.locks import NodeAddChildrenLock
 from common.exceptions import JMSException
 from common.tree import TreeNodeSerializer
-from common.utils import get_logger
+from common.utils import get_logger, middleman_client
+from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.mixins import generics
 from orgs.utils import current_org
 from .mixin import SerializeToTreeNodeMixin
@@ -24,7 +26,7 @@ __all__ = [
 ]
 
 
-class NodeChildrenApi(generics.ListCreateAPIView):
+class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
     """
     节点的增删改查
     """
@@ -34,13 +36,25 @@ class NodeChildrenApi(generics.ListCreateAPIView):
     instance = None
     is_initial = False
 
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.request.method == 'POST' and self.slave_name:
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        self.instance = self.get_object()
+        if not self.slave_name:
+            self.instance = self.get_object()
 
-    def perform_create(self, serializer):
+    def raw_perform_create(self, serializer):
         data = serializer.validated_data
         _id = data.get("id")
+        key = data.get("key")
         value = data.get("value")
         if value:
             children = self.instance.get_children()
@@ -49,10 +63,33 @@ class NodeChildrenApi(generics.ListCreateAPIView):
         else:
             value = self.instance.get_next_child_preset_name()
         with NodeAddChildrenLock(self.instance):
-            node = self.instance.create_child(value=value, _id=_id)
+            node = self.instance.create_child(value=value, _id=_id, child_key=key)
             # 避免查询 full value
             node._full_value = node.value
             serializer.instance = node
+
+    def _push_node_to_middleman(self, serializer):
+        cur_username = self.request.user.username
+        d = serializer.validated_data
+        data = {
+            'id': d.get('id', str(uuid.uuid4())),
+            'value': d.get('value', ''),
+            'parent_id': str(self.kwargs.get('pk', '')),
+            'created_by': cur_username,
+        }
+        resp = middleman_client.post_resource(
+            type_='children_node', data=[data], slave_name=self.slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+
+        serializer._data = data
+
+    def perform_create(self, serializer):
+        if not self.slave_name:
+            self.raw_perform_create(serializer)
+        else:
+            self._push_node_to_middleman(serializer)
 
     def get_object(self):
         pk = self.kwargs.get('pk') or self.request.query_params.get('id')
@@ -144,7 +181,20 @@ class NodeChildrenAsTreeApi(SerializeToTreeNodeMixin, NodeChildrenApi):
             assets = assets.filter(q)
         return assets
 
+    @property
+    def slave_name(self):
+        return self.request.headers.get('x-slave-name')
+
     def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return self.raw_list(request, *args, **kwargs)
+
+        resp = middleman_client.get_children_nodes(
+            slave_name=self.slave_name, query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
+
+    def raw_list(self, request, *args, **kwargs):
         nodes = self.filter_queryset(self.get_queryset()).order_by('value')
         nodes = self.serialize_nodes(nodes, with_asset_amount=True)
         assets = self.filter_queryset_for_assets(self.get_queryset_for_assets())
