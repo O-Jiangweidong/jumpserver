@@ -25,6 +25,10 @@ class GPTSerializer(AssetSerializer):
         }
 
     @staticmethod
+    def get_middleman_type():
+        return 'gpt'
+
+    @staticmethod
     def validate_proxy(value):
         if value and not value.startswith(("http://", "https://")):
             raise serializers.ValidationError(

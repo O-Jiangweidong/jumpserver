@@ -8,3 +8,7 @@ __all__ = ['DeviceSerializer']
 class DeviceSerializer(AssetSerializer):
     class Meta(AssetSerializer.Meta):
         model = Device
+
+    @staticmethod
+    def get_middleman_type():
+        return 'device'

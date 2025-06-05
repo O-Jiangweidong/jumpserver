@@ -27,3 +27,7 @@ class WebSerializer(AssetSerializer):
                 'default': 'id=login_button',
             },
         }
+
+    @staticmethod
+    def get_middleman_type():
+        return 'web'

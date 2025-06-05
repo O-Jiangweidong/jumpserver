@@ -53,6 +53,15 @@ class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
     def slave_name(self):
         return self.request.headers.get('x-slave-name')
 
+    def list(self, request, *args, **kwargs):
+        if not self.slave_name:
+            return super().list(request, *args, **kwargs)
+
+        resp = middleman_client.get_nodes(
+            slave_name=self.slave_name, query_params=dict(request.query_params.items())
+        )
+        return Response(resp)
+
     @action(methods=[POST], detail=False, url_path='check_assets_amount_task')
     def check_assets_amount_task(self, request):
         task = check_node_assets_amount_task.delay(current_org.id)
@@ -125,20 +134,27 @@ class NodeAddChildrenApi(generics.UpdateAPIView):
         return Response("OK")
 
 
-class NodeWithAssetMiddlemanMixin(MiddlemanSerializerMixin):
+class NodeWithAssetMiddlemanBase(MiddlemanSerializerMixin, generics.UpdateAPIView):
     middleman_action = ''
     raw_perform_update: callable
-    request: Request
     kwargs: dict
 
     @property
     def slave_name(self):
         return self.request.headers.get('x-slave-name')
 
-    def perform_update(self, serializer):
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.request.method == 'PUT' and self.slave_name:
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
+
+    def update(self, request, *args, **kwargs):
         if not self.slave_name:
-            self.raw_perform_update(serializer)
+            super().update(request, *args, **kwargs)
         else:
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             data = {
                 'action': self.middleman_action,
                 'node_id': self.kwargs.get('pk'),
@@ -147,9 +163,10 @@ class NodeWithAssetMiddlemanMixin(MiddlemanSerializerMixin):
             middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
             )
+            return Response(serializer.data)
 
 
-class NodeAddAssetsApi(MiddlemanSerializerMixin, generics.UpdateAPIView):
+class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
     model = Node
     serializer_class = serializers.NodeAssetsSerializer
     instance = None
@@ -159,12 +176,13 @@ class NodeAddAssetsApi(MiddlemanSerializerMixin, generics.UpdateAPIView):
     }
     middleman_action = 'remove'
 
-    def raw_perform_update(self, serializer):
+    def perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')
         instance = self.get_object()
         instance.assets.add(*tuple(assets))
 
-class NodeRemoveAssetsApi(generics.UpdateAPIView):
+
+class NodeRemoveAssetsApi(NodeWithAssetMiddlemanBase):
     model = Node
     serializer_class = serializers.NodeAssetsSerializer
     instance = None
@@ -174,7 +192,7 @@ class NodeRemoveAssetsApi(generics.UpdateAPIView):
     }
     middleman_action = 'remove'
 
-    def raw_perform_update(self, serializer):
+    def perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')
         node = self.get_object()
         node.assets.remove(*assets)

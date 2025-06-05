@@ -14,3 +14,7 @@ class CloudSerializer(AssetSerializer):
                 'label': 'URL'
             }
         }
+
+    @staticmethod
+    def get_middleman_type():
+        return 'cloud'

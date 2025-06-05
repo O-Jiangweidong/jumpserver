@@ -118,7 +118,7 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
 
     def destroy(self, request, *args, **kwargs):
         if not self.slave_name:
-            super().destroy(request, *args, **kwargs)
+            return super().destroy(request, *args, **kwargs)
         else:
             id_ = kwargs.get('pk', '')
             if not id_:

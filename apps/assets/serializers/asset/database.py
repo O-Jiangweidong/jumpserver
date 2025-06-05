@@ -24,6 +24,10 @@ class DatabaseSerializer(AssetSerializer):
         super().__init__(*args, **kwargs)
         self.set_db_name_required()
 
+    @staticmethod
+    def get_middleman_type():
+        return 'database'
+
     def get_platform(self):
         platform = None
         platform_id = None

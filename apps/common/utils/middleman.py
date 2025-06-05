@@ -10,6 +10,19 @@ from common.utils import lazyproperty, get_logger
 logger = get_logger(__name__)
 
 
+def pk2id(data, with_raw=False):
+    result = []
+    for d in data:
+        if isinstance(d, dict):
+            v = d.get('pk', d.get('id', ''))
+            if with_raw:
+                v = {'id': v}
+        else:
+            v = d
+        result.append(v)
+    return result
+
+
 class MiddlemanClient(object):
     def __init__(self):
         self.endpoint = settings.MIDDLEMAN_ENDPOINT
@@ -87,6 +100,14 @@ class MiddlemanClient(object):
 
     def get_perms(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=perm'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
+    def get_nodes(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=node'
         resp = self._request(
             'GET', url, headers={'SLAVE-NAME': slave_name},
             query_params=query_params, **kwargs

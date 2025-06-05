@@ -12,7 +12,7 @@ from assets.models import Asset, Node
 from common.serializers import ResourceLabelsMixin
 from common.serializers.fields import BitChoicesField, ObjectRelatedField
 from common.exceptions import JMSException
-from common.utils import middleman_client
+from common.utils import middleman_client, pk2id
 from orgs.mixins.serializers import BulkOrgResourceModelSerializer
 from perms.models import ActionChoices, AssetPermission
 from users.models import User, UserGroup
@@ -167,17 +167,6 @@ class AssetPermissionSerializer(ResourceLabelsMixin, BulkOrgResourceModelSeriali
         )
         return super().validate(attrs)
 
-    @staticmethod
-    def __pk2id(data):
-        result = []
-        for d in data:
-            if isinstance(d, dict):
-                v = d.get('pk', d.get('id', ''))
-            else:
-                v = d
-            result.append(v)
-        return result
-
     def _push_perm_to_middleman(self, request, slave_name):
         cur_username = request.user.username
         d = self.validated_data
@@ -188,10 +177,10 @@ class AssetPermissionSerializer(ResourceLabelsMixin, BulkOrgResourceModelSeriali
             'date_start': str(d.get('date_start', '')),
             'date_expired': str(d.get('date_expired', '')),
             'created_by': cur_username, 'updated_by': cur_username,
-            'user_ids': self.__pk2id(d.get('users', [])),
-            'user_group_ids': self.__pk2id(d.get('user_groups', [])),
-            'asset_ids': self.__pk2id(d.get('assets', [])),
-            'node_ids': self.__pk2id(d.get('nodes', [])),
+            'user_ids': pk2id(d.get('users', [])),
+            'user_group_ids': pk2id(d.get('user_groups', [])),
+            'asset_ids': pk2id(d.get('assets', [])),
+            'node_ids': pk2id(d.get('nodes', [])),
             'accounts': d.get('accounts', []),
             'protocols': d.get('protocols', []),
             'actions': d.get('actions', 127),

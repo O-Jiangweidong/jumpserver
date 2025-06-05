@@ -16,8 +16,9 @@ from common.serializers import (
     CommonModelSerializer, MethodSerializer, ResourceLabelsMixin
 )
 from common.serializers.common import DictSerializer
-from common.serializers.fields import LabeledChoiceField, ObjectRelatedField
-from common.utils import middleman_client
+from common.serializers.fields import LabeledChoiceField
+from common.utils import middleman_client, pk2id
+from common.utils.timezone import utc_now
 from labels.models import Label
 from jumpserver.utils import get_current_request
 from orgs.mixins.serializers import BulkOrgResourceModelSerializer
@@ -358,13 +359,14 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
     def _push_asset_to_middleman(self, request, slave_name):
         d = self.validated_data
         platform = d.get('platform', {})
+        cur_time = str(utc_now())
         data = {
             'id': str(d.get('id', uuid.uuid4())), 'comment': d.get('comment'),
             'name': d['name'], 'address': d['address'], 'is_active': d.get('is_active', True),
             'protocols': [dict(i) for i in d.get('protocols', [])],
             'platform_id': platform.get('pk') or platform.get('id', ''),
-            'nodes': d.get('nodes', []), 'accounts': self._accounts,
-            'connectivity': '-',
+            'nodes': pk2id(d.get('nodes', [])), 'accounts': self._accounts,
+            'connectivity': '-', 'date_created': cur_time, 'date_updated': cur_time,
         }
         middleman_type = self.get_middleman_type()
         if not middleman_type:
@@ -387,7 +389,6 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
             instance = self._push_asset_to_middleman(request, slave_name)
         else:
             instance = super().create(validated_data)
-            # TODO Node 设计好了，这里也要放出去
             self.perform_nodes_display_create(instance, nodes_display)
             self.accounts_create(self._accounts, instance)
         return instance

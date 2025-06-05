@@ -22,6 +22,10 @@ class CustomSerializer(AssetSerializer):
         if hasattr(self, 'initial_data') and not self.initial_data.get('custom_info'):
             self.initial_data['custom_info'] = {}
 
+    @staticmethod
+    def get_middleman_type():
+        return 'custom'
+
     def get_custom_info_serializer(self):
         request = self.context.get('request')
         default_field = DictSerializer()
