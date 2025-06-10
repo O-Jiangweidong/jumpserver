@@ -2,6 +2,7 @@
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+from common.serializers.fields import ObjectPrimaryKeyRelatedField
 from orgs.mixins.serializers import BulkOrgResourceModelSerializer
 from ..models import Asset, Node
 
@@ -58,9 +59,7 @@ class NodeSerializer(BulkOrgResourceModelSerializer):
 
 
 class NodeAssetsSerializer(BulkOrgResourceModelSerializer):
-    assets = serializers.PrimaryKeyRelatedField(
-        many=True, queryset=Asset.objects
-    )
+    assets = ObjectPrimaryKeyRelatedField(many=True, queryset=Asset.objects)
 
     class Meta:
         model = Node

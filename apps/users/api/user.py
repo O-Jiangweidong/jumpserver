@@ -2,12 +2,14 @@
 from collections import defaultdict
 
 from django.utils.translation import gettext as _
+from django.http import Http404
 from rest_framework import generics
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_bulk import BulkModelViewSet
 
 from common.api import CommonApiMixin, SuggestionMixin
+from common.exceptions import JMSException
 from common.drf.filters import AttrRulesFilterBackend
 from common.utils import get_logger, middleman_client
 from common.mixins.middleman import MiddlemanSerializerMixin
@@ -55,12 +57,8 @@ class UserViewSet(
         'bulk_remove': 'users.remove_user',
     }
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_users(
@@ -88,7 +86,7 @@ class UserViewSet(
             queryset = self.set_users_orgs_roles(args[0])
             args = (queryset,)
         serializer = super().get_serializer(*args, **kwargs)
-        if self.action == 'create' and self.slave_name:
+        if self.action == 'create' and self.is_middleman_master():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
@@ -209,8 +207,23 @@ class UserChangePasswordApi(UserQuerysetMixin, generics.UpdateAPIView):
         user.save()
 
 
-class UserUnblockPKApi(UserQuerysetMixin, generics.UpdateAPIView):
+class UserUnblockPKApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.UpdateAPIView):
     serializer_class = serializers.UserSerializer
+
+    def update(self, request, *args, **kwargs):
+        if not self.is_middleman_master():
+            return super().update(request, *args, **kwargs)
+
+        id_ = kwargs.get('pk', '')
+        if not id_:
+            raise Http404
+
+        resp = middleman_client.update_resource(
+            type_='user_unblock', id_=id_, slave_name=self.slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+        return Response(status=200)
 
     def perform_update(self, serializer):
         user = self.get_object()
@@ -219,10 +232,10 @@ class UserUnblockPKApi(UserQuerysetMixin, generics.UpdateAPIView):
         MFABlockUtils.unblock_user(username)
 
 
-class UserResetMFAApi(UserQuerysetMixin, generics.RetrieveAPIView):
+class UserResetMFAApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.RetrieveAPIView):
     serializer_class = serializers.ResetOTPSerializer
 
-    def retrieve(self, request, *args, **kwargs):
+    def raw_retrieve(self, request, *args, **kwargs):
         user = self.get_object() if kwargs.get('pk') else request.user
         if user == request.user:
             msg = _("Could not reset self otp, use profile reset instead")
@@ -235,3 +248,18 @@ class UserResetMFAApi(UserQuerysetMixin, generics.RetrieveAPIView):
 
         ResetMFAMsg(user).publish_async()
         return Response({"msg": "success"})
+
+    def retrieve(self, request, *args, **kwargs):
+        if not self.is_middleman_master():
+            return self.raw_retrieve(request, *args, **kwargs)
+
+        id_ = kwargs.get('pk', '')
+        if not id_:
+            raise Http404
+
+        resp = middleman_client.update_resource(
+            type_='user_reset_mfa', id_=id_, slave_name=self.slave_name
+        )
+        if resp.status_code > 300:
+            raise JMSException(resp.json())
+        return Response(status=200)

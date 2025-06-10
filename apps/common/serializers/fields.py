@@ -17,6 +17,7 @@ __all__ = [
     "LabeledChoiceField",
     "ObjectRelatedField",
     "ObjectManyRelatedField",
+    "ObjectPrimaryKeyRelatedField",
     "BitChoicesField",
     "TreeChoicesField",
     "LabeledMultipleChoiceField",
@@ -132,6 +133,22 @@ class LabelRelatedField(serializers.RelatedField):
             k, v = data.split(":", 1)
             label, __ = Label.objects.get_or_create(name=k, value=v, defaults={'name': k, 'value': v})
         return LabeledResource(label=label)
+
+
+class ObjectPrimaryKeyRelatedField(serializers.PrimaryKeyRelatedField):
+
+    @classmethod
+    def many_init(cls, *args, **kwargs):
+        list_kwargs = {'child_relation': cls(*args, **kwargs)}
+        for key in kwargs:
+            if key in MANY_RELATION_KWARGS:
+                list_kwargs[key] = kwargs[key]
+        return ObjectManyRelatedField(**list_kwargs)
+
+    def to_internal_value(self, data):
+        if getattr(self, 'ignore_to_internal_value', False):
+            return data
+        return super().to_internal_value(data)
 
 
 class ObjectManyRelatedField(serializers.ManyRelatedField):

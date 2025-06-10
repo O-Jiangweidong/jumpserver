@@ -11,6 +11,7 @@ from accounts.models import Account
 from assets.models import Asset, Node
 from authentication.permissions import UserConfirmation, ConfirmType
 from common.api.mixin import ExtraFilterFieldsMixin
+from common.mixins.middleman import MiddlemanSerializerMixin
 from common.permissions import IsValidUser
 from common.utils import middleman_client
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -22,7 +23,7 @@ __all__ = [
 ]
 
 
-class AccountViewSet(OrgBulkModelViewSet):
+class AccountViewSet(MiddlemanSerializerMixin, OrgBulkModelViewSet):
     model = Account
     search_fields = ('username', 'name', 'asset__name', 'asset__address', 'comment')
     filterset_class = AccountFilterSet
@@ -37,12 +38,8 @@ class AccountViewSet(OrgBulkModelViewSet):
     }
     export_as_zip = True
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_accounts(

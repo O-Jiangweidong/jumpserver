@@ -215,7 +215,7 @@ def resource_created(sender, instance, created, **kwargs):
     if not serializer_class:
         return
 
-    # TODO 这里发送失败要有失败机制，重试、失败检查
+    # TODO middleman: 这里发送失败要有失败机制，重试、失败检查
     slave_name = settings.MIDDLEMAN_SERVICE_NAME
     resp = middleman_client.post_resource(
         {

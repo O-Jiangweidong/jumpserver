@@ -135,7 +135,7 @@ class OrgsConfig(AppConfig):
         if not self._is_main_process():
             return
 
-        # TODO 这里后边需要放开
+        # TODO middleman: 这里后边需要放开
         # slave_name = settings.MIDDLEMAN_SERVICE_NAME
         # user = User.objects.get(username='admin')
         # resp = middleman_client.post_resource(

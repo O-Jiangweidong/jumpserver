@@ -2,8 +2,8 @@
 #
 from django.http import Http404
 from rest_framework.response import Response
-from rest_framework import status
 
+from common.exceptions import JMSException
 from common.utils import middleman_client
 from common.mixins.middleman import MiddlemanSerializerMixin
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -31,8 +31,8 @@ class AssetPermissionViewSet(MiddlemanSerializerMixin, OrgBulkModelViewSet):
     search_fields = ('name',)
 
     def destroy(self, request, *args, **kwargs):
-        if not self.slave_name:
-            super().destroy(request, *args, **kwargs)
+        if not self.is_middleman_master():
+            return super().destroy(request, *args, **kwargs)
         else:
             id_ = kwargs.get('pk', '')
             if not id_:
@@ -44,16 +44,29 @@ class AssetPermissionViewSet(MiddlemanSerializerMixin, OrgBulkModelViewSet):
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.action == 'create' and self.slave_name:
+        if self.action == 'create' and self.is_middleman_master():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
+    def retrieve(self, request, *args, **kwargs):
+        if not self.is_middleman_master():
+            return super().retrieve(request, *args, **kwargs)
+
+        id_ = kwargs.get('pk', '')
+        if not id_:
+            raise Http404
+
+        resp = middleman_client.get_perms(
+            slave_name=self.slave_name, query_params={'id': id_}
+        )
+        permissions = []
+        for perm in resp.get('results', [])[:1]:
+            perm['actions'] = ActionChoicesField().to_representation(perm['actions'])
+            permissions.append(perm)
+        return Response(permissions[0] if len(permissions) else {})
 
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_perms(

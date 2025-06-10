@@ -7,6 +7,7 @@ from assets.const import AllTypes
 from assets.models import Platform, Node, Asset, PlatformProtocol
 from assets.serializers import PlatformSerializer, PlatformProtocolSerializer
 from common.api import JMSModelViewSet
+from common.mixins.middleman import MiddlemanSerializerMixin
 from common.permissions import IsValidUser
 from common.serializers import GroupedChoiceSerializer
 from common.utils import middleman_client
@@ -14,7 +15,7 @@ from common.utils import middleman_client
 __all__ = ['AssetPlatformViewSet', 'PlatformAutomationMethodsApi', 'PlatformProtocolViewSet']
 
 
-class AssetPlatformViewSet(JMSModelViewSet):
+class AssetPlatformViewSet(MiddlemanSerializerMixin, JMSModelViewSet):
     queryset = Platform.objects.all()
     serializer_classes = {
         'default': PlatformSerializer,
@@ -30,12 +31,8 @@ class AssetPlatformViewSet(JMSModelViewSet):
         'filter_nodes_assets': 'assets.view_platform',
     }
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_platforms(

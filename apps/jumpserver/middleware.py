@@ -126,6 +126,47 @@ class StartMiddleware:
         return response
 
 
+class MiddlemanMiddleware:
+    def __init__(self, get_response):
+        self._path_mapping = {
+            '/api/v1/assets/assets/': ('GET',),
+            '/api/v1/assets/assets/%s/': ('DELETE',),
+            '/api/v1/assets/hosts/': ('GET', 'POST'),
+            '/api/v1/assets/hosts/%s/': ('DELETE',),
+
+            '/api/v1/assets/nodes/%s/': ('PATCH',),
+            '/api/v1/assets/nodes/%s/assets/add/': ('PUT',),
+            '/api/v1/assets/nodes/%s/assets/remove/': ('PUT',),
+            '/api/v1/assets/nodes/%s/children/': ('POST',),
+            '/api/v1/assets/nodes/children/tree/': ('GET',),
+
+            '/api/v1/users/users/': ('GET', 'POST'),
+            '/api/v1/users/users/%s/unblock/': ('PATCH',),
+            '/api/v1/users/users/%s/mfa/reset/': ('GET',),
+
+            '/api/v1/perms/asset-permissions/': ('GET', 'POST'),
+            '/api/v1/perms/asset-permissions/%s/': ('GET', 'PUT', 'DELETE'),
+        }
+        self.get_response = get_response
+
+    @staticmethod
+    def _format_path(path):
+        # 简单粗暴，适合目前使用
+        return '/'.join(map(lambda x: '%s' if len(x) == 36 else x, path.split('/')))
+
+    def __call__(self, request):
+        # TODO middleman: 这里后边需要放开
+        # if settings.MIDDLEMAN_SERVICE_ROLE_NAME != 'master':
+        #     msg = "This node doesn't support the request header: x-slave-name"
+        #     return HttpResponse(msg, status=403)
+
+        path = self._format_path(request.path)
+        if request.method not in self._path_mapping.get(path, tuple()):
+            msg = "This path(%s) doesn't support the request header: x-slave-name"
+            return HttpResponse(msg % (f'{request.method} {request.path}',), status=403)
+        return self.get_response(request)
+
+
 class EndMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response

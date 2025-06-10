@@ -36,19 +36,15 @@ class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
     instance = None
     is_initial = False
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.request.method == 'POST' and self.slave_name:
+        if self.request.method == 'POST' and self.is_middleman_master():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        if not self.slave_name:
+        if not self.is_middleman_master():
             self.instance = self.get_object()
 
     def raw_perform_create(self, serializer):
@@ -86,7 +82,7 @@ class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
         serializer._data = data
 
     def perform_create(self, serializer):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             self.raw_perform_create(serializer)
         else:
             self._push_node_to_middleman(serializer)
@@ -181,12 +177,8 @@ class NodeChildrenAsTreeApi(SerializeToTreeNodeMixin, NodeChildrenApi):
             assets = assets.filter(q)
         return assets
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return self.raw_list(request, *args, **kwargs)
 
         resp = middleman_client.get_children_nodes(

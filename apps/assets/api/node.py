@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
+class NodeViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet):
     model = Node
     filterset_fields = ('value', 'key', 'id')
     search_fields = ('full_value',)
@@ -49,12 +49,8 @@ class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
         'check_assets_amount_task': 'assets.change_node'
     }
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_nodes(
@@ -89,7 +85,7 @@ class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
         serializer._data = data
 
     def perform_update(self, serializer):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             self.raw_perform_update(serializer)
         else:
             self._update_node_to_middleman(serializer)
@@ -139,31 +135,27 @@ class NodeWithAssetMiddlemanBase(MiddlemanSerializerMixin, generics.UpdateAPIVie
     raw_perform_update: callable
     kwargs: dict
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.request.method == 'PUT' and self.slave_name:
+        if self.request.method == 'PUT' and self.is_middleman_master():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
     def update(self, request, *args, **kwargs):
-        if not self.slave_name:
-            super().update(request, *args, **kwargs)
+        if not self.is_middleman_master():
+            return super().update(request, *args, **kwargs)
         else:
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = {
                 'action': self.middleman_action,
-                'node_id': self.kwargs.get('pk'),
+                'node_id': str(self.kwargs.get('pk')),
                 'asset_ids': serializer.validated_data.get('assets'),
             }
             middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
             )
-            return Response(serializer.data)
+            return Response(data)
 
 
 class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
@@ -174,7 +166,7 @@ class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
     rbac_perms = {
         'PUT': 'assets.change_assetnodes',
     }
-    middleman_action = 'remove'
+    middleman_action = 'add'
 
     def perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')

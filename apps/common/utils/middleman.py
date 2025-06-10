@@ -123,14 +123,14 @@ class MiddlemanClient(object):
         return resp.json()
 
     def delete_instance(self, tp, id_, slave_name=''):
-        # TODO 后续这里是异步任务，如果任务失败了，要有重试机制
+        # TODO middleman: 后续这里是异步任务，如果任务失败了，要有重试机制
         url = f'/middleman/resources/{id_}/?m_type={tp}'
         return self._request(
             'DELETE', url, headers={'SLAVE-NAME': slave_name},
         )
 
     def post_resource(self, type_, data, slave_name, **kwargs):
-        # TODO 后续这里是异步任务，如果任务失败了，要有重试机制
+        # TODO middleman: 后续这里是异步任务，如果任务失败了，要有重试机制
         if not self.enable:
             return
 

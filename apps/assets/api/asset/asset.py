@@ -117,7 +117,7 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
     ]
 
     def destroy(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().destroy(request, *args, **kwargs)
         else:
             id_ = kwargs.get('pk', '')
@@ -129,12 +129,8 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
             )
             return Response(status=resp.status_code, data=resp.json())
 
-    @property
-    def slave_name(self):
-        return self.request.headers.get('x-slave-name')
-
     def list(self, request, *args, **kwargs):
-        if not self.slave_name:
+        if not self.is_middleman_master():
             return super().list(request, *args, **kwargs)
 
         serializer = self.get_serializer()
@@ -153,7 +149,7 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.action == 'create' and self.slave_name:
+        if self.action == 'create' and self.is_middleman_master():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
