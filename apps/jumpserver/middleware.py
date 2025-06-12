@@ -128,6 +128,20 @@ class StartMiddleware:
 
 class MiddlemanMiddleware:
     def __init__(self, get_response):
+        self._whitelist = {
+            '/api/v1/common/middleman/',
+            '/api/v1/settings/public/open/',
+            '/api/v1/settings/public/',
+            '/core/auth/login/',
+            '/core/auth/login/guard/',
+            '/core/jsi18n/',
+            '/api/health/',
+            '/api/v1/users/profile/',
+            '/api/v1/authentication/user-session/',
+            '/api/v1/orgs/orgs/current/',
+            '/api/v1/assets/categories/',
+            '/api/v1/tickets/tickets/',
+        }
         self._path_mapping = {
             '/api/v1/assets/assets/': ('GET',),
             '/api/v1/assets/assets/%s/': ('DELETE',),
@@ -159,6 +173,8 @@ class MiddlemanMiddleware:
         # if settings.MIDDLEMAN_SERVICE_ROLE_NAME != 'master':
         #     msg = "This node doesn't support the request header: x-slave-name"
         #     return HttpResponse(msg, status=403)
+        if not request.headers.get('x-slave-name') or request.path in self._whitelist:
+            return self.get_response(request)
 
         path = self._format_path(request.path)
         if request.method not in self._path_mapping.get(path, tuple()):

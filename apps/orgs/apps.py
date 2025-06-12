@@ -136,6 +136,8 @@ class OrgsConfig(AppConfig):
             return
 
         # TODO middleman: 这里后边需要放开
+        # if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
+        #     return
         # slave_name = settings.MIDDLEMAN_SERVICE_NAME
         # user = User.objects.get(username='admin')
         # resp = middleman_client.post_resource(

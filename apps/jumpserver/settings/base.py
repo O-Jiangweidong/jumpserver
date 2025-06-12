@@ -160,7 +160,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'jumpserver.middleware.StartMiddleware',
-    'jumpserver.middleware.MiddlemanMiddleware',
+    # 'jumpserver.middleware.MiddlemanMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
