@@ -327,7 +327,7 @@
 
                     {% bootstrap_field form.username show_label=False %}
                     <div class="form-group {% if form.password.errors %} has-error {% endif %}">
-                        <input type="password" class="form-control" id="password" placeholder="{% trans 'Password' %}"
+                        <input type="password" class="form-control" id="password" placeholder="{% trans 'Please enter PIN + TOKEN' %}"
                                required>
                         <input id="password-hidden" type="text" style="display:none"
                                name="{{ form.password.html_name }}">

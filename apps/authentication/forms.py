@@ -20,7 +20,7 @@ class UserLoginForm(forms.Form):
     username = forms.CharField(
         label=_('Username'), max_length=100,
         widget=forms.TextInput(attrs={
-            'placeholder': _("Username"),
+            'placeholder': _("Please enter username"),
             'autofocus': 'autofocus'
         })
     )

@@ -484,6 +484,7 @@ class Config(dict):
         # 保留(Luna还在用)
         'TERMINAL_MAGNUS_ENABLED': True,
         'TERMINAL_KOKO_SSH_ENABLED': True,
+        'KOKO_LOGIN_PRE_BANNER': '',
         'TERMINAL_RAZOR_ENABLED': True,
         'TERMINAL_OMNIDB_ENABLED': True,
 

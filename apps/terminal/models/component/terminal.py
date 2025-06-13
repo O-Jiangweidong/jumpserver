@@ -127,6 +127,18 @@ class Terminal(StorageMixin, TerminalStatusMixin, JMSBaseModel):
             'GPT_MODEL': settings.GPT_MODEL,
         }
 
+    @staticmethod
+    def _get_koko_banner():
+        import base64
+        value = settings.KOKO_LOGIN_PRE_BANNER
+        prefix = 'base64:'
+        if value.startswith(prefix):
+            try:
+                value = base64.b64decode(value[len(prefix):]).decode()
+            except: # noqa
+                pass
+        return value
+
     @property
     def config(self):
         configs = {}
@@ -144,6 +156,7 @@ class Terminal(StorageMixin, TerminalStatusMixin, JMSBaseModel):
             'FTP_FILE_MAX_STORE': settings.FTP_FILE_MAX_STORE,
             'SECURITY_MAX_SESSION_TIME': settings.SECURITY_MAX_SESSION_TIME,
         })
+        configs['TERMINAL_KOKO_LOGIN_PRE_BANNER'] = self._get_koko_banner()
         return configs
 
     @property
