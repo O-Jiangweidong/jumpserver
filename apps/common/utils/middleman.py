@@ -130,7 +130,6 @@ class MiddlemanClient(object):
         )
 
     def post_resource(self, type_, data, slave_name, **kwargs):
-        # TODO middleman: 后续这里是异步任务，如果任务失败了，要有重试机制
         if not self.enable:
             return
 
