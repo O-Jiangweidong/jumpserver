@@ -103,6 +103,7 @@ class SerializeToTreeNodeMixin:
                 'open': False,
                 'iconSkin': self.get_icon(platform),
                 'chkDisabled': not asset.is_active,
+                'chkOffline': not asset.is_offline,
                 'meta': {
                     'type': 'asset',
                     'data': {

@@ -166,6 +166,9 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     is_active = models.BooleanField(default=True, verbose_name=_('Is active'))
     gathered_info = models.JSONField(verbose_name=_('Gathered info'), default=dict, blank=True)  # 资产的一些信息，如 硬件信息
     custom_info = models.JSONField(verbose_name=_('Custom info'), default=dict)
+    weight = models.PositiveIntegerField(default=0, db_index=True, verbose_name=_('Weight'))
+    is_offline = models.BooleanField(default=False, verbose_name=_('Offline'))
+    unique_session = models.BooleanField(default=False, verbose_name=_('Unique session'))
 
     objects = AssetManager.from_queryset(AssetQuerySet)()
 
@@ -344,6 +347,12 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
             asset for asset in assets
             if secret_type in asset_secret_types_mapp.get(asset.id, [])
         ]
+
+    def save(self, *args, **kwargs):
+        if not self.weight:
+            last_weight = Asset.objects.aggregate(models.Max('weight'))['weight__max'] or 0
+            self.weight = last_weight + 1000
+        return super().save(*args, **kwargs)
 
     class Meta:
         unique_together = [('org_id', 'name')]

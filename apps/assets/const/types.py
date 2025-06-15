@@ -230,6 +230,7 @@ class AllTypes(ChoicesMixin):
             'open': False,
             'iconSkin': asset.type,
             'chkDisabled': not asset.is_active,
+            'chkOffline': not asset.is_offline,
             'meta': {
                 'type': 'platform',
                 'data': {

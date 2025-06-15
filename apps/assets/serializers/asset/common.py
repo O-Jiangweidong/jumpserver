@@ -132,7 +132,8 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
     class Meta:
         model = Asset
         fields_mini = ['id', 'name', 'address']
-        fields_small = fields_mini + ['is_active', 'comment']
+        fields_small = fields_mini + ['is_active', 'comment', 'weight']
+        extra_fields = ['weight', 'is_offline', 'unique_session']
         fields_fk = ['domain', 'platform']
         fields_m2m = [
             'nodes', 'labels', 'protocols',
@@ -142,7 +143,7 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
             'category', 'type', 'connectivity', 'auto_config',
             'date_verified', 'created_by', 'date_created',
         ]
-        fields = fields_small + fields_fk + fields_m2m + read_only_fields
+        fields = fields_small + fields_fk + fields_m2m + read_only_fields + extra_fields
         fields_unexport = ['auto_config']
         extra_kwargs = {
             'auto_config': {'label': _('Auto info')},
