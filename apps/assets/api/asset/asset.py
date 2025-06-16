@@ -100,9 +100,11 @@ class AssetViewSet(SuggestionMixin, OrgBulkModelViewSet):
         ("platform", serializers.PlatformSerializer),
         ("suggestion", serializers.MiniAssetSerializer),
         ("gateways", serializers.GatewaySerializer),
+        ("weights", serializers.WeightSerializer),
     )
     rbac_perms = (
         ("match", "assets.match_asset"),
+        ("weights", "assets.change_asset"),
         ("platform", "assets.view_platform"),
         ("gateways", "assets.view_gateway"),
         ("spec_info", "assets.view_asset"),
@@ -127,6 +129,13 @@ class AssetViewSet(SuggestionMixin, OrgBulkModelViewSet):
             retrieve_cls = type(name, (serializers.DetailMixin, cls), {})
             return retrieve_cls
         return cls
+
+    @action(methods=['POST', ], detail=False, url_path='weights')
+    def weights(self, request):
+        serializer = super().get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     @action(methods=["GET"], detail=True, url_path="platform")
     def platform(self, *args, **kwargs):

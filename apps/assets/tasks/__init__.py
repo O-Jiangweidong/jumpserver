@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+from .asset import *
 from .ping import *
 from .utils import *
 from .common import *

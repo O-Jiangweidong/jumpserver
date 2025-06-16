@@ -351,7 +351,7 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     def save(self, *args, **kwargs):
         if not self.weight:
             last_weight = Asset.objects.aggregate(models.Max('weight'))['weight__max'] or 0
-            self.weight = last_weight + 1000
+            self.weight = last_weight + 1
         return super().save(*args, **kwargs)
 
     class Meta:

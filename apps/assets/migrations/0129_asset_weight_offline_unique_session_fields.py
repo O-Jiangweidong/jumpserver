@@ -16,7 +16,7 @@ def set_old_assets_weight_value(apps, schema_editor):
         start = time.time()
         for asset in assets:
             asset.weight = weight
-            weight += 1000
+            weight += 1
         asset_model.objects.bulk_update(assets, ['weight'])
         count += len(assets)
         print(f"Update {len(assets)} assets weight, using: {time.time() - start:.2f}s")
@@ -33,6 +33,16 @@ class Migration(migrations.Migration):
             model_name='asset',
             name='weight',
             field=models.PositiveIntegerField(db_index=True, default=0, verbose_name='Weight'),
+        ),
+        migrations.AddField(
+            model_name='asset',
+            name='is_offline',
+            field=models.BooleanField(default=False, verbose_name='Offline'),
+        ),
+        migrations.AddField(
+            model_name='asset',
+            name='unique_session',
+            field=models.BooleanField(default=False, verbose_name='Unique session'),
         ),
         migrations.RunPython(set_old_assets_weight_value)
     ]
