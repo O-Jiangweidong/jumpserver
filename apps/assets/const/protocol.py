@@ -9,6 +9,25 @@ from .base import FillType
 __all__ = ['Protocol']
 
 
+aad_setting = {
+    'auth_method': {
+        'type': 'choice',
+        'choices': [('normal', _('Normal')), ('azure-aad', 'Azure AAD')],
+        'default': 'normal',
+        'label': _('Authentication backend'),
+    },
+    'authority_url': {
+        'type': 'str',
+        'default': 'https://login.chinacloudapi.cn',
+        'label': f"{_('Authentication')} Url",
+    },
+    'resource_url': {
+        'type': 'str',
+        'default': 'https://database.chinacloudapi.cn',
+        'label': f"{_('Resource')} Url",
+    },
+    }
+
 class Protocol(ChoicesMixin, models.TextChoices):
     ssh = 'ssh', 'SSH'
     sftp = 'sftp', 'SFTP'
@@ -136,9 +155,9 @@ class Protocol(ChoicesMixin, models.TextChoices):
         return {
             cls.mysql: {
                 'port': 3306,
-                'setting': {},
                 'required': True,
                 'secret_types': ['password'],
+                'setting': aad_setting
             },
             cls.mariadb: {
                 'port': 3306,
@@ -149,7 +168,8 @@ class Protocol(ChoicesMixin, models.TextChoices):
                 'port': 5432,
                 'required': True,
                 'secret_types': ['password'],
-                'xpack': True
+                'xpack': True,
+                'setting': aad_setting
             },
             cls.oracle: {
                 'port': 1521,
@@ -177,7 +197,8 @@ class Protocol(ChoicesMixin, models.TextChoices):
                         'default': '>=2014',
                         'label': _('Version'),
                         'help_text': _('SQL Server version, Different versions have different connection drivers')
-                    }
+                    },
+                    **aad_setting,
                 }
             },
             cls.db2: {

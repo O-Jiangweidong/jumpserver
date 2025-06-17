@@ -1,3 +1,6 @@
+from azure.identity import ClientSecretCredential
+from django.conf import settings
+
 from common.utils import get_logger
 from ..base import BaseVault
 
@@ -11,7 +14,30 @@ class Vault(BaseVault):
     def is_active(self):
         return True, ''
 
+    @staticmethod
+    def _get_secret_from_aad_sp(auth_url, resource_url):
+        try:
+            credential = ClientSecretCredential(
+                tenant_id=settings.AAD_TENANT_ID,
+                client_id=settings.AAD_CLIENT_ID,
+                client_secret=settings.AAD_CLIENT_SECRET,
+                authority=auth_url
+            )
+
+            token = credential.get_token(f"{resource_url}/.default")
+            return token.token
+        except Exception as e: # noqa
+            return None
+
     def _get(self, instance):
+        primary_protocol = instance.platform.protocols.filter(primary=True).first()
+        if primary_protocol:
+            setting = primary_protocol.setting
+            if setting.get('auth_method') == 'azure-aad':
+                auth_url = setting.get('authority_url')
+                resource_url = setting.get('resource_url')
+                secret = self._get_secret_from_aad_sp(auth_url, resource_url)
+                setattr(instance, '_secret', secret)
         secret = getattr(instance, '_secret', None)
         return secret
 
