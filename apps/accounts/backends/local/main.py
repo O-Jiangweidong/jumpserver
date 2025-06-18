@@ -31,7 +31,7 @@ class Vault(BaseVault):
 
     def _get(self, instance):
         primary_protocol = instance.platform.protocols.filter(primary=True).first()
-        if primary_protocol:
+        if primary_protocol and primary_protocol.name in ('postgresql', 'mysql'):
             setting = primary_protocol.setting
             if setting.get('auth_method') == 'azure-aad':
                 auth_url = setting.get('authority_url')
