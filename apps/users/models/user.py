@@ -407,6 +407,10 @@ class RoleMixin:
         return self.cached_orgs['audit_orgs']
 
     @lazyproperty
+    def hub_orgs(self):
+        return self.cached_orgs['hub_orgs']
+
+    @lazyproperty
     def workbench_orgs(self):
         return self.cached_orgs['workbench_orgs']
 
@@ -425,11 +429,13 @@ class RoleMixin:
         console_orgs = RoleBinding.get_user_has_the_perm_orgs('rbac.view_console', self)
         audit_orgs = RoleBinding.get_user_has_the_perm_orgs('rbac.view_audit', self)
         workbench_orgs = RoleBinding.get_user_has_the_perm_orgs('rbac.view_workbench', self)
+        hub_orgs = RoleBinding.get_user_has_the_perm_orgs('rbac.view_control-hub', self)
 
         if settings.LIMIT_SUPER_PRIV:
             audit_orgs = list(set(audit_orgs) - set(console_orgs))
 
         data = {
+            'hub_orgs': hub_orgs,
             'console_orgs': console_orgs,
             'audit_orgs': audit_orgs,
             'workbench_orgs': workbench_orgs,

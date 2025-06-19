@@ -66,6 +66,14 @@ class MiddlemanClient(object):
         )
         return resp.json()
 
+    def get_user_groups(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=user_group'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
     def get_roles(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=role'
         resp = self._request(
@@ -123,7 +131,6 @@ class MiddlemanClient(object):
         return resp.json()
 
     def delete_instance(self, tp, id_, slave_name=''):
-        # TODO middleman: 后续这里是异步任务，如果任务失败了，要有重试机制
         url = f'/middleman/resources/{id_}/?m_type={tp}'
         return self._request(
             'DELETE', url, headers={'SLAVE-NAME': slave_name},

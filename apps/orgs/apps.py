@@ -131,23 +131,27 @@ class OrgsConfig(AppConfig):
         )
         print('Push node: ', resp)
 
+    @staticmethod
+    def __push_admin_user():
+        from users.models import User
+
+        user = User.objects.get(username='admin')
+        resp = middleman_client.post_resource(
+            {
+                'type': 'user',
+                'data': [MiddlemanUserSerializer(user).data]
+            }, settings.MIDDLEMAN_SERVICE_NAME
+        )
+        print(resp)
+
     def _push_some_resource_to_middleman(self):
         if not self._is_main_process():
             return
+        if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
+            return
 
-        # TODO middleman: 这里后边需要放开
-        # if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
-        #     return
-        # slave_name = settings.MIDDLEMAN_SERVICE_NAME
-        # user = User.objects.get(username='admin')
-        # resp = middleman_client.post_resource(
-        #     {
-        #         'type': 'user',
-        #         'data': [MiddlemanUserSerializer(user).data]
-        #     }, slave_name
-        # )
-        # print(resp)
         self.__push_rbac()
+        # self.__push_admin_user()
         self.__push_user_groups()
         self.__push_platforms()
         self.__push_nodes()

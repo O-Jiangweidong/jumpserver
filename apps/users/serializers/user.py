@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-import uuid
-
 from functools import partial
 
 from django.utils.translation import gettext_lazy as _
@@ -11,7 +9,7 @@ from common.serializers import CommonBulkSerializerMixin, ResourceLabelsMixin
 from common.serializers.fields import (
     EncryptedField, ObjectRelatedField, LabeledChoiceField, PhoneField
 )
-from common.utils import pretty_string, get_logger, middleman_client
+from common.utils import pretty_string, get_logger
 from common.validators import PhoneValidator
 from common.exceptions import JMSException
 from orgs.utils import current_org
@@ -274,44 +272,14 @@ class UserSerializer(RolesSerializerMixin, CommonBulkSerializerMixin, ResourceLa
             post_user_change_password.send(instance.__class__, user=instance)
         return instance
 
-    def _push_user_to_middleman(self, request, slave_name):
-        cur_username = request.user.username
-        d = self.validated_data
-        data = {
-            'id': d.get('id', str(uuid.uuid4())), 'is_first_login': True,
-            'name': d['name'], 'username': d['username'], 'email': d['email'],
-            'wechat': d.get('wechat', ''), 'phone': d.get('phone', ''),
-            'mfa_level': d['mfa_level'], 'source': d['source'],
-            'comment': d.get('comment', ''), 'is_active': d.get('is_active', False),
-            'need_update_password': d.get('need_update_password', True),
-            'date_expired': str(d.get('date_expired', '')),
-            'password': d.get('password_raw'),
-            'password_strategy': self.initial_data.get('password_strategy', 'email'),
-            'created_by': cur_username, 'updated_by': cur_username,
-            'groups': [{'id': g.get('pk') or g.get('id', '')} for g in d.get('groups', [])],
-            'roles': d.get('system_roles', []) + d.get('org_roles', []),
-        }
-        resp = middleman_client.post_resource(
-            type_='user', data=[data], slave_name=slave_name
-        )
-        if resp.status_code > 300:
-            raise JMSException(resp.json())
-        self._data = data
-        return User(d)
-
     def create(self, validated_data):
-        request = self.context['request']
-        slave_name = request.headers.get('x-slave-name', '')
-        if slave_name:
-            return self._push_user_to_middleman(request, slave_name)
-        else:
-            save_handler = super().create
-            instance = self.save_and_set_custom_m2m_fields(
-                validated_data, save_handler, created=True
-            )
-            if validated_data.get('public_key'):
-                post_user_change_password.send(instance.__class__, user=instance)
-            return instance
+        save_handler = super().create
+        instance = self.save_and_set_custom_m2m_fields(
+            validated_data, save_handler, created=True
+        )
+        if validated_data.get('public_key'):
+            post_user_change_password.send(instance.__class__, user=instance)
+        return instance
 
     @classmethod
     def setup_eager_loading(cls, queryset):

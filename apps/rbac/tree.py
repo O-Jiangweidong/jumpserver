@@ -22,6 +22,7 @@ root_node_data = {
 # 第二层 view 节点，手动创建的
 view_nodes_data = [
     {'id': 'view_console', 'name': _('Console view')},
+    {'id': 'view_control-hub', 'name': _('Control view hub')},
     {'id': 'view_workbench', 'name': _('Workbench view')},
     {'id': 'view_audit', 'name': _('Audit view')},
     {'id': 'view_setting', 'name': _('System setting')},
@@ -115,6 +116,7 @@ special_pid_mapper = {
     "settings.change_terminal": "terminal_node",
     "settings.view_setting": "view_setting",
     "rbac.view_console": "view_console",
+    "rbac.view_control-hub": "view_control-hub",
     "rbac.view_audit": "view_audit",
     'audits.usersession': 'view_audit',
     "rbac.view_workbench": "view_workbench",
@@ -149,6 +151,7 @@ def _sort_action(node):
         return ['zz', 0]
 
     action_resource = node.title.split('.')[-1]
+    print('action_resource: ', action_resource)
     action, resource = action_resource.split('_', 2)
     action_value_mapper = {
         'view': 2,

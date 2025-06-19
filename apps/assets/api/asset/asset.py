@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 #
+import uuid
+
 from collections import defaultdict
 
 import django_filters
@@ -20,8 +22,9 @@ from assets.models import Asset, Gateway, Platform, Protocol
 from assets.tasks import test_assets_connectivity_manual, update_assets_hardware_info_manual
 from common.api import SuggestionMixin
 from common.drf.filters import BaseFilterSet, AttrRulesFilterBackend
-from common.utils import get_logger, is_uuid, middleman_client
-from common.mixins.middleman import MiddlemanSerializerMixin
+from common.utils import get_logger, is_uuid, middleman_client, pk2id
+from common.utils.timezone import utc_now
+from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
 from ...notifications import BulkUpdatePlatformSkipAssetUserMsg
@@ -89,7 +92,7 @@ class AssetFilterSet(BaseFilterSet):
         return queryset.filter(protocols__name__in=value).distinct()
 
 
-class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet):
+class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     """
     API endpoint that allows Asset to be viewed or edited.
     """
@@ -115,22 +118,47 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
         IpInFilterBackend,
         NodeFilterBackend, AttrRulesFilterBackend
     ]
+    tp = 'asset'
 
-    def destroy(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
-            return super().destroy(request, *args, **kwargs)
-        else:
-            id_ = kwargs.get('pk', '')
-            if not id_:
-                raise Http404
+    @staticmethod
+    def _build_data(serializer):
+        validated_data = serializer.validated_data
+        platform = validated_data.get('platform', {})
+        current_time = str(utc_now())
+        return {
+            'id': str(validated_data.get('id', uuid.uuid4())),
+            'comment': validated_data.get('comment'),
+            'name': validated_data['name'],
+            'address': validated_data['address'],
+            'is_active': validated_data.get('is_active', True),
+            'protocols': [dict(i) for i in validated_data.get('protocols', [])],
+            'platform_id': platform.get('pk') or platform.get('id', ''),
+            'nodes': pk2id(validated_data.get('nodes', [])),
+            'accounts': serializer._accounts,
+            'connectivity': '-',
+            'date_created': current_time,
+            'date_updated': current_time,
+        }
 
-            resp = middleman_client.delete_instance(
-                tp='asset', id_=id_, slave_name=self.slave_name
+    def perform_create(self, serializer):
+        if self.has_middleman_master_behavior():
+            data = self._build_data(serializer)
+            resp = middleman_client.post_resource(
+                type_='asset', data=[data], slave_name=self.slave_name
             )
-            return Response(status=resp.status_code, data=resp.json())
+            resp.raise_for_status()
+        elif self.is_middleman_slave():
+            data = self._build_data(serializer)
+            resp = middleman_client.post_resource(
+                type_='asset', data=[data], slave_name=self.slave_name
+            )
+            resp.raise_for_status()
+            super().perform_create(serializer)
+        else:
+            super().perform_create(serializer)
 
     def list(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
 
         serializer = self.get_serializer()
@@ -149,7 +177,7 @@ class AssetViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSe
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.action == 'create' and self.is_middleman_master():
+        if self.action == 'create' and self.has_middleman_master_behavior():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 

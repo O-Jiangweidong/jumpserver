@@ -1,4 +1,6 @@
 # ~*~ coding: utf-8 ~*~
+import uuid
+
 from collections import defaultdict
 
 from django.utils.translation import gettext as _
@@ -12,7 +14,7 @@ from common.api import CommonApiMixin, SuggestionMixin
 from common.exceptions import JMSException
 from common.drf.filters import AttrRulesFilterBackend
 from common.utils import get_logger, middleman_client
-from common.mixins.middleman import MiddlemanSerializerMixin
+from common.mixins.middleman import MiddlemanMixin
 from orgs.utils import current_org, tmp_to_root_org
 from rbac.models import Role, RoleBinding
 from rbac.permissions import RBACPermission
@@ -37,7 +39,7 @@ __all__ = [
 
 
 class UserViewSet(
-    MiddlemanSerializerMixin, CommonApiMixin, UserQuerysetMixin,
+    MiddlemanMixin, CommonApiMixin, UserQuerysetMixin,
     SuggestionMixin, BulkModelViewSet
 ):
     filterset_class = UserFilter
@@ -56,9 +58,53 @@ class UserViewSet(
         'remove': 'users.remove_user',
         'bulk_remove': 'users.remove_user',
     }
+    tp = 'user'
+
+    @staticmethod
+    def _build_data(request, serializer):
+        current_username = request.user.username
+        validated_data = serializer.validated_data
+        return {
+            'id': validated_data.get('id', str(uuid.uuid4())),
+            'is_first_login': True,
+            'name': validated_data['name'],
+            'username': validated_data['username'],
+            'email': validated_data['email'],
+            'wechat': validated_data.get('wechat', ''),
+            'phone': validated_data.get('phone', ''),
+            'mfa_level': validated_data['mfa_level'],
+            'source': validated_data['source'],
+            'comment': validated_data.get('comment', ''),
+            'is_active': validated_data.get('is_active', False),
+            'need_update_password': validated_data.get('need_update_password', True),
+            'date_expired': str(validated_data.get('date_expired', '')),
+            'password': validated_data.get('password_raw'),
+            'password_strategy': serializer.initial_data.get('password_strategy', 'email'),
+            'created_by': current_username,
+            'updated_by': current_username,
+            'groups': [{'id': g.get('pk') or g.get('id', '')} for g in validated_data.get('groups', [])],
+            'roles': validated_data.get('system_roles', []) + validated_data.get('org_roles', []),
+        }
+
+    def perform_create(self, serializer):
+        if self.has_middleman_master_behavior():
+            data = self._build_data(self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_='user', data=[data], slave_name=self.slave_name
+            )
+            resp.raise_for_status()
+        elif self.is_middleman_slave():
+            data = self._build_data(self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_='user', data=[data], slave_name=self.slave_name
+            )
+            resp.raise_for_status()
+            self.custom_perform_create(serializer)
+        else:
+            self.custom_perform_create(serializer)
 
     def list(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_users(
@@ -86,7 +132,7 @@ class UserViewSet(
             queryset = self.set_users_orgs_roles(args[0])
             args = (queryset,)
         serializer = super().get_serializer(*args, **kwargs)
-        if self.action == 'create' and self.is_middleman_master():
+        if self.action == 'create' and self.has_middleman_master_behavior():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
@@ -135,7 +181,7 @@ class UserViewSet(
             setattr(u, 'orgs_roles', orgs_roles)
         return queryset
 
-    def perform_create(self, serializer):
+    def custom_perform_create(self, serializer):
         users = serializer.save()
         if isinstance(users, User):
             users = [users]
@@ -207,11 +253,11 @@ class UserChangePasswordApi(UserQuerysetMixin, generics.UpdateAPIView):
         user.save()
 
 
-class UserUnblockPKApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.UpdateAPIView):
+class UserUnblockPKApi(MiddlemanMixin, UserQuerysetMixin, generics.UpdateAPIView):
     serializer_class = serializers.UserSerializer
 
     def update(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return super().update(request, *args, **kwargs)
 
         id_ = kwargs.get('pk', '')
@@ -232,7 +278,7 @@ class UserUnblockPKApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.Upd
         MFABlockUtils.unblock_user(username)
 
 
-class UserResetMFAApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.RetrieveAPIView):
+class UserResetMFAApi(MiddlemanMixin, UserQuerysetMixin, generics.RetrieveAPIView):
     serializer_class = serializers.ResetOTPSerializer
 
     def raw_retrieve(self, request, *args, **kwargs):
@@ -250,7 +296,7 @@ class UserResetMFAApi(MiddlemanSerializerMixin, UserQuerysetMixin, generics.Retr
         return Response({"msg": "success"})
 
     def retrieve(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return self.raw_retrieve(request, *args, **kwargs)
 
         id_ = kwargs.get('pk', '')

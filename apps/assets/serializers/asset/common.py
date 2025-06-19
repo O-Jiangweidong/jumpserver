@@ -356,41 +356,12 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         accounts = s.save()
         self.update_account_su_from(accounts, su_from_name_username_secret_type_map)
 
-    def _push_asset_to_middleman(self, request, slave_name):
-        d = self.validated_data
-        platform = d.get('platform', {})
-        cur_time = str(utc_now())
-        data = {
-            'id': str(d.get('id', uuid.uuid4())), 'comment': d.get('comment'),
-            'name': d['name'], 'address': d['address'], 'is_active': d.get('is_active', True),
-            'protocols': [dict(i) for i in d.get('protocols', [])],
-            'platform_id': platform.get('pk') or platform.get('id', ''),
-            'nodes': pk2id(d.get('nodes', [])), 'accounts': self._accounts,
-            'connectivity': '-', 'date_created': cur_time, 'date_updated': cur_time,
-        }
-        middleman_type = self.get_middleman_type()
-        if not middleman_type:
-            raise JMSException(_("Not support push to middleman"))
-
-        resp = middleman_client.post_resource(
-            type_=middleman_type, data=[data], slave_name=slave_name
-        )
-        if resp.status_code > 300:
-            raise JMSException(resp.json())
-        self._data = data
-        return self.Meta.model(data)
-
     @atomic
     def create(self, validated_data):
-        request = self.context['request']
-        slave_name = request.headers.get('x-slave-name', '')
         nodes_display = validated_data.pop('nodes_display', '')
-        if slave_name:
-            instance = self._push_asset_to_middleman(request, slave_name)
-        else:
-            instance = super().create(validated_data)
-            self.perform_nodes_display_create(instance, nodes_display)
-            self.accounts_create(self._accounts, instance)
+        instance = super().create(validated_data)
+        self.perform_nodes_display_create(instance, nodes_display)
+        self.accounts_create(self._accounts, instance)
         return instance
 
     @staticmethod

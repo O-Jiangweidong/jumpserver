@@ -7,7 +7,7 @@ from assets.const import AllTypes
 from assets.models import Platform, Node, Asset, PlatformProtocol
 from assets.serializers import PlatformSerializer, PlatformProtocolSerializer
 from common.api import JMSModelViewSet
-from common.mixins.middleman import MiddlemanSerializerMixin
+from common.mixins.middleman import MiddlemanMixin
 from common.permissions import IsValidUser
 from common.serializers import GroupedChoiceSerializer
 from common.utils import middleman_client
@@ -15,7 +15,7 @@ from common.utils import middleman_client
 __all__ = ['AssetPlatformViewSet', 'PlatformAutomationMethodsApi', 'PlatformProtocolViewSet']
 
 
-class AssetPlatformViewSet(MiddlemanSerializerMixin, JMSModelViewSet):
+class AssetPlatformViewSet(MiddlemanMixin, JMSModelViewSet):
     queryset = Platform.objects.all()
     serializer_classes = {
         'default': PlatformSerializer,
@@ -32,7 +32,7 @@ class AssetPlatformViewSet(MiddlemanSerializerMixin, JMSModelViewSet):
     }
 
     def list(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_platforms(

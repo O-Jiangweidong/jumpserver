@@ -17,7 +17,7 @@ from common.const.http import POST
 from common.const.signals import PRE_REMOVE, POST_REMOVE
 from common.exceptions import SomeoneIsDoingThis, JMSException
 from common.utils import get_logger, middleman_client
-from common.mixins.middleman import MiddlemanSerializerMixin
+from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
 from orgs.utils import current_org
@@ -39,7 +39,7 @@ __all__ = [
 ]
 
 
-class NodeViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet):
+class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     model = Node
     filterset_fields = ('value', 'key', 'id')
     search_fields = ('full_value',)
@@ -48,9 +48,10 @@ class NodeViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet
         'match': 'assets.match_node',
         'check_assets_amount_task': 'assets.change_node'
     }
+    tp = 'node'
 
     def list(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
 
         resp = middleman_client.get_nodes(
@@ -76,21 +77,23 @@ class NodeViewSet(MiddlemanSerializerMixin, SuggestionMixin, OrgBulkModelViewSet
         data = {
             'value': d.get('value', ''),
         }
-        resp = middleman_client.update_resource(
+        serializer._data = data
+        return middleman_client.update_resource(
             type_='node', id_=id_, data=data, slave_name=self.slave_name
         )
-        if resp.status_code > 300:
-            raise JMSException(resp.json())
-
-        serializer._data = data
 
     def perform_update(self, serializer):
-        if not self.is_middleman_master():
+        if self.has_middleman_master_behavior():
+            resp = self._update_node_to_middleman(serializer)
+            resp.raise_for_status()
+        elif self.is_middleman_slave():
+            resp = self._update_node_to_middleman(serializer)
+            resp.raise_for_status()
             self.raw_perform_update(serializer)
         else:
-            self._update_node_to_middleman(serializer)
+            self.raw_perform_update(serializer)
 
-    def destroy(self, request, *args, **kwargs):
+    def raw_destroy(self, request, *args, **kwargs):
         node = self.get_object()
         if node.is_org_root():
             error = _("You can't delete the root node ({})".format(node.value))
@@ -130,35 +133,7 @@ class NodeAddChildrenApi(generics.UpdateAPIView):
         return Response("OK")
 
 
-class NodeWithAssetMiddlemanBase(MiddlemanSerializerMixin, generics.UpdateAPIView):
-    middleman_action = ''
-    raw_perform_update: callable
-    kwargs: dict
-
-    def get_serializer(self, *args, **kwargs):
-        serializer = super().get_serializer(*args, **kwargs)
-        if self.request.method == 'PUT' and self.is_middleman_master():
-            serializer = self._clean_serializer_fields(serializer)
-        return serializer
-
-    def update(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
-            return super().update(request, *args, **kwargs)
-        else:
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            data = {
-                'action': self.middleman_action,
-                'node_id': str(self.kwargs.get('pk')),
-                'asset_ids': serializer.validated_data.get('assets'),
-            }
-            middleman_client.post_resource(
-                'node_with_assets', data, self.slave_name
-            )
-            return Response(data)
-
-
-class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
+class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
     model = Node
     serializer_class = serializers.NodeAssetsSerializer
     instance = None
@@ -166,6 +141,47 @@ class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
     rbac_perms = {
         'PUT': 'assets.change_assetnodes',
     }
+    middleman_action = ''
+    kwargs: dict
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.request.method == 'PUT' and self.has_middleman_master_behavior():
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
+
+    def update(self, request, *args, **kwargs):
+        if self.has_middleman_master_behavior():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = {
+                'action': self.middleman_action,
+                'node_id': str(self.kwargs.get('pk')),
+                'asset_ids': serializer.validated_data.get('assets'),
+            }
+            resp = middleman_client.post_resource(
+                'node_with_assets', data, self.slave_name
+            )
+            resp.raise_for_status()
+            return Response(data)
+        elif self.is_middleman_slave():
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = {
+                'action': self.middleman_action,
+                'node_id': str(self.kwargs.get('pk')),
+                'asset_ids': serializer.validated_data.get('assets'),
+            }
+            resp = middleman_client.post_resource(
+                'node_with_assets', data, self.slave_name
+            )
+            resp.raise_for_status()
+            return super().update(request, *args, **kwargs)
+        else:
+            return super().update(request, *args, **kwargs)
+
+
+class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
     middleman_action = 'add'
 
     def perform_update(self, serializer):
@@ -175,13 +191,6 @@ class NodeAddAssetsApi(NodeWithAssetMiddlemanBase):
 
 
 class NodeRemoveAssetsApi(NodeWithAssetMiddlemanBase):
-    model = Node
-    serializer_class = serializers.NodeAssetsSerializer
-    instance = None
-    permission_classes = (RBACPermission,)
-    rbac_perms = {
-        'PUT': 'assets.change_assetnodes',
-    }
     middleman_action = 'remove'
 
     def perform_update(self, serializer):
@@ -197,14 +206,8 @@ class NodeRemoveAssetsApi(NodeWithAssetMiddlemanBase):
         Node.org_root().assets.add(*orphan_assets)
 
 
-class MoveAssetsToNodeApi(generics.UpdateAPIView):
-    model = Node
-    serializer_class = serializers.NodeAssetsSerializer
-    instance = None
-    permission_classes = (RBACPermission,)
-    rbac_perms = {
-        'PUT': 'assets.change_assetnodes',
-    }
+class MoveAssetsToNodeApi(NodeWithAssetMiddlemanBase):
+    middleman_action = 'add'
 
     def perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')

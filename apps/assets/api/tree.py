@@ -10,7 +10,7 @@ from assets.locks import NodeAddChildrenLock
 from common.exceptions import JMSException
 from common.tree import TreeNodeSerializer
 from common.utils import get_logger, middleman_client
-from common.mixins.middleman import MiddlemanSerializerMixin
+from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins import generics
 from orgs.utils import current_org
 from .mixin import SerializeToTreeNodeMixin
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
+class NodeChildrenApi(MiddlemanMixin, generics.ListCreateAPIView):
     """
     节点的增删改查
     """
@@ -38,13 +38,13 @@ class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
-        if self.request.method == 'POST' and self.is_middleman_master():
+        if self.request.method == 'POST' and self.has_middleman_master_behavior():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             self.instance = self.get_object()
 
     def raw_perform_create(self, serializer):
@@ -82,7 +82,7 @@ class NodeChildrenApi(MiddlemanSerializerMixin, generics.ListCreateAPIView):
         serializer._data = data
 
     def perform_create(self, serializer):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             self.raw_perform_create(serializer)
         else:
             self._push_node_to_middleman(serializer)
@@ -178,7 +178,7 @@ class NodeChildrenAsTreeApi(SerializeToTreeNodeMixin, NodeChildrenApi):
         return assets
 
     def list(self, request, *args, **kwargs):
-        if not self.is_middleman_master():
+        if not self.has_middleman_master_behavior():
             return self.raw_list(request, *args, **kwargs)
 
         resp = middleman_client.get_children_nodes(
