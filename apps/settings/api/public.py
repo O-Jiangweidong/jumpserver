@@ -24,6 +24,7 @@ class OpenPublicSettingApi(generics.RetrieveAPIView):
 
     def get_object(self):
         return {
+            "HUB_ENABLED": settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() == 'master',
             "XPACK_ENABLED": settings.XPACK_ENABLED,
             "INTERFACE": self.interface_setting,
             "COUNTRY_CALLING_CODES": COUNTRY_CALLING_CODES

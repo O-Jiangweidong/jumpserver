@@ -4,6 +4,7 @@ import os
 import requests
 
 from django.apps import AppConfig
+from django.core.cache import cache
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -18,14 +19,9 @@ class OrgsConfig(AppConfig):
     verbose_name = _('App organizations')
 
     @staticmethod
-    def _is_main_process():
-        return os.environ.get('RUN_MAIN') == 'true'
-
-    def _register_middleman(self):
+    def _register_middleman():
         from users.models import User
-
-        if not self._is_main_process():
-            return
+        from settings.models import Setting
 
         token = settings.BOOTSTRAP_TOKEN
         md_endpoint = settings.MIDDLEMAN_ENDPOINT
@@ -44,7 +40,7 @@ class OrgsConfig(AppConfig):
         access_key_path = os.path.join(settings.DATA_DIR, '.access_key')
         if os.path.exists(access_key_path):
             with open(access_key_path, 'r') as f:
-                settings.MIDDLEMAN_AUTH_TOKEN = f.read().strip()
+                Setting.update_or_create("MIDDLEMAN_AUTH_TOKEN", f.read().strip())
                 return
 
         resp = None
@@ -60,9 +56,9 @@ class OrgsConfig(AppConfig):
             resp.raise_for_status()
             resp_data = resp.json().get('data', {})
             with open(access_key_path, 'w') as f:
-                access_key = f"{resp_data.get('access_key')}:{resp_data.get('secret_key')}"
-                settings.MIDDLEMAN_AUTH_TOKEN = access_key
-                f.write(access_key)
+                auth_token = f"{resp_data.get('access_key')}:{resp_data.get('secret_key')}"
+                Setting.update_or_create("MIDDLEMAN_AUTH_TOKEN", auth_token)
+                f.write(auth_token)
         except Exception as e:
             msg = resp.text if resp is not None and getattr(resp, 'text') else e
             logger.error('Failed to register middleman: %s' % msg)
@@ -145,8 +141,6 @@ class OrgsConfig(AppConfig):
         print(resp)
 
     def _push_some_resource_to_middleman(self):
-        if not self._is_main_process():
-            return
         if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
             return
 
@@ -157,8 +151,11 @@ class OrgsConfig(AppConfig):
         self.__push_nodes()
 
     def ready(self):
-        self._register_middleman()
-        self._push_some_resource_to_middleman()
+        lock_key = 'middleman_init_lock'
+        acquired = cache.add(lock_key, '1', 60)
+        if acquired:
+            self._register_middleman()
+            self._push_some_resource_to_middleman()
 
         from . import signal_handlers  # noqa
         from . import tasks  # noqa

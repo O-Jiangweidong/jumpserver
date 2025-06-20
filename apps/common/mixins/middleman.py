@@ -28,7 +28,7 @@ class MiddlemanMixin(object):
 
     def has_middleman_master_behavior(self):
         h_salve_name = self.request.headers.get('x-slave-name')
-        return h_salve_name and self.slave_name != h_salve_name
+        return h_salve_name and settings.MIDDLEMAN_SERVICE_NAME != h_salve_name
 
     @staticmethod
     def is_middleman_slave():
