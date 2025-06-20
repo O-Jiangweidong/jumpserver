@@ -147,7 +147,7 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
                 type_='asset', data=[data], slave_name=self.slave_name
             )
             resp.raise_for_status()
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(serializer)
             resp = middleman_client.post_resource(
                 type_='asset', data=[data], slave_name=self.slave_name

@@ -86,7 +86,7 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         if self.has_middleman_master_behavior():
             resp = self._update_node_to_middleman(serializer)
             resp.raise_for_status()
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             resp = self._update_node_to_middleman(serializer)
             resp.raise_for_status()
             self.raw_perform_update(serializer)
@@ -164,7 +164,7 @@ class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
             )
             resp.raise_for_status()
             return Response(data)
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = {

@@ -630,7 +630,6 @@ class Config(dict):
         'MIDDLEMAN_SERVICE_NAME': '',
         'MIDDLEMAN_SERVICE_DISPLAY': '',
         'MIDDLEMAN_SERVICE_ROLE_NAME': '',
-        'MIDDLEMAN_AUTH_TOKEN': '',
         'MIDDLEMAN_IGNORE_SAME_NAME': False,
 
     }

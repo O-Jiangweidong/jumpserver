@@ -1,8 +1,11 @@
+import os
+
 import urllib.parse
 
 import requests
 
 from django.conf import settings
+from django.core.cache import cache
 
 from common.utils import lazyproperty, get_logger
 
@@ -29,7 +32,14 @@ class MiddlemanClient(object):
 
     @lazyproperty
     def _auth_token(self):
-        return f'Bearer {settings.MIDDLEMAN_AUTH_TOKEN}'
+        value = cache.get('MIDDLEMAN_AUTH_TOKEN')
+        if not value:
+            access_key_path = os.path.join(settings.DATA_DIR, '.access_key')
+            if os.path.exists(access_key_path):
+                with open(access_key_path, 'r') as f:
+                    value = f.read().strip()
+        cache.set('MIDDLEMAN_AUTH_TOKEN', value, None)
+        return f'Bearer {value}'
 
     def _request(self, method, url, query_params=None, **kwargs):
         url = self.endpoint + url

@@ -34,6 +34,9 @@ class MiddlemanMixin(object):
     def is_middleman_slave():
         return settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() == 'slave'
 
+    def from_middleman(self):
+        return self.request.headers.get('x-middleman-version', '')
+
     @staticmethod
     def _clean_serializer_fields(serializer):
         s_validators = []
@@ -67,7 +70,7 @@ class MiddlemanMixin(object):
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
             return Response(status=resp.status_code, data=resp.json())
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             resp = middleman_client.delete_instance(
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )

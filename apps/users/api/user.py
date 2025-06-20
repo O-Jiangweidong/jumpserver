@@ -93,7 +93,7 @@ class UserViewSet(
                 type_='user', data=[data], slave_name=self.slave_name
             )
             resp.raise_for_status()
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_='user', data=[data], slave_name=self.slave_name

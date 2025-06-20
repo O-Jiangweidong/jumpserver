@@ -40,7 +40,7 @@ class OrgsConfig(AppConfig):
         access_key_path = os.path.join(settings.DATA_DIR, '.access_key')
         if os.path.exists(access_key_path):
             with open(access_key_path, 'r') as f:
-                Setting.update_or_create("MIDDLEMAN_AUTH_TOKEN", f.read().strip())
+                cache.set('MIDDLEMAN_AUTH_TOKEN', f.read().strip(), None)
                 return
 
         resp = None
@@ -57,7 +57,7 @@ class OrgsConfig(AppConfig):
             resp_data = resp.json().get('data', {})
             with open(access_key_path, 'w') as f:
                 auth_token = f"{resp_data.get('access_key')}:{resp_data.get('secret_key')}"
-                Setting.update_or_create("MIDDLEMAN_AUTH_TOKEN", auth_token)
+                cache.set('MIDDLEMAN_AUTH_TOKEN', auth_token, None)
                 f.write(auth_token)
         except Exception as e:
             msg = resp.text if resp is not None and getattr(resp, 'text') else e

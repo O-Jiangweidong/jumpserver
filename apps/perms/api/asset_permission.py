@@ -68,7 +68,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
                 type_='perm', id_=id_, data=data, slave_name=self.slave_name
             )
             return Response(status=resp.status_code, data=resp.json())
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_)
@@ -87,7 +87,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
                 type_='perm', data=[data], slave_name=self.slave_name
             )
             resp.raise_for_status()
-        elif self.is_middleman_slave():
+        elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_='perm', data=[data], slave_name=self.slave_name
