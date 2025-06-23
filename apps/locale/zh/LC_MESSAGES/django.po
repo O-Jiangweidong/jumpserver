@@ -3493,7 +3493,7 @@ msgstr "如果你是管理员，可以更新配置文件解决，设置配置项
 
 #: authentication/templates/authentication/login.html:330
 msgid "Please enter PIN + TOKEN"
-msgstr "请输入 PIN + TOKEN}"
+msgstr "请输入 PIN + TOKEN"
 
 #: authentication/templates/authentication/login.html:361
 msgid "Cannot log in"
