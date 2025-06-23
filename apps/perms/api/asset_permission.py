@@ -94,9 +94,9 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
                 type_='perm', data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
-            self.perform_create(serializer)
+            super().perform_create(serializer)
         else:
-            self.perform_create(serializer)
+            super().perform_create(serializer)
 
     def get_serializer(self, *args, **kwargs):
         serializer = super().get_serializer(*args, **kwargs)
