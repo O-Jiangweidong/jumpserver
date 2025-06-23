@@ -76,7 +76,7 @@ class OrgsConfig(AppConfig):
                 'id': d['id'], 'name': d['name'], 'scope': d['scope']['value'],
                 'date_created': d['date_created'], 'date_updated': d['date_updated'],
                 'created_by': d['created_by'], 'updated_by': d['updated_by'],
-                'comment': d['comment'],
+                'comment': d['comment'], 'builtin': d['builtin'],
             })
         resp = middleman_client.post_resource(
             'role', data, settings.MIDDLEMAN_SERVICE_NAME

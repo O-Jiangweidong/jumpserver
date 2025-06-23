@@ -52,7 +52,7 @@ class MiddlemanClient(object):
             url = f'{url}&{urllib.parse.urlencode(query_params)}'
         kwargs.setdefault('headers', {})
         kwargs['headers']['Authorization'] = self._auth_token
-        logger.debug('Request url: %s' % url)
+        logger.debug(f'({method}) Request url: {url}')
         return requests.request(method, url, **kwargs)
 
     @property

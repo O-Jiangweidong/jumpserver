@@ -6,7 +6,6 @@ from collections import defaultdict
 
 import django_filters
 
-from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext as _
 from rest_framework import status
@@ -22,7 +21,7 @@ from assets.models import Asset, Gateway, Platform, Protocol
 from assets.tasks import test_assets_connectivity_manual, update_assets_hardware_info_manual
 from common.api import SuggestionMixin
 from common.drf.filters import BaseFilterSet, AttrRulesFilterBackend
-from common.utils import get_logger, is_uuid, middleman_client, pk2id
+from common.utils import get_logger, is_uuid, middleman_client, pk2id, decrypt_password
 from common.utils.timezone import utc_now
 from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins import generics
@@ -121,7 +120,17 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     tp = 'asset'
 
     @staticmethod
-    def _build_data(serializer):
+    def __clean_accounts(accounts):
+        new_accounts = []
+        for account in accounts:
+            account['id'] = str(uuid.uuid4())
+            secret = account.get('secret')
+            if secret:
+                account['secret'] = decrypt_password(secret)
+            new_accounts.append(account)
+        return new_accounts
+
+    def _build_data(self, serializer):
         validated_data = serializer.validated_data
         platform = validated_data.get('platform', {})
         current_time = str(utc_now())
@@ -134,7 +143,7 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
             'protocols': [dict(i) for i in validated_data.get('protocols', [])],
             'platform_id': platform.get('pk') or platform.get('id', ''),
             'nodes': pk2id(validated_data.get('nodes', [])),
-            'accounts': serializer._accounts,
+            'accounts': self.__clean_accounts(serializer._accounts),
             'connectivity': '-',
             'date_created': current_time,
             'date_updated': current_time,
@@ -144,15 +153,15 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         if self.has_middleman_master_behavior():
             data = self._build_data(serializer)
             resp = middleman_client.post_resource(
-                type_='asset', data=[data], slave_name=self.slave_name
+                type_=self.tp, data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
         elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(serializer)
             resp = middleman_client.post_resource(
-                type_='asset', data=[data], slave_name=self.slave_name
+                type_=self.tp, data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             super().perform_create(serializer)
         else:
             super().perform_create(serializer)

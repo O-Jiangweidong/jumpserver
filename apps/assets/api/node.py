@@ -85,10 +85,10 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     def perform_update(self, serializer):
         if self.has_middleman_master_behavior():
             resp = self._update_node_to_middleman(serializer)
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
         elif self.is_middleman_slave() and not self.from_middleman():
             resp = self._update_node_to_middleman(serializer)
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             self.raw_perform_update(serializer)
         else:
             self.raw_perform_update(serializer)
@@ -162,7 +162,7 @@ class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
             resp = middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             return Response(data)
         elif self.is_middleman_slave() and not self.from_middleman():
             serializer = self.get_serializer(data=request.data)
@@ -175,7 +175,7 @@ class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
             resp = middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             return super().update(request, *args, **kwargs)
         else:
             return super().update(request, *args, **kwargs)

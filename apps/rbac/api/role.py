@@ -2,9 +2,12 @@ from django.db.models import Q, Count
 from django.utils.translation import gettext as _
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 
 from common.api import JMSModelViewSet
+from common.mixins.middleman import MiddlemanMixin
 from orgs.utils import current_org
+from common.utils import middleman_client
 from .permission import PermissionViewSet
 from ..filters import RoleFilter
 from ..models import Role, SystemRole, OrgRole, RoleBinding
@@ -16,7 +19,7 @@ __all__ = [
 ]
 
 
-class RoleViewSet(JMSModelViewSet):
+class RoleViewSet(MiddlemanMixin, JMSModelViewSet):
     queryset = Role.objects.all()
     serializer_classes = {
         'default': RoleSerializer,
@@ -28,6 +31,28 @@ class RoleViewSet(JMSModelViewSet):
     rbac_perms = {
         'users': 'rbac.view_rolebinding'
     }
+    scope = None
+    tp = 'role'
+
+    def list(self, request, *args, **kwargs):
+        if not self.has_middleman_master_behavior():
+            return super().list(request, *args, **kwargs)
+
+        query_params = dict(request.query_params.items())
+        if self.scope is not None:
+            query_params.setdefault('scope', self.scope)
+        resp = middleman_client.get_roles(
+            slave_name=self.slave_name, query_params=query_params
+        )
+        roles = []
+        for role in resp.get('results', []):
+            if role['builtin']:
+                role['display_name'] = _(role['name'])
+            else:
+                role['display_name'] = role['name']
+            roles.append(role)
+        resp['results'] = roles
+        return Response(resp)
 
     def perform_destroy(self, instance):
         from orgs.utils import tmp_to_root_org
@@ -115,6 +140,7 @@ class RoleViewSet(JMSModelViewSet):
 
 class SystemRoleViewSet(RoleViewSet):
     perm_model = SystemRole
+    scope = 'system'
 
     def get_queryset(self):
         qs = super().get_queryset().filter(scope='system')
@@ -123,6 +149,7 @@ class SystemRoleViewSet(RoleViewSet):
 
 class OrgRoleViewSet(RoleViewSet):
     perm_model = OrgRole
+    scope = 'org'
 
     def get_queryset(self):
         qs = super().get_queryset().filter(scope='org')

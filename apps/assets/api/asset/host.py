@@ -8,6 +8,7 @@ __all__ = ['HostViewSet']
 class HostViewSet(AssetViewSet):
     model = Host
     perm_model = Asset
+    tp = 'host'
 
     def get_serializer_classes(self):
         serializer_classes = super().get_serializer_classes()

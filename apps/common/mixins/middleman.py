@@ -4,6 +4,7 @@ from rest_framework.validators import UniqueValidator
 from rest_framework.request import Request
 from rest_framework.response import Response
 
+from common.exceptions import JMSException
 from common.serializers.fields import (
     ObjectRelatedField, ObjectManyRelatedField, ObjectPrimaryKeyRelatedField
 )
@@ -36,6 +37,15 @@ class MiddlemanMixin(object):
 
     def from_middleman(self):
         return self.request.headers.get('x-middleman-version', '')
+
+    @staticmethod
+    def raise_failed_request(response):
+        if response.status_code >= 300:
+            try:
+                reason = response.json()
+            except Exception: # noqa
+                reason = response.text
+            raise JMSException(reason)
 
     @staticmethod
     def _clean_serializer_fields(serializer):
@@ -74,7 +84,7 @@ class MiddlemanMixin(object):
             resp = middleman_client.delete_instance(
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             return super().destroy(request, *args, **kwargs)
         else:
             return super().destroy(request, *args, **kwargs)

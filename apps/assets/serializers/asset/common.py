@@ -85,7 +85,7 @@ class AssetAccountSerializer(AccountSerializer):
             return super().to_internal_value(data)
 
         request = get_current_request()
-        if request.headers.get('middleman-version'):
+        if request.headers.get('x-middleman-version'):
             return super().to_internal_value(data)
 
         clone_id = data.pop('id', None)

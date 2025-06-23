@@ -67,6 +67,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             resp = middleman_client.update_resource(
                 type_='perm', id_=id_, data=data, slave_name=self.slave_name
             )
+            self.raise_failed_request(resp)
             return Response(status=resp.status_code, data=resp.json())
         elif self.is_middleman_slave() and not self.from_middleman():
             serializer = self.get_serializer(data=request.data)
@@ -75,7 +76,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             resp = middleman_client.update_resource(
                 type_='perm', id_=id_, data=data, slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             return super().update(request, *args, **kwargs)
         else:
             return super().update(request, *args, **kwargs)
@@ -86,13 +87,13 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             resp = middleman_client.post_resource(
                 type_='perm', data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
         elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_='perm', data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             self.perform_create(serializer)
         else:
             self.perform_create(serializer)
@@ -109,7 +110,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             resp = middleman_client.get_perms(
                 slave_name=self.slave_name, query_params={'id': id_}
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             permissions = []
             for perm in resp.get('results', [])[:1]:
                 perm['actions'] = ActionChoicesField().to_representation(perm['actions'])

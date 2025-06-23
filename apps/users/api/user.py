@@ -92,13 +92,13 @@ class UserViewSet(
             resp = middleman_client.post_resource(
                 type_='user', data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
         elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_='user', data=[data], slave_name=self.slave_name
             )
-            resp.raise_for_status()
+            self.raise_failed_request(resp)
             self.custom_perform_create(serializer)
         else:
             self.custom_perform_create(serializer)
