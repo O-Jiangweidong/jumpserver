@@ -6,6 +6,7 @@ import requests
 
 from django.conf import settings
 from django.core.cache import cache
+from django.db.models import Model
 
 from common.utils import lazyproperty, get_logger
 
@@ -17,11 +18,13 @@ def pk2id(data, with_raw=False):
     result = []
     for d in data:
         if isinstance(d, dict):
-            v = d.get('pk', d.get('id', ''))
-            if with_raw:
-                v = {'id': v}
+            v = str(d.get('pk', d.get('id', '')))
+        elif isinstance(d, Model):
+            v = str(d.pk)
         else:
             v = d
+        if with_raw:
+            v = {'id': v}
         result.append(v)
     return result
 
@@ -122,7 +125,7 @@ class MiddlemanClient(object):
             'GET', url, headers={'SLAVE-NAME': slave_name},
             query_params=query_params, **kwargs
         )
-        return resp.json()
+        return resp
 
     def get_nodes(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=node'

@@ -47,7 +47,7 @@ class NodeChildrenApi(MiddlemanMixin, generics.ListCreateAPIView):
         if not self.has_middleman_master_behavior():
             self.instance = self.get_object()
 
-    def raw_perform_create(self, serializer):
+    def custom_perform_create(self, serializer):
         data = serializer.validated_data
         _id = data.get("id")
         key = data.get("key")
@@ -64,28 +64,35 @@ class NodeChildrenApi(MiddlemanMixin, generics.ListCreateAPIView):
             node._full_value = node.value
             serializer.instance = node
 
-    def _push_node_to_middleman(self, serializer):
-        cur_username = self.request.user.username
-        d = serializer.validated_data
-        data = {
-            'id': d.get('id', str(uuid.uuid4())),
-            'value': d.get('value', ''),
-            'parent_id': str(self.kwargs.get('pk', '')),
+    @staticmethod
+    def _build_data(parent_id, request, serializer):
+        cur_username = request.user.username
+        validated_data = serializer.validated_data
+        return {
+            'id': validated_data.get('id', str(uuid.uuid4())),
+            'value': validated_data.get('value', ''),
+            'parent_id': parent_id,
             'created_by': cur_username,
         }
-        resp = middleman_client.post_resource(
-            type_='children_node', data=[data], slave_name=self.slave_name
-        )
-        if resp.status_code > 300:
-            raise JMSException(resp.json())
-
-        serializer._data = data
 
     def perform_create(self, serializer):
-        if not self.has_middleman_master_behavior():
-            self.raw_perform_create(serializer)
+        parent_id = str(self.kwargs.get('pk') or self.request.query_params.get('id'))
+        if self.has_middleman_master_behavior():
+            data = self._build_data(parent_id, self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_='children_node', data=[data], slave_name=self.slave_name
+            )
+            self.raise_failed_request(resp)
+        elif self.is_middleman_slave() and not self.from_middleman():
+            data = self._build_data(parent_id, self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_='children_node', data=[data], slave_name=self.slave_name
+            )
+            self.raise_failed_request(resp)
+            serializer.validated_data['id'] = data['id']
+            self.custom_perform_create(serializer)
         else:
-            self._push_node_to_middleman(serializer)
+            self.custom_perform_create(serializer)
 
     def get_object(self):
         pk = self.kwargs.get('pk') or self.request.query_params.get('id')

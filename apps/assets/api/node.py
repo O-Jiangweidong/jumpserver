@@ -50,6 +50,12 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     }
     tp = 'node'
 
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.action in ('create', 'patch') and self.has_middleman_master_behavior():
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
+
     def list(self, request, *args, **kwargs):
         if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
@@ -74,9 +80,7 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     def _update_node_to_middleman(self, serializer):
         d = serializer.validated_data
         id_ = self.kwargs.get('pk', '')
-        data = {
-            'value': d.get('value', ''),
-        }
+        data = {'value': d.get('value', '')}
         serializer._data = data
         return middleman_client.update_resource(
             type_='node', id_=id_, data=data, slave_name=self.slave_name
@@ -207,7 +211,7 @@ class NodeRemoveAssetsApi(NodeWithAssetMiddlemanBase):
 
 
 class MoveAssetsToNodeApi(NodeWithAssetMiddlemanBase):
-    middleman_action = 'add'
+    middleman_action = 'replace'
 
     def perform_update(self, serializer):
         assets = serializer.validated_data.get('assets')

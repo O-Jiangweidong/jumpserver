@@ -13,7 +13,7 @@ from rest_framework_bulk import BulkModelViewSet
 from common.api import CommonApiMixin, SuggestionMixin
 from common.exceptions import JMSException
 from common.drf.filters import AttrRulesFilterBackend
-from common.utils import get_logger, middleman_client
+from common.utils import get_logger, middleman_client, pk2id
 from common.mixins.middleman import MiddlemanMixin
 from orgs.utils import current_org, tmp_to_root_org
 from rbac.models import Role, RoleBinding
@@ -82,8 +82,8 @@ class UserViewSet(
             'password_strategy': serializer.initial_data.get('password_strategy', 'email'),
             'created_by': current_username,
             'updated_by': current_username,
-            'groups': [{'id': g.get('pk') or g.get('id', '')} for g in validated_data.get('groups', [])],
-            'roles': validated_data.get('system_roles', []) + validated_data.get('org_roles', []),
+            'groups': pk2id(validated_data.get('groups', []), with_raw=True),
+            'roles': pk2id(validated_data.get('system_roles', [])) + pk2id(validated_data.get('org_roles', [])),
         }
 
     def perform_create(self, serializer):
@@ -99,6 +99,7 @@ class UserViewSet(
                 type_='user', data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
+            serializer.validated_data['id'] = data['id']
             self.custom_perform_create(serializer)
         else:
             self.custom_perform_create(serializer)

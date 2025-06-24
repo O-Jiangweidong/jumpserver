@@ -40,12 +40,14 @@ class MiddlemanMixin(object):
 
     @staticmethod
     def raise_failed_request(response):
+        try:
+            data = response.json()
+        except Exception: # noqa
+            data = {}
+
         if response.status_code >= 300:
-            try:
-                reason = response.json()
-            except Exception: # noqa
-                reason = response.text
-            raise JMSException(reason)
+            raise JMSException(data)
+        return data
 
     @staticmethod
     def _clean_serializer_fields(serializer):
@@ -70,11 +72,19 @@ class MiddlemanMixin(object):
             field.validators = validators
         return serializer
 
+    def get_object(self):
+        if self.has_middleman_master_behavior():
+            return None
+        return super().get_object()
+
     def destroy(self, request, *args, **kwargs):
         if not self.tp:
             raise Http404()
 
         id_ = kwargs.get('pk', '')
+        destroy_func = super().destroy
+        if hasattr(self, 'raw_destroy'):
+            destroy_func = self.raw_destroy
         if self.has_middleman_master_behavior():
             resp = middleman_client.delete_instance(
                 tp=self.tp, id_=id_, slave_name=self.slave_name
@@ -85,6 +95,6 @@ class MiddlemanMixin(object):
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
-            return super().destroy(request, *args, **kwargs)
+            return destroy_func(request, *args, **kwargs)
         else:
-            return super().destroy(request, *args, **kwargs)
+            return destroy_func(request, *args, **kwargs)

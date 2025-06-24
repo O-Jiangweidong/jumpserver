@@ -2,10 +2,8 @@
 #
 import uuid
 
-from django.http import Http404
 from rest_framework.response import Response
 
-from common.exceptions import JMSException
 from common.utils import middleman_client, pk2id
 from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -13,7 +11,7 @@ from perms.filters import AssetPermissionFilter
 from perms.models import AssetPermission
 from perms.serializers import (
     AssetPermissionSerializer, AssetPermissionListSerializer,
-    ActionChoicesField,
+    ActionChoicesField as ActionField,
 )
 
 
@@ -31,13 +29,13 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     }
     filterset_class = AssetPermissionFilter
     search_fields = ('name',)
-    tp = 'permission'
+    tp = 'perm'
 
     @staticmethod
     def _build_data(request, serializer, id_=None):
         current_username = request.user.username
-        raw_data = serializer.data
         validated_data = serializer.validated_data
+        actions_number = validated_data.get('actions', 127)
         data = {
             'id': id_ or validated_data.get('id', str(uuid.uuid4())),
             'name': validated_data['name'],
@@ -53,8 +51,8 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             'node_ids': pk2id(validated_data.get('nodes', [])),
             'accounts': validated_data.get('accounts', []),
             'protocols': validated_data.get('protocols', []),
-            'actions': validated_data.get('actions', 127),
-            'actions_display': [a['value'] for a in raw_data.get('actions', [])]
+            'actions': actions_number,
+            'actions_display': [i['value'] for i in ActionField().to_representation(actions_number)],
         }
         return data
 
@@ -65,16 +63,16 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_)
             resp = middleman_client.update_resource(
-                type_='perm', id_=id_, data=data, slave_name=self.slave_name
+                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
             )
-            self.raise_failed_request(resp)
-            return Response(status=resp.status_code, data=resp.json())
+            data = self.raise_failed_request(resp)
+            return Response(status=resp.status_code, data=data)
         elif self.is_middleman_slave() and not self.from_middleman():
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_)
             resp = middleman_client.update_resource(
-                type_='perm', id_=id_, data=data, slave_name=self.slave_name
+                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
             return super().update(request, *args, **kwargs)
@@ -94,6 +92,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
                 type_='perm', data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
+            serializer.validated_data['id'] = data['id']
             super().perform_create(serializer)
         else:
             super().perform_create(serializer)
@@ -110,10 +109,10 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             resp = middleman_client.get_perms(
                 slave_name=self.slave_name, query_params={'id': id_}
             )
-            self.raise_failed_request(resp)
+            data = self.raise_failed_request(resp)
             permissions = []
-            for perm in resp.get('results', [])[:1]:
-                perm['actions'] = ActionChoicesField().to_representation(perm['actions'])
+            for perm in data.get('results', [])[:1]:
+                perm['actions'] = ActionField().to_representation(perm['actions'])
                 permissions.append(perm)
             return Response(permissions[0] if len(permissions) else {})
         else:
@@ -126,9 +125,10 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
         resp = middleman_client.get_perms(
             slave_name=self.slave_name, query_params=dict(request.query_params.items())
         )
+        data = self.raise_failed_request(resp)
         permissions = []
-        for perm in resp.get('results', []):
-            perm['actions'] = ActionChoicesField().to_representation(perm['actions'])
+        for perm in data.get('results', []):
+            perm['actions'] = ActionField().to_representation(perm['actions'])
             permissions.append(perm)
-        resp['results'] = permissions
-        return Response(resp)
+        data['results'] = permissions
+        return Response(data)

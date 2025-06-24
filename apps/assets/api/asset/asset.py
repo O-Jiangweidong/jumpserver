@@ -141,7 +141,7 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
             'address': validated_data['address'],
             'is_active': validated_data.get('is_active', True),
             'protocols': [dict(i) for i in validated_data.get('protocols', [])],
-            'platform_id': platform.get('pk') or platform.get('id', ''),
+            'platform_id': pk2id([platform])[0],
             'nodes': pk2id(validated_data.get('nodes', [])),
             'accounts': self.__clean_accounts(serializer._accounts),
             'connectivity': '-',
@@ -162,6 +162,8 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
                 type_=self.tp, data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
+            serializer._skip_accounts_clone = True
+            serializer.validated_data['id'] = data['id']
             super().perform_create(serializer)
         else:
             super().perform_create(serializer)
