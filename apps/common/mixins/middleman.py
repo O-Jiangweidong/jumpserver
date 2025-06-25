@@ -78,10 +78,10 @@ class MiddlemanMixin(object):
         return super().get_object()
 
     def destroy(self, request, *args, **kwargs):
-        if not self.tp:
+        id_ = kwargs.get('pk', '')
+        if not self.tp or not id_:
             raise Http404()
 
-        id_ = kwargs.get('pk', '')
         destroy_func = super().destroy
         if hasattr(self, 'raw_destroy'):
             destroy_func = self.raw_destroy

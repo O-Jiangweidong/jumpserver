@@ -9,14 +9,13 @@ from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
-from rest_framework.request import Request
 
 from assets.models import Asset
 from common.api import SuggestionMixin
 from common.const.http import POST
 from common.const.signals import PRE_REMOVE, POST_REMOVE
-from common.exceptions import SomeoneIsDoingThis, JMSException
-from common.utils import get_logger, middleman_client
+from common.exceptions import SomeoneIsDoingThis
+from common.utils import get_logger, middleman_client, pk2id
 from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -81,7 +80,6 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         d = serializer.validated_data
         id_ = self.kwargs.get('pk', '')
         data = {'value': d.get('value', '')}
-        serializer._data = data
         return middleman_client.update_resource(
             type_='node', id_=id_, data=data, slave_name=self.slave_name
         )
@@ -161,7 +159,7 @@ class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
             data = {
                 'action': self.middleman_action,
                 'node_id': str(self.kwargs.get('pk')),
-                'asset_ids': serializer.validated_data.get('assets'),
+                'asset_ids': pk2id(serializer.validated_data.get('assets', [])),
             }
             resp = middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
@@ -174,7 +172,7 @@ class NodeWithAssetMiddlemanBase(MiddlemanMixin, generics.UpdateAPIView):
             data = {
                 'action': self.middleman_action,
                 'node_id': str(self.kwargs.get('pk')),
-                'asset_ids': serializer.validated_data.get('assets'),
+                'asset_ids': pk2id(serializer.validated_data.get('assets', [])),
             }
             resp = middleman_client.post_resource(
                 'node_with_assets', data, self.slave_name
