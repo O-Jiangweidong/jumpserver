@@ -7,7 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from common.mixins.middleman import MiddlemanMixin
-from common.utils import middleman_client
+from common.utils import middleman_client, pk2id
 from orgs.mixins.api import OrgBulkModelViewSet
 from ..models import UserGroup, User
 from ..serializers import UserGroupSerializer, UserGroupListSerializer
@@ -38,7 +38,7 @@ class UserGroupViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             'comment': validated_data.get('comment', ''),
             'created_by': current_username,
             'updated_by': current_username,
-            'users': [{'id': u.get('pk') or u.get('id', '')} for u in validated_data.get('users', [])],
+            'users': pk2id(validated_data.get('users', [])),
         }
 
     def perform_create(self, serializer):
