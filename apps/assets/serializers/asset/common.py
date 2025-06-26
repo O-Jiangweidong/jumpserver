@@ -80,13 +80,20 @@ class AssetAccountSerializer(AccountSerializer):
     clone_id = None
     _skip_accounts_clone = False
 
+    def _is_middleman_action(self):
+        request = get_current_request()
+        if request.headers.get('x-middleman-version'):
+            return True
+        if getattr(self, '_skip_accounts_clone', False):
+            return True
+        return getattr(self.parent, '_skip_accounts_clone', False)
+
     def to_internal_value(self, data):
         # 导入时，data有时为str
         if isinstance(data, str):
             return super().to_internal_value(data)
 
-        request = get_current_request()
-        if request.headers.get('x-middleman-version') or self._skip_accounts_clone:
+        if self._is_middleman_action():
             return super().to_internal_value(data)
 
         clone_id = data.pop('id', None)

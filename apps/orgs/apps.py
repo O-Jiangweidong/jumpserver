@@ -8,7 +8,7 @@ from django.core.cache import cache
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from common.utils import get_logger, middleman_client
+from common.utils import get_logger, middleman_client, pk2id
 
 
 logger = get_logger(__name__)
@@ -132,21 +132,37 @@ class OrgsConfig(AppConfig):
         from users.models import User
 
         user = User.objects.get(username='admin')
+        data = {
+            'id': str(user.id),
+            'is_first_login': user.is_first_login,
+            'name': user.name,
+            'username': user.username,
+            'email': user.email,
+            'wechat': user.wechat,
+            'phone': user.phone,
+            'mfa_level': user.mfa_level,
+            'source': user.source,
+            'comment': user.comment,
+            'is_active': user.is_active,
+            'need_update_password': user.need_update_password,
+            'date_expired': str(user.date_expired),
+            'created_by': user.created_by,
+            'updated_by': user.updated_by,
+            'groups': pk2id(user.groups.values('id'), with_raw=True),
+            'roles': pk2id(user.roles.values('id')),
+        }
         resp = middleman_client.post_resource(
-            {
-                'type': 'user',
-                'data': [MiddlemanUserSerializer(user).data]
-            }, settings.MIDDLEMAN_SERVICE_NAME
+            'user', [data], settings.MIDDLEMAN_SERVICE_NAME
         )
-        print(resp)
+        print('Push admin user: ', resp)
 
     def _push_some_resource_to_middleman(self):
         if settings.MIDDLEMAN_SERVICE_ROLE_NAME.lower() != 'slave':
             return
 
         self.__push_rbac()
-        # self.__push_admin_user()
         self.__push_user_groups()
+        self.__push_admin_user()
         self.__push_platforms()
         self.__push_nodes()
 
