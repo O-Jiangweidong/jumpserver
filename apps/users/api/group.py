@@ -29,7 +29,7 @@ class UserGroupViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     tp = 'user_group'
 
     @staticmethod
-    def _build_data(request, serializer, id_=None):
+    def _build_data(request, serializer, id_=None, is_create=True):
         current_username = request.user.username
         validated_data = serializer.validated_data
         return {

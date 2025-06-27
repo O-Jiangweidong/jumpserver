@@ -130,34 +130,38 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
             new_accounts.append(account)
         return new_accounts
 
-    def _build_data(self, serializer):
+    def _build_data(self, request, serializer, _id=None, is_create=True):
         validated_data = serializer.validated_data
         platform = validated_data.get('platform', {})
         current_time = str(utc_now())
-        return {
-            'id': str(validated_data.get('id', uuid.uuid4())),
+        data = {
             'comment': validated_data.get('comment'),
             'name': validated_data['name'],
             'address': validated_data['address'],
             'is_active': validated_data.get('is_active', True),
             'protocols': [dict(i) for i in validated_data.get('protocols', [])],
-            'platform_id': pk2id([platform])[0],
-            'nodes': pk2id(validated_data.get('nodes', [])),
-            'accounts': self.__clean_accounts(serializer._accounts),
-            'connectivity': '-',
-            'date_created': current_time,
+            'platform': pk2id([platform], with_raw=True)[0],
+            'nodes': pk2id(validated_data.get('nodes', []), with_raw=True),
             'date_updated': current_time,
         }
+        if is_create:
+            data.update({
+                'id': _id or str(validated_data.get('id', uuid.uuid4())),
+                'accounts': self.__clean_accounts(serializer._accounts),
+                'connectivity': '-',
+                'date_created': current_time,
+            })
+        return data
 
     def perform_create(self, serializer):
         if self.has_middleman_master_behavior():
-            data = self._build_data(serializer)
+            data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_=self.tp, data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
         elif self.is_middleman_slave() and not self.from_middleman():
-            data = self._build_data(serializer)
+            data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_=self.tp, data=[data], slave_name=self.slave_name
             )

@@ -61,12 +61,10 @@ class UserViewSet(
     tp = 'user'
 
     @staticmethod
-    def _build_data(request, serializer):
+    def _build_data(request, serializer, id_=None, is_create=True):
         current_username = request.user.username
         validated_data = serializer.validated_data
-        return {
-            'id': validated_data.get('id', str(uuid.uuid4())),
-            'is_first_login': True,
+        data = {
             'name': validated_data['name'],
             'username': validated_data['username'],
             'email': validated_data['email'],
@@ -78,13 +76,26 @@ class UserViewSet(
             'is_active': validated_data.get('is_active', False),
             'need_update_password': validated_data.get('need_update_password', True),
             'date_expired': str(validated_data.get('date_expired', '')),
-            'password': validated_data.get('password_raw'),
             'password_strategy': serializer.initial_data.get('password_strategy', 'email'),
-            'created_by': current_username,
             'updated_by': current_username,
             'groups': pk2id(validated_data.get('groups', []), with_raw=True),
-            'roles': pk2id(validated_data.get('system_roles', [])) + pk2id(validated_data.get('org_roles', [])),
+
         }
+        if validated_data.get('password_raw'):
+            data['password'] = validated_data.get('password_raw')
+        if is_create:
+            data.update({
+                'id': id_ or validated_data.get('id', str(uuid.uuid4())),
+                'is_first_login': True,
+                'created_by': current_username,
+                'roles': pk2id(validated_data.get('system_roles', [])) + pk2id(validated_data.get('org_roles', [])),
+            })
+        else:
+            data.update({
+                'system_roles': pk2id(validated_data.get('system_roles', [])),
+                'org_roles': pk2id(validated_data.get('org_roles', [])),
+            })
+        return data
 
     def perform_create(self, serializer):
         if self.has_middleman_master_behavior():

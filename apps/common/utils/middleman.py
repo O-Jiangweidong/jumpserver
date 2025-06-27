@@ -18,7 +18,8 @@ def pk2id(data, with_raw=False):
     result = []
     for d in data:
         if isinstance(d, dict):
-            v = str(d.get('pk', d.get('id', '')))
+            v = d.get('pk', d.get('id', ''))
+            v = v if isinstance(v, int) else str(v)
         elif isinstance(d, Model):
             v = str(d.pk)
         else:

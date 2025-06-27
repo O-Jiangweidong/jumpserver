@@ -17,6 +17,7 @@ from common.utils import lazyproperty, middleman_client
 class MiddlemanMixin(object):
     request: Request
     tp: str
+    retrieve_internal: bool = False
 
     @lazyproperty
     def slave_name(self):
@@ -75,7 +76,7 @@ class MiddlemanMixin(object):
         return serializer
 
     def get_object(self):
-        if self.has_middleman_master_behavior():
+        if self.has_middleman_master_behavior() and not self.retrieve_internal:
             return None
         return super().get_object()
 
@@ -91,7 +92,7 @@ class MiddlemanMixin(object):
         return result
 
     def retrieve(self, request, *args, **kwargs):
-        if self.has_middleman_master_behavior():
+        if self.has_middleman_master_behavior() and not self.retrieve_internal:
             id_ = self._get_id(**kwargs)
             resp = middleman_client.get_detail(
                 type_=self.tp, id_=id_, slave_name=self.slave_name
@@ -118,7 +119,7 @@ class MiddlemanMixin(object):
             id_ = self._get_id(**kwargs)
             serializer = self.get_serializer(data=request.data, clean_fields=True)
             serializer.is_valid(raise_exception=True)
-            data = self._build_data(request, serializer, id_)
+            data = self._build_data(request, serializer, id_, is_create=False)
             resp = middleman_client.update_resource(
                 type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
             )
@@ -128,7 +129,7 @@ class MiddlemanMixin(object):
             id_ = self._get_id(**kwargs)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            data = self._build_data(request, serializer, id_)
+            data = self._build_data(request, serializer, id_, is_create=False)
             resp = middleman_client.update_resource(
                 type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
             )

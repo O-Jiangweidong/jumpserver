@@ -32,7 +32,7 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     tp = 'perm'
 
     @staticmethod
-    def _build_data(request, serializer, id_=None):
+    def _build_data(request, serializer, id_=None, is_create=True):
         current_username = request.user.username
         validated_data = serializer.validated_data
         actions_number = validated_data.get('actions', 127)
