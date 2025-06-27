@@ -29,17 +29,23 @@ class UserGroupViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     tp = 'user_group'
 
     @staticmethod
-    def _build_data(request, serializer):
+    def _build_data(request, serializer, id_=None):
         current_username = request.user.username
         validated_data = serializer.validated_data
         return {
-            'id': validated_data.get('id', str(uuid.uuid4())),
+            'id': id_ or validated_data.get('id', str(uuid.uuid4())),
             'name': validated_data['name'],
             'comment': validated_data.get('comment', ''),
             'created_by': current_username,
             'updated_by': current_username,
             'users': pk2id(validated_data.get('users', [])),
         }
+
+    def get_serializer(self, *args, **kwargs):
+        serializer = super().get_serializer(*args, **kwargs)
+        if self.action in ('create', 'put') and self.has_middleman_master_behavior():
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
 
     def perform_create(self, serializer):
         if self.has_middleman_master_behavior():

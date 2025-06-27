@@ -266,7 +266,7 @@ class UserUnblockPKApi(MiddlemanMixin, UserQuerysetMixin, generics.UpdateAPIView
             raise Http404
 
         resp = middleman_client.update_resource(
-            type_='user_unblock', id_=id_, slave_name=self.slave_name
+            type_='user_unblock', id_=id_, partial=True, slave_name=self.slave_name
         )
         if resp.status_code > 300:
             raise JMSException(resp.json())
@@ -305,7 +305,7 @@ class UserResetMFAApi(MiddlemanMixin, UserQuerysetMixin, generics.RetrieveAPIVie
             raise Http404
 
         resp = middleman_client.update_resource(
-            type_='user_reset_mfa', id_=id_, slave_name=self.slave_name
+            type_='user_reset_mfa', id_=id_, partial=True, slave_name=self.slave_name
         )
         if resp.status_code > 300:
             raise JMSException(resp.json())

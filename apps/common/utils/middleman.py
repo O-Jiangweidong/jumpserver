@@ -127,6 +127,13 @@ class MiddlemanClient(object):
         )
         return resp
 
+    def get_detail(self, type_, id_, slave_name='', **kwargs):
+        url = f'/middleman/resources/{id_}/?m_type={type_}'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name}, **kwargs
+        )
+        return resp
+
     def get_nodes(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=node'
         resp = self._request(
@@ -158,12 +165,13 @@ class MiddlemanClient(object):
             json=data, headers={'SLAVE-NAME': slave_name}
         )
 
-    def update_resource(self, type_, id_, data, slave_name, **kwargs):
+    def update_resource(self, type_, id_, data, slave_name, partial=False, **kwargs):
         if not self.enable:
             return
 
+        method = 'PATCH' if partial else 'PUT'
         return self._request(
-            'PATCH', f'/middleman/resources/{id_}/?m_type={type_}',
+            method, f'/middleman/resources/{id_}/?m_type={type_}',
             json=data, headers={'SLAVE-NAME': slave_name}
         )
 

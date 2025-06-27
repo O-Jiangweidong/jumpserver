@@ -81,7 +81,7 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         id_ = self.kwargs.get('pk', '')
         data = {'value': d.get('value', '')}
         return middleman_client.update_resource(
-            type_='node', id_=id_, data=data, slave_name=self.slave_name
+            type_='node', id_=id_, data=data, partial=True, slave_name=self.slave_name
         )
 
     def perform_update(self, serializer):

@@ -56,29 +56,6 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
         }
         return data
 
-    def update(self, request, *args, **kwargs):
-        id_ = kwargs.get('pk', '')
-        if self.has_middleman_master_behavior():
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            data = self._build_data(request, serializer, id_)
-            resp = middleman_client.update_resource(
-                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
-            )
-            data = self.raise_failed_request(resp)
-            return Response(status=resp.status_code, data=data)
-        elif self.is_middleman_slave() and not self.from_middleman():
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            data = self._build_data(request, serializer, id_)
-            resp = middleman_client.update_resource(
-                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
-            )
-            self.raise_failed_request(resp)
-            return super().update(request, *args, **kwargs)
-        else:
-            return super().update(request, *args, **kwargs)
-
     def perform_create(self, serializer):
         if self.has_middleman_master_behavior():
             data = self._build_data(self.request, serializer)
@@ -97,26 +74,10 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
         else:
             super().perform_create(serializer)
 
-    def get_serializer(self, *args, **kwargs):
-        serializer = super().get_serializer(*args, **kwargs)
-        if self.action in ('create', 'update') and self.has_middleman_master_behavior():
-            serializer = self._clean_serializer_fields(serializer)
-        return serializer
-
-    def retrieve(self, request, *args, **kwargs):
-        id_ = kwargs.get('pk', '')
-        if self.has_middleman_master_behavior():
-            resp = middleman_client.get_perms(
-                slave_name=self.slave_name, query_params={'id': id_}
-            )
-            data = self.raise_failed_request(resp)
-            permissions = []
-            for perm in data.get('results', [])[:1]:
-                perm['actions'] = ActionField().to_representation(perm['actions'])
-                permissions.append(perm)
-            return Response(permissions[0] if len(permissions) else {})
-        else:
-            return super().retrieve(request, *args, **kwargs)
+    @staticmethod
+    def clean_retrieve_result(perm):
+        perm['actions'] = ActionField().to_representation(perm['actions'])
+        return perm
 
     def list(self, request, *args, **kwargs):
         if not self.has_middleman_master_behavior():

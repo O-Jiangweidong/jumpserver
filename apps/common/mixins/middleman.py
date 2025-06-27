@@ -1,3 +1,5 @@
+import abc
+
 from django.conf import settings
 from django.http import Http404
 from rest_framework.validators import UniqueValidator
@@ -77,20 +79,76 @@ class MiddlemanMixin(object):
             return None
         return super().get_object()
 
-    def destroy(self, request, *args, **kwargs):
+    @staticmethod
+    def _get_id(**kwargs):
         id_ = kwargs.get('pk', '')
-        if not self.tp or not id_:
+        if not id_:
             raise Http404()
+        return id_
 
+    @staticmethod
+    def clean_retrieve_result(result):
+        return result
+
+    def retrieve(self, request, *args, **kwargs):
+        if self.has_middleman_master_behavior():
+            id_ = self._get_id(**kwargs)
+            resp = middleman_client.get_detail(
+                type_=self.tp, id_=id_, slave_name=self.slave_name
+            )
+            data = self.raise_failed_request(resp)
+            data = self.clean_retrieve_result(data)
+            return Response(data)
+        else:
+            return super().retrieve(request, *args, **kwargs)
+
+    def get_serializer(self, *args, **kwargs):
+        clean_fields = kwargs.pop('clean_fields', False)
+        serializer = super().get_serializer(*args, **kwargs)
+        if clean_fields and self.has_middleman_master_behavior():
+            serializer = self._clean_serializer_fields(serializer)
+        return serializer
+
+    @abc.abstractmethod
+    def _build_data(self, *args, **kwargs):
+        raise NotImplementedError('Unsupported API request')
+
+    def update(self, request, *args, **kwargs):
+        if self.has_middleman_master_behavior():
+            id_ = self._get_id(**kwargs)
+            serializer = self.get_serializer(data=request.data, clean_fields=True)
+            serializer.is_valid(raise_exception=True)
+            data = self._build_data(request, serializer, id_)
+            resp = middleman_client.update_resource(
+                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
+            )
+            data = self.raise_failed_request(resp)
+            return Response(status=resp.status_code, data=data)
+        elif self.is_middleman_slave() and not self.from_middleman():
+            id_ = self._get_id(**kwargs)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = self._build_data(request, serializer, id_)
+            resp = middleman_client.update_resource(
+                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
+            )
+            self.raise_failed_request(resp)
+            return super().update(request, *args, **kwargs)
+        else:
+            return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
         destroy_func = super().destroy
         if hasattr(self, 'raw_destroy'):
             destroy_func = self.raw_destroy
         if self.has_middleman_master_behavior():
+            id_ = self._get_id(**kwargs)
             resp = middleman_client.delete_instance(
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
             return Response(status=resp.status_code, data=resp.json())
         elif self.is_middleman_slave() and not self.from_middleman():
+            id_ = self._get_id(**kwargs)
             resp = middleman_client.delete_instance(
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
