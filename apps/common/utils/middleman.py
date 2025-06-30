@@ -63,10 +63,6 @@ class MiddlemanClient(object):
     def enable(self):
         return bool(settings.MIDDLEMAN_ENDPOINT)
 
-    def get_index(self, **kwargs):
-        count = self.get_slave_nodes().get('total', 0)
-        return {'total_count_slave_node': count}
-
     def get_slave_nodes(self, **kwargs):
         url = '/middleman/slave-nodes/'
         resp = self._request('GET', url)
