@@ -63,8 +63,8 @@ class MiddlemanClient(object):
     def enable(self):
         return bool(settings.MIDDLEMAN_ENDPOINT)
 
-    def get_slave_nodes(self, **kwargs):
-        url = '/middleman/slave-nodes/'
+    def get_slaves(self, **kwargs):
+        url = f'/middleman/slave-nodes/?{urllib.parse.urlencode(kwargs)}'
         resp = self._request('GET', url)
         return resp.json()
 
