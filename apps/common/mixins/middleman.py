@@ -104,9 +104,8 @@ class MiddlemanMixin(object):
             return super().retrieve(request, *args, **kwargs)
 
     def get_serializer(self, *args, **kwargs):
-        clean_fields = kwargs.pop('clean_fields', False)
         serializer = super().get_serializer(*args, **kwargs)
-        if clean_fields and self.has_middleman_master_behavior():
+        if self.has_middleman_master_behavior():
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
@@ -117,7 +116,7 @@ class MiddlemanMixin(object):
     def update(self, request, *args, **kwargs):
         if self.has_middleman_master_behavior():
             id_ = self._get_id(**kwargs)
-            serializer = self.get_serializer(data=request.data, clean_fields=True)
+            serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_, is_create=False)
             resp = middleman_client.update_resource(

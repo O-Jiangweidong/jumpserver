@@ -37,23 +37,32 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
         validated_data = serializer.validated_data
         actions_number = validated_data.get('actions', 127)
         data = {
-            'id': id_ or validated_data.get('id', str(uuid.uuid4())),
             'name': validated_data['name'],
             'comment': validated_data.get('comment', ''),
             'is_active': validated_data.get('is_active', False),
             'date_start': str(validated_data.get('date_start', '')),
             'date_expired': str(validated_data.get('date_expired', '')),
-            'created_by': current_username,
             'updated_by': current_username,
-            'user_ids': pk2id(validated_data.get('users', [])),
-            'user_group_ids': pk2id(validated_data.get('user_groups', [])),
-            'asset_ids': pk2id(validated_data.get('assets', [])),
-            'node_ids': pk2id(validated_data.get('nodes', [])),
+            'users': pk2id(validated_data.get('users', []), with_raw=True),
+            'user_groups': pk2id(validated_data.get('user_groups', []), with_raw=True),
+            'assets': pk2id(validated_data.get('assets', []), with_raw=True),
+            'nodes': pk2id(validated_data.get('nodes', []), with_raw=True),
             'accounts': validated_data.get('accounts', []),
             'protocols': validated_data.get('protocols', []),
-            'actions': actions_number,
-            'actions_display': [i['value'] for i in ActionField().to_representation(actions_number)],
         }
+        # 后边 actions 统一下
+        if is_create:
+            data.update({
+                'id': id_ or validated_data.get('id', str(uuid.uuid4())),
+                'created_by': current_username,
+                'actions': actions_number,
+                'actions_display': [i['value'] for i in ActionField().to_representation(actions_number)],
+            })
+        else:
+            data.update({
+                'actions': [i['value'] for i in ActionField().to_representation(actions_number)],
+                'actions_value': actions_number,
+            })
         return data
 
     def perform_create(self, serializer):
