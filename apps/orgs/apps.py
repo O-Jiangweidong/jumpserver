@@ -148,7 +148,7 @@ class OrgsConfig(AppConfig):
             'date_expired': str(user.date_expired),
             'created_by': user.created_by,
             'updated_by': user.updated_by,
-            'groups': pk2id(user.groups.values('id'), with_raw=True),
+            'groups': pk2id(user.groups.values('id'), with_id=True),
             'roles': pk2id(user.roles.values('id')),
         }
         resp = middleman_client.post_resource(

@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from common.utils import middleman_client, pk2id
 from common.mixins.middleman import MiddlemanMixin
 from orgs.mixins.api import OrgBulkModelViewSet
+from orgs.models import Organization
 from perms.filters import AssetPermissionFilter
 from perms.models import AssetPermission
 from perms.serializers import (
@@ -43,10 +44,10 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             'date_start': str(validated_data.get('date_start', '')),
             'date_expired': str(validated_data.get('date_expired', '')),
             'updated_by': current_username,
-            'users': pk2id(validated_data.get('users', []), with_raw=True),
-            'user_groups': pk2id(validated_data.get('user_groups', []), with_raw=True),
-            'assets': pk2id(validated_data.get('assets', []), with_raw=True),
-            'nodes': pk2id(validated_data.get('nodes', []), with_raw=True),
+            'users': pk2id(validated_data.get('users', []), with_id=True),
+            'user_groups': pk2id(validated_data.get('user_groups', []), with_id=True),
+            'assets': pk2id(validated_data.get('assets', []), with_id=True),
+            'nodes': pk2id(validated_data.get('nodes', []), with_id=True),
             'accounts': validated_data.get('accounts', []),
             'protocols': validated_data.get('protocols', []),
         }

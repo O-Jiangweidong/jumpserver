@@ -17,6 +17,8 @@ class MiddlemanApi(APIView):
             res = middleman_client.get_slaves(filter='index')
         elif action_ == 'get_slave_nodes':
             res = middleman_client.get_slaves()
+        elif action_ == 'get_tasks':
+            res = middleman_client.get_tasks(**query_data)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
         return Response(res)

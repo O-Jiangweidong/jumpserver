@@ -140,8 +140,8 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
             'address': validated_data['address'],
             'is_active': validated_data.get('is_active', True),
             'protocols': [dict(i) for i in validated_data.get('protocols', [])],
-            'platform': pk2id([platform], with_raw=True)[0],
-            'nodes': pk2id(validated_data.get('nodes', []), with_raw=True),
+            'platform': pk2id([platform], with_id=True, id_typer=int)[0],
+            'nodes': pk2id(validated_data.get('nodes', []), with_id=True),
             'date_updated': current_time,
         }
         if is_create:

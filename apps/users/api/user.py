@@ -78,7 +78,7 @@ class UserViewSet(
             'date_expired': str(validated_data.get('date_expired', '')),
             'password_strategy': serializer.initial_data.get('password_strategy', 'email'),
             'updated_by': current_username,
-            'groups': pk2id(validated_data.get('groups', []), with_raw=True),
+            'groups': pk2id(validated_data.get('groups', []), with_id=True),
 
         }
         if validated_data.get('password_raw'):

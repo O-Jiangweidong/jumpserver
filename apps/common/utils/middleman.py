@@ -14,17 +14,17 @@ from common.utils import lazyproperty, get_logger
 logger = get_logger(__name__)
 
 
-def pk2id(data, with_raw=False):
+def pk2id(data, with_id=False, id_typer=str):
     result = []
     for d in data:
         if isinstance(d, dict):
             v = d.get('pk', d.get('id', ''))
-            v = v if isinstance(v, int) else str(v)
+            v = id_typer(v)
         elif isinstance(d, Model):
-            v = str(d.pk)
+            v = id_typer(d.pk)
         else:
             v = d
-        if with_raw:
+        if with_id:
             v = {'id': v}
         result.append(v)
     return result
@@ -65,6 +65,11 @@ class MiddlemanClient(object):
 
     def get_slaves(self, **kwargs):
         url = f'/middleman/slave-nodes/?{urllib.parse.urlencode(kwargs)}'
+        resp = self._request('GET', url)
+        return resp.json()
+
+    def get_tasks(self, **kwargs):
+        url = f'/middleman/tasks/?{urllib.parse.urlencode(kwargs)}'
         resp = self._request('GET', url)
         return resp.json()
 

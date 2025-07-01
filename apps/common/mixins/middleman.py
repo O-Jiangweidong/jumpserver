@@ -16,8 +16,10 @@ from common.utils import lazyproperty, middleman_client
 
 class MiddlemanMixin(object):
     request: Request
-    tp: str
-    retrieve_internal: bool = False
+    tp: str = ''
+    use_middleman_retrieve: bool = True
+    use_middleman_update: bool = True
+    use_middleman_destroy: bool = True
 
     @lazyproperty
     def slave_name(self):
@@ -76,7 +78,7 @@ class MiddlemanMixin(object):
         return serializer
 
     def get_object(self):
-        if self.has_middleman_master_behavior() and not self.retrieve_internal:
+        if self.has_middleman_master_behavior() and self.use_middleman_retrieve:
             return None
         return super().get_object()
 
@@ -92,7 +94,7 @@ class MiddlemanMixin(object):
         return result
 
     def retrieve(self, request, *args, **kwargs):
-        if self.has_middleman_master_behavior() and not self.retrieve_internal:
+        if self.has_middleman_master_behavior() and self.use_middleman_retrieve:
             id_ = self._get_id(**kwargs)
             resp = middleman_client.get_detail(
                 type_=self.tp, id_=id_, slave_name=self.slave_name
@@ -111,26 +113,30 @@ class MiddlemanMixin(object):
 
     @abc.abstractmethod
     def _build_data(self, *args, **kwargs):
-        raise NotImplementedError('Unsupported API request')
+        raise JMSException('Unsupported API request')
 
     def update(self, request, *args, **kwargs):
+        if not self.tp or not self.use_middleman_update:
+            return super().update(request, *args, **kwargs)
+
+        partial = kwargs.pop('partial', False) and self.tp == 'node'
         if self.has_middleman_master_behavior():
             id_ = self._get_id(**kwargs)
             serializer = self.get_serializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_, is_create=False)
             resp = middleman_client.update_resource(
-                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
+                type_=self.tp, id_=id_, data=data, partial=partial, slave_name=self.slave_name
             )
             data = self.raise_failed_request(resp)
             return Response(status=resp.status_code, data=data)
         elif self.is_middleman_slave() and not self.from_middleman():
             id_ = self._get_id(**kwargs)
-            serializer = self.get_serializer(data=request.data)
+            serializer = self.get_serializer(instance=self.get_object(), data=request.data)
             serializer.is_valid(raise_exception=True)
             data = self._build_data(request, serializer, id_, is_create=False)
             resp = middleman_client.update_resource(
-                type_=self.tp, id_=id_, data=data, slave_name=self.slave_name
+                type_=self.tp, id_=id_, data=data, partial=partial, slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
             return super().update(request, *args, **kwargs)
@@ -138,6 +144,9 @@ class MiddlemanMixin(object):
             return super().update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
+        if not self.tp or not self.use_middleman_destroy:
+            return super().destroy(request, *args, **kwargs)
+
         destroy_func = super().destroy
         if hasattr(self, 'raw_destroy'):
             destroy_func = self.raw_destroy

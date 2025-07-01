@@ -30,7 +30,7 @@ class AssetPlatformViewSet(MiddlemanMixin, JMSModelViewSet):
         'ops_methods': 'assets.view_platform',
         'filter_nodes_assets': 'assets.view_platform',
     }
-    retrieve_internal = True
+    use_middleman_retrieve = False
 
     def list(self, request, *args, **kwargs):
         if not self.has_middleman_master_behavior():

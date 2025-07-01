@@ -1,4 +1,6 @@
 # ~*~ coding: utf-8 ~*~
+import uuid
+
 from collections import namedtuple, defaultdict
 from functools import partial
 
@@ -49,12 +51,6 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
     }
     tp = 'node'
 
-    def get_serializer(self, *args, **kwargs):
-        serializer = super().get_serializer(*args, **kwargs)
-        if self.action in ('create', 'patch') and self.has_middleman_master_behavior():
-            serializer = self._clean_serializer_fields(serializer)
-        return serializer
-
     def list(self, request, *args, **kwargs):
         if not self.has_middleman_master_behavior():
             return super().list(request, *args, **kwargs)
@@ -69,31 +65,22 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         task = check_node_assets_amount_task.delay(current_org.id)
         return Response(data={'task': task.id})
 
-    def raw_perform_update(self, serializer):
+    def perform_update(self, serializer):
         node = self.get_object()
         if node.is_org_root() and node.value != serializer.validated_data['value']:
             msg = _("You can't update the root node name")
             raise ValidationError({"error": msg})
         return super().perform_update(serializer)
 
-    def _update_node_to_middleman(self, serializer):
-        d = serializer.validated_data
-        id_ = self.kwargs.get('pk', '')
-        data = {'value': d.get('value', '')}
-        return middleman_client.update_resource(
-            type_='node', id_=id_, data=data, partial=True, slave_name=self.slave_name
-        )
-
-    def perform_update(self, serializer):
-        if self.has_middleman_master_behavior():
-            resp = self._update_node_to_middleman(serializer)
-            self.raise_failed_request(resp)
-        elif self.is_middleman_slave() and not self.from_middleman():
-            resp = self._update_node_to_middleman(serializer)
-            self.raise_failed_request(resp)
-            self.raw_perform_update(serializer)
-        else:
-            self.raw_perform_update(serializer)
+    @staticmethod
+    def _build_data(request, serializer, id_=None, is_create=True):
+        validated_data = serializer.validated_data
+        data = {'value': validated_data.get('value', '')}
+        if is_create:
+            data.update({
+                'id': id_ or serializer.validated_data.get('id', str(uuid.uuid4())),
+            })
+        return data
 
     def raw_destroy(self, request, *args, **kwargs):
         node = self.get_object()

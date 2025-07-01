@@ -37,6 +37,8 @@ class AccountViewSet(MiddlemanMixin, OrgBulkModelViewSet):
         'clear_secret': 'accounts.change_account',
     }
     export_as_zip = True
+    use_middleman_update = False
+    tp = 'account'
 
     def list(self, request, *args, **kwargs):
         if not self.has_middleman_master_behavior():
