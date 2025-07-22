@@ -47,11 +47,6 @@ class MiddlemanClient(object):
 
     def _request(self, method, url, query_params=None, **kwargs):
         url = self.endpoint + url
-        query_params = query_params or {}
-        limit = query_params.pop('limit', 100)
-        offset = query_params.pop('offset', 0)
-        sep = '&' if '?' in url else '?'
-        url = f'{url}{sep}limit={limit}&offset={offset}'
         if query_params:
             url = f'{url}&{urllib.parse.urlencode(query_params)}'
         kwargs.setdefault('headers', {})
