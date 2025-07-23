@@ -13,10 +13,11 @@ urlpatterns = [
     # login
     path('login/', non_atomic_requests(views.UserLoginView.as_view()), name='login'),
     path('login/mfa/', views.UserLoginMFAView.as_view(), name='login-mfa'),
+    path('login/ukey/', views.UserUKeyView.as_view(), name='login-ukey'),
     path('login/wait-confirm/', views.UserLoginWaitConfirmView.as_view(), name='login-wait-confirm'),
     path('login/guard/', views.UserLoginGuardView.as_view(), name='login-guard'),
     path('logout/', views.UserLogoutView.as_view(), name='logout'),
-
+    path('ukey/<uuid:user_id>/bind/', views.UserUKeyBindView.as_view(), name='ukey-bind'),
     # 原来在users中的
     path('password/forget/previewing/', users_view.UserForgotPasswordPreviewingView.as_view(),
          name='forgot-previewing'),

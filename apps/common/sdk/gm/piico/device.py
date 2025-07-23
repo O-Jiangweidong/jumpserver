@@ -1,9 +1,12 @@
 from ctypes import *
 
-from .exception import PiicoError
-from .session import Session
 from .cipher import *
 from .digest import *
+from .exception import PiicoError
+from .session import Session
+from common.utils import get_logger
+
+logger = get_logger(__file__)
 
 
 class Device:
@@ -18,17 +21,17 @@ class Device:
 
     def close(self):
         if self.__device is None:
-            raise Exception("device not turned on")
+            raise PiicoError("device not turned on", -1)
         ret = self._driver.SDF_CloseDevice(self.__device)
         if ret != 0:
-            raise Exception("turn off device failed")
+            raise PiicoError("turn off device failed", -1)
         self.__device = None
 
     def new_session(self):
         session = c_void_p()
         ret = self._driver.SDF_OpenSession(self.__device, pointer(session))
         if ret != 0:
-            raise Exception("create session failed")
+            raise PiicoError("create session failed", -1)
         return Session(self._driver, session)
 
     def generate_ecc_key_pair(self):
@@ -38,6 +41,13 @@ class Device:
     def generate_random(self, length=64):
         session = self.new_session()
         return session.generate_random(length)
+
+    def verify_sign(self, public_key, raw_data, sign_data):
+        logger.debug("verify_sign public_key: %s", public_key)
+        logger.debug("verify_sign raw_data: %s", raw_data)
+        logger.debug("verify_sign sign_data: %s", sign_data)
+        session = self.new_session()
+        return session.verify_sign_ecc(0x00020200, public_key, raw_data, sign_data)
 
     def new_sm2_ecc_cipher(self, public_key, private_key):
         session = self.new_session()
@@ -58,7 +68,7 @@ class Device:
     def __load_driver(self, path):
         # check driver status
         if self._driver is not None:
-            raise Exception("already load driver")
+            raise PiicoError("already load driver", -1)
         # load driver
         self._driver = cdll.LoadLibrary(path)
 

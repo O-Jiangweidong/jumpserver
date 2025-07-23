@@ -314,6 +314,7 @@ class UserLoginGuardView(mixins.AuthMixin, RedirectView):
     redirect_field_name = 'next'
     login_url = reverse_lazy('authentication:login')
     login_mfa_url = reverse_lazy('authentication:login-mfa')
+    login_ukey_url = reverse_lazy('authentication:login-ukey')
     login_confirm_url = reverse_lazy('authentication:login-wait-confirm')
 
     def format_redirect_url(self, url):
@@ -333,12 +334,15 @@ class UserLoginGuardView(mixins.AuthMixin, RedirectView):
         try:
             user = self.get_user_from_session()
             self.check_user_mfa_if_need(user)
+            self.check_user_ukey_if_need(user)
             self.check_user_login_confirm_if_need(user)
         except (errors.CredentialError, errors.SessionEmptyError) as e:
             print("Error: ", e)
             return self.format_redirect_url(self.login_url)
         except errors.MFARequiredError:
             return self.format_redirect_url(self.login_mfa_url)
+        except (errors.LoginCheckKeyError, errors.UKeyUnsetError):
+            return self.format_redirect_url(self.login_ukey_url)
         except errors.LoginConfirmBaseError:
             return self.format_redirect_url(self.login_confirm_url)
         except errors.MFAUnsetError as e:
