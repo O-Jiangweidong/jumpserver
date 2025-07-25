@@ -1,5 +1,3 @@
-import abc
-
 from django.conf import settings
 from django.http import Http404
 from rest_framework.validators import UniqueValidator
@@ -111,7 +109,6 @@ class MiddlemanMixin(object):
             serializer = self._clean_serializer_fields(serializer)
         return serializer
 
-    @abc.abstractmethod
     def _build_data(self, *args, **kwargs):
         raise JMSException('Unsupported API request')
 

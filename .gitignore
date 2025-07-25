@@ -44,3 +44,5 @@ data/*
 test.py
 .history/
 .test/
+*.mmdb
+*.ipdb

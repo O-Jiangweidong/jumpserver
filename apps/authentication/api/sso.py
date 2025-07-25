@@ -16,8 +16,9 @@ from common.api import JMSGenericViewSet
 from common.const.http import POST, GET
 from common.permissions import OnlySuperUser
 from common.serializers import EmptySerializer
-from common.utils import reverse, safe_next_url
+from common.utils import reverse, safe_next_url, middleman_client
 from common.utils.timezone import utc_now
+from common.mixins.middleman import MiddlemanMixin
 from users.models import User
 from users.utils import LoginBlockUtil, LoginIpBlockUtil
 from ..errors import (
@@ -32,15 +33,23 @@ NEXT_URL = 'next'
 AUTH_KEY = 'authkey'
 
 
-class SSOViewSet(AuthMixin, JMSGenericViewSet):
+class SSOViewSet(MiddlemanMixin, AuthMixin, JMSGenericViewSet):
     queryset = SSOToken.objects.all()
     serializer_classes = {
         'login_url': SSOTokenSerializer,
         'login': EmptySerializer
     }
+    use_middleman_retrieve: bool = False
+    use_middleman_update: bool = False
+    use_middleman_destroy: bool = False
 
     @action(methods=[POST], detail=False, permission_classes=[OnlySuperUser], url_path='login-url')
     def login_url(self, request, *args, **kwargs):
+        if self.has_middleman_master_behavior():
+            resp = middleman_client.proxy_request(self, slave_name=self.slave_name)
+            resp.raise_for_status()
+            return Response(resp.json())
+
         if not settings.AUTH_SSO:
             raise SSOAuthClosed()
 

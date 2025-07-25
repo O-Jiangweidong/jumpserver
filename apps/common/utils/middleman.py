@@ -172,5 +172,12 @@ class MiddlemanClient(object):
             json=data, headers={'SLAVE-NAME': slave_name}
         )
 
+    def proxy_request(self, view, slave_name):
+        request = view.request
+        return self._request(
+            request.method, f'/middleman/proxy/?action={view.action}',
+            json=request.data, headers={'SLAVE-NAME': slave_name}
+        )
+
 
 middleman_client = MiddlemanClient()
