@@ -128,6 +128,33 @@ class OrgsConfig(AppConfig):
         print('Push node: ', resp)
 
     @staticmethod
+    def __push_account_templates():
+        from accounts.models import AccountTemplate
+
+        data = []
+        for obj in AccountTemplate.objects.all():
+            data.append({
+                'id': str(obj.id),
+                'name': obj.name,
+                'username': obj.username,
+                'comment': obj.comment,
+                'secret_type': obj.secret_type,
+                'secret_strategy': obj.secret_strategy,
+                'privileged': obj.privileged,
+                'created_by': obj.created_by,
+                'updated_by': obj.updated_by,
+                'date_created': str(obj.date_created),
+                'date_updated': str(obj.date_updated),
+                'auto_push': obj.auto_push,
+                'password_rules': obj.password_rules,
+                'secret': obj.secret,
+            })
+        resp = middleman_client.post_resource(
+            'account_template', data, settings.MIDDLEMAN_SERVICE_NAME
+        )
+        print('Push account template: ', resp)
+
+    @staticmethod
     def __push_admin_user():
         from users.models import User
 
@@ -165,6 +192,7 @@ class OrgsConfig(AppConfig):
         self.__push_admin_user()
         self.__push_platforms()
         self.__push_nodes()
+        self.__push_account_templates()
 
     def ready(self):
         lock_key = 'middleman_init_lock'

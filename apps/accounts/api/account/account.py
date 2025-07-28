@@ -38,6 +38,7 @@ class AccountViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     }
     export_as_zip = True
     use_middleman_update = False
+    use_middleman_create = False
     tp = 'account'
 
     def list(self, request, *args, **kwargs):

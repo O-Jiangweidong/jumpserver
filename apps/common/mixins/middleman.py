@@ -17,6 +17,7 @@ class MiddlemanMixin(object):
     tp: str = ''
     use_middleman_retrieve: bool = True
     use_middleman_update: bool = True
+    use_middleman_create: bool = True
     use_middleman_destroy: bool = True
 
     @lazyproperty
@@ -60,6 +61,8 @@ class MiddlemanMixin(object):
                 continue
             s_validators.append(v)
         serializer.validators = s_validators
+        if not hasattr(serializer, 'fields'):
+            return serializer
 
         for __, field in serializer.fields.items():
             if isinstance(field, (
@@ -111,6 +114,30 @@ class MiddlemanMixin(object):
 
     def _build_data(self, *args, **kwargs):
         raise JMSException('Unsupported API request')
+
+    def perform_create(self, serializer):
+        if not self.tp or not self.use_middleman_create:
+            return super().perform_create(serializer)
+
+        perform_create_func = super().perform_create
+        if hasattr(self, 'raw_perform_create'):
+            perform_create_func = self.raw_perform_create
+        if self.has_middleman_master_behavior():
+            data = self._build_data(self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_=self.tp, data=[data], slave_name=self.slave_name
+            )
+            self.raise_failed_request(resp)
+        elif self.is_middleman_slave() and not self.from_middleman():
+            data = self._build_data(self.request, serializer)
+            resp = middleman_client.post_resource(
+                type_=self.tp, data=[data], slave_name=self.slave_name
+            )
+            self.raise_failed_request(resp)
+            serializer.validated_data['id'] = data['id']
+            perform_create_func(serializer)
+        else:
+            perform_create_func(serializer)
 
     def update(self, request, *args, **kwargs):
         if not self.tp or not self.use_middleman_update:

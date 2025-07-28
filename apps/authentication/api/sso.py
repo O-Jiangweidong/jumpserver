@@ -42,6 +42,7 @@ class SSOViewSet(MiddlemanMixin, AuthMixin, JMSGenericViewSet):
     use_middleman_retrieve: bool = False
     use_middleman_update: bool = False
     use_middleman_destroy: bool = False
+    use_middleman_create: bool = False
 
     @action(methods=[POST], detail=False, permission_classes=[OnlySuperUser], url_path='login-url')
     def login_url(self, request, *args, **kwargs):

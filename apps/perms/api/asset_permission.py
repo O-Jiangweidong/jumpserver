@@ -66,24 +66,6 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             })
         return data
 
-    def perform_create(self, serializer):
-        if self.has_middleman_master_behavior():
-            data = self._build_data(self.request, serializer)
-            resp = middleman_client.post_resource(
-                type_='perm', data=[data], slave_name=self.slave_name
-            )
-            self.raise_failed_request(resp)
-        elif self.is_middleman_slave() and not self.from_middleman():
-            data = self._build_data(self.request, serializer)
-            resp = middleman_client.post_resource(
-                type_='perm', data=[data], slave_name=self.slave_name
-            )
-            self.raise_failed_request(resp)
-            serializer.validated_data['id'] = data['id']
-            super().perform_create(serializer)
-        else:
-            super().perform_create(serializer)
-
     @staticmethod
     def clean_retrieve_result(perm):
         perm['actions'] = ActionField().to_representation(perm['actions'])

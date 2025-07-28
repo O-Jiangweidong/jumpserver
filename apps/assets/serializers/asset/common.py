@@ -78,27 +78,19 @@ class AssetAccountSerializer(AccountSerializer):
     add_org_fields = False
     asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects, required=False, write_only=True)
     clone_id = None
-    _skip_accounts_clone = False
-
-    def _is_middleman_action(self):
-        request = get_current_request()
-        if request.headers.get('x-middleman-version'):
-            return True
-        if getattr(self, '_skip_accounts_clone', False):
-            return True
-        return getattr(self.parent, '_skip_accounts_clone', False)
 
     def to_internal_value(self, data):
         # 导入时，data有时为str
         if isinstance(data, str):
             return super().to_internal_value(data)
 
-        if self._is_middleman_action():
-            return super().to_internal_value(data)
-
         clone_id = data.pop('id', None)
+        exist = Account.objects.filter(id=clone_id).exists()
+        if not exist:
+            data['id'] = clone_id
+        else:
+            self.clone_id = clone_id
         ret = super().to_internal_value(data)
-        self.clone_id = clone_id
         return ret
 
     def set_secret(self, attrs):
@@ -145,7 +137,6 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
     accounts = AssetAccountSerializer(many=True, required=False, allow_null=True, write_only=True, label=_('Account'))
     nodes_display = serializers.ListField(read_only=False, required=False, label=_("Node path"))
     _accounts = None
-    _skip_accounts_clone = False
 
     class Meta:
         model = Asset
@@ -361,7 +352,6 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
                     su_from.username, su_from.secret_type
                 )
         s = AssetAccountSerializer(data=accounts_data, many=True)
-        s._skip_accounts_clone = self._skip_accounts_clone
         s.is_valid(raise_exception=True)
         accounts = s.save()
         self.update_account_su_from(accounts, su_from_name_username_secret_type_map)

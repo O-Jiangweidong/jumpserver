@@ -116,6 +116,14 @@ class MiddlemanClient(object):
         )
         return resp.json()
 
+    def get_account_templates(self, slave_name='', query_params=None, **kwargs):
+        url = f'/middleman/resources/?m_type=account_template'
+        resp = self._request(
+            'GET', url, headers={'SLAVE-NAME': slave_name},
+            query_params=query_params, **kwargs
+        )
+        return resp.json()
+
     def get_perms(self, slave_name='', query_params=None, **kwargs):
         url = f'/middleman/resources/?m_type=perm'
         resp = self._request(
