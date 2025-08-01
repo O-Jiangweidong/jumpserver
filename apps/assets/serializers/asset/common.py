@@ -85,11 +85,12 @@ class AssetAccountSerializer(AccountSerializer):
             return super().to_internal_value(data)
 
         clone_id = data.pop('id', None)
-        exist = Account.objects.filter(id=clone_id).exists()
-        if not exist:
-            data['id'] = clone_id
-        else:
-            self.clone_id = clone_id
+        if clone_id:
+            exist = Account.objects.filter(id=clone_id).exists()
+            if not exist:
+                data['id'] = clone_id
+            else:
+                self.clone_id = clone_id
         ret = super().to_internal_value(data)
         return ret
 
