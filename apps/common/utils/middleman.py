@@ -1,4 +1,6 @@
 import os
+import uuid
+import json
 
 import urllib.parse
 
@@ -12,6 +14,13 @@ from common.utils import lazyproperty, get_logger
 
 
 logger = get_logger(__name__)
+
+
+class MiddlemanDataEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, uuid.UUID):
+            return str(obj)
+        return super().default(obj)
 
 
 def pk2id(data, with_id=False, id_typer=str):
@@ -165,9 +174,10 @@ class MiddlemanClient(object):
         if not self.enable:
             return
 
+        json_data = json.dumps(data, cls=MiddlemanDataEncoder)
         return self._request(
             'POST', f'/middleman/resources/?m_type={type_}',
-            json=data, headers={'SLAVE-NAME': slave_name}
+            json=json_data, headers={'SLAVE-NAME': slave_name}
         )
 
     def update_resource(self, type_, id_, data, slave_name, partial=False, **kwargs):
@@ -175,9 +185,10 @@ class MiddlemanClient(object):
             return
 
         method = 'PATCH' if partial else 'PUT'
+        json_data = json.dumps(data, cls=MiddlemanDataEncoder)
         return self._request(
             method, f'/middleman/resources/{id_}/?m_type={type_}',
-            json=data, headers={'SLAVE-NAME': slave_name}
+            json=json_data, headers={'SLAVE-NAME': slave_name}
         )
 
     def proxy_request(self, view, slave_name):
