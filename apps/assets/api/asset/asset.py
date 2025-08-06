@@ -147,7 +147,7 @@ class AssetViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
         if is_create:
             data.update({
                 'id': _id or str(validated_data.get('id', uuid.uuid4())),
-                'accounts': self.__clean_accounts(serializer._accounts),
+                'accounts': self.__clean_accounts(serializer._accounts or []),
                 'connectivity': '-',
                 'date_created': current_time,
             })

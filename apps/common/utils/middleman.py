@@ -174,7 +174,11 @@ class MiddlemanClient(object):
         if not self.enable:
             return
 
-        json_data = json.dumps(data, cls=MiddlemanDataEncoder)
+        try:
+            data_str = json.dumps(data, cls=MiddlemanDataEncoder)
+            json_data = json.loads(data_str)
+        except Exception: # noqa
+            json_data = data
         return self._request(
             'POST', f'/middleman/resources/?m_type={type_}',
             json=json_data, headers={'SLAVE-NAME': slave_name}
@@ -185,7 +189,11 @@ class MiddlemanClient(object):
             return
 
         method = 'PATCH' if partial else 'PUT'
-        json_data = json.dumps(data, cls=MiddlemanDataEncoder)
+        try:
+            data_str = json.dumps(data, cls=MiddlemanDataEncoder)
+            json_data = json.loads(data_str)
+        except Exception: # noqa
+            json_data = data
         return self._request(
             method, f'/middleman/resources/{id_}/?m_type={type_}',
             json=json_data, headers={'SLAVE-NAME': slave_name}
