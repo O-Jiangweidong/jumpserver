@@ -143,7 +143,7 @@ class MiddlemanMixin(object):
         if not self.tp or not self.use_middleman_update:
             return super().update(request, *args, **kwargs)
 
-        partial = kwargs.pop('partial', False) and self.tp == 'node'
+        partial = kwargs.get('partial', False) and self.tp == 'node'
         if self.has_middleman_master_behavior():
             id_ = self._get_id(**kwargs)
             serializer = self.get_serializer(data=request.data)
