@@ -26,6 +26,7 @@ class ApplyAssetSerializer(BaseApplyAssetSerializer, TicketApplySerializer):
         label=_('Apply nodes'), help_text=apply_help_text
     )
     apply_actions = ActionChoicesField(required=False, allow_null=True, label=_("Apply actions"))
+    ticket_apply_asset_actions = serializers.ListField(child=serializers.CharField(), required=True)
     permission_model = AssetPermission
 
     class Meta(TicketApplySerializer.Meta):
@@ -33,7 +34,7 @@ class ApplyAssetSerializer(BaseApplyAssetSerializer, TicketApplySerializer):
         writeable_fields = [
             'id', 'title', 'type', 'apply_nodes', 'apply_assets', 'apply_accounts',
             'apply_actions', 'apply_date_start', 'apply_date_expired',
-            'comment', 'org_id'
+            'comment', 'org_id', 'ticket_apply_asset_actions',
         ]
         read_only_fields = TicketApplySerializer.Meta.read_only_fields + ['apply_permission_name', ]
         fields = TicketApplySerializer.Meta.fields_small + writeable_fields + read_only_fields
@@ -63,6 +64,26 @@ class ApplyAssetSerializer(BaseApplyAssetSerializer, TicketApplySerializer):
             })
 
         return attrs
+
+    def create(self, validated_data):
+        ticket_apply_asset_actions = validated_data.pop('ticket_apply_asset_actions', None)
+        instance = super().create(validated_data)
+        if ticket_apply_asset_actions is not None:
+            if not instance.meta:
+                instance.meta = {}
+            instance.meta['ticket_apply_asset_actions'] = ticket_apply_asset_actions
+            instance.save(update_fields=['meta'])
+        return instance
+
+    def update(self, instance, validated_data):
+        ticket_apply_asset_actions = validated_data.pop('ticket_apply_asset_actions', None)
+        instance = super().update(instance, validated_data)
+        if ticket_apply_asset_actions is not None:
+            if not instance.meta:
+                instance.meta = {}
+            instance.meta['ticket_apply_asset_actions'] = ticket_apply_asset_actions
+            instance.save(update_fields=['meta'])
+        return instance
 
     @classmethod
     def setup_eager_loading(cls, queryset):

@@ -586,6 +586,7 @@ class Config(dict):
         'PERM_SINGLE_ASSET_TO_UNGROUP_NODE': False,
         'TICKET_AUTHORIZE_DEFAULT_TIME': 7,
         'TICKET_AUTHORIZE_DEFAULT_TIME_UNIT': 'day',
+        'TICKET_ACTION_CHOICES': [],
         'PERIOD_TASK_ENABLED': True,
         'TERMINAL_TELNET_REGEX': '',
 

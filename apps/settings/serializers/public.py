@@ -19,6 +19,7 @@ class PrivateSettingSerializer(PublicSettingSerializer):
     OLD_PASSWORD_HISTORY_LIMIT_COUNT = serializers.IntegerField()
     TICKET_AUTHORIZE_DEFAULT_TIME = serializers.IntegerField()
     TICKET_AUTHORIZE_DEFAULT_TIME_UNIT = serializers.CharField()
+    TICKET_ACTION_CHOICES = serializers.ListField()
     AUTH_LDAP_SYNC_ORG_IDS = serializers.ListField()
     SECURITY_MAX_IDLE_TIME = serializers.IntegerField()
     SECURITY_VIEW_AUTH_NEED_MFA = serializers.BooleanField()

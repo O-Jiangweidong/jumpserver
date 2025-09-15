@@ -24,3 +24,7 @@ class ApplyAssetTicket(Ticket):
 
     class Meta:
         verbose_name = _('Apply Asset Ticket')
+
+    @property
+    def ticket_apply_asset_actions(self):
+        return self.meta.get('ticket_apply_asset_actions', [])

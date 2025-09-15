@@ -103,6 +103,9 @@ class TicketSettingSerializer(serializers.Serializer):
         choices=[('day', _("day")), ('hour', _("hour"))],
         label=_("Ticket authorize default time unit"), required=False,
     )
+    TICKET_ACTION_CHOICES = serializers.ListField(
+        child=serializers.CharField(), label=_('Action'), required=False
+    )
 
 
 class OpsSettingSerializer(serializers.Serializer):
