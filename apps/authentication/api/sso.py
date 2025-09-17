@@ -14,7 +14,6 @@ from rest_framework.response import Response
 from authentication.errors import ACLError
 from common.api import JMSGenericViewSet
 from common.const.http import POST, GET
-from common.permissions import OnlySuperUser
 from common.serializers import EmptySerializer
 from common.utils import reverse, safe_next_url
 from common.utils.timezone import utc_now
@@ -38,8 +37,11 @@ class SSOViewSet(AuthMixin, JMSGenericViewSet):
         'login_url': SSOTokenSerializer,
         'login': EmptySerializer
     }
-
-    @action(methods=[POST], detail=False, permission_classes=[OnlySuperUser], url_path='login-url')
+    rbac_perms = {
+        'login_url': 'authentication.add_ssotoken',
+    }
+    
+    @action(methods=[POST], detail=False, url_path='login-url')
     def login_url(self, request, *args, **kwargs):
         if not settings.AUTH_SSO:
             raise SSOAuthClosed()
@@ -103,11 +105,9 @@ class SSOViewSet(AuthMixin, JMSGenericViewSet):
             self.request.session['auth_backend'] = settings.AUTH_BACKEND_SSO
             login(self.request, user, settings.AUTH_BACKEND_SSO)
             self.send_auth_signal(success=True, user=user)
-            self.mark_mfa_ok('otp', user)
 
             LoginIpBlockUtil(ip).clean_block_if_need()
             LoginBlockUtil(username, ip).clean_failed_count()
-            self.clear_auth_mark()
         except (ACLError, LoginConfirmBaseError):  # 无需记录日志
             pass
         except (AuthFailedError, SSOAuthKeyTTLError) as e:
