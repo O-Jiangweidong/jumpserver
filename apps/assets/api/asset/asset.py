@@ -134,8 +134,15 @@ class AssetViewSet(SuggestionMixin, OrgBulkModelViewSet):
     def weights(self, request):
         serializer = super().get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data)
+        assets = []
+        for item in serializer.validated_data:
+            asset = item['asset']
+            asset.weight = item['weight']
+            assets.append(asset)
+        Asset.objects.bulk_update(assets, ['weight'])
+        import time
+        time.sleep(2)
+        return Response('ok', status=status.HTTP_200_OK)
 
     @action(methods=["GET"], detail=True, url_path="platform")
     def platform(self, *args, **kwargs):

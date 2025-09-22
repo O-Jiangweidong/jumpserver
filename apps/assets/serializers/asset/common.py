@@ -126,12 +126,6 @@ class WeightSerializer(serializers.Serializer):
     asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects, required=True, write_only=True)
     weight = serializers.IntegerField(min_value=0, required=True)
 
-    def create(self, validated_data):
-        asset = validated_data['asset']
-        asset.weight = validated_data['weight']
-        asset.save(update_fields=['weight'])
-        return asset
-
 
 class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, WritableNestedModelSerializer):
     category = LabeledChoiceField(choices=Category.choices, read_only=True, label=_('Category'))
@@ -163,7 +157,6 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
             'address': {'label': _('Address')},
             'nodes_display': {'label': _('Node path')},
             'nodes': {'allow_empty': True},
-            'weight': {'required': True}
         }
 
     def __init__(self, *args, **kwargs):
