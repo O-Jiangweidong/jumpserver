@@ -12,7 +12,7 @@ __all__ = ['Protocol']
 aad_setting = {
     'auth_method': {
         'type': 'choice',
-        'choices': [('normal', _('Normal')), ('azure-aad', 'Azure AAD')],
+        'choices': [('normal', _('Normal')), ('entra', 'Microsoft Entra')],
         'default': 'normal',
         'label': _('Authentication backend'),
     },

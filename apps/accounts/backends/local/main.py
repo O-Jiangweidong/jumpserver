@@ -33,7 +33,7 @@ class Vault(BaseVault):
         primary_protocol = instance.platform.protocols.filter(primary=True).first()
         if primary_protocol and primary_protocol.name in ('postgresql', 'mysql'):
             setting = primary_protocol.setting
-            if setting.get('auth_method') == 'azure-aad':
+            if setting.get('auth_method') == 'entra':
                 auth_url = setting.get('authority_url')
                 resource_url = setting.get('resource_url')
                 secret = self._get_secret_from_aad_sp(auth_url, resource_url)
