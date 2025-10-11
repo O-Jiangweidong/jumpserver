@@ -7,3 +7,4 @@ from .profile import *
 from .relation import *
 from .service import *
 from .user import *
+from .ukey import *

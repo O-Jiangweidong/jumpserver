@@ -86,5 +86,6 @@ class SessionCommandSerializer(SessionCommandSerializerMixin, SimpleSessionComma
 
     class Meta(SimpleSessionCommandSerializer.Meta):
         fields = SimpleSessionCommandSerializer.Meta.fields + [
-            'id', 'account', 'output', 'timestamp', 'timestamp_display', 'remote_addr'
+            'id', 'account', 'output', 'timestamp', 'timestamp_display', 'remote_addr',
+            'encrypt_value', 'hmac_verify',
         ]

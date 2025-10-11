@@ -9,6 +9,7 @@ from django.db.models import F, Value, CharField
 from django.db.models.functions import Concat
 from django.utils import translation
 
+from audits.encrypt import audit_crypto_handler
 from common.db.fields import RelatedManager
 from common.utils import validate_ip, get_ip_city, get_logger
 from common.utils.timezone import as_current_tz
@@ -29,7 +30,8 @@ def write_login_log(*args, **kwargs):
     else:
         city = get_ip_city(ip) or DEFAULT_CITY
     kwargs.update({'ip': ip, 'city': city})
-    return UserLoginLog.objects.create(**kwargs)
+    data = audit_crypto_handler.fill_data(kwargs)
+    return UserLoginLog.objects.create(**data)
 
 
 def _get_instance_field_value(

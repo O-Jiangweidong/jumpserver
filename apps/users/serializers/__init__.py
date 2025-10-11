@@ -5,3 +5,4 @@ from .preference import *
 from .profile import *
 from .realtion import *
 from .user import *
+from .ukey import *

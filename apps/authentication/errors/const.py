@@ -5,6 +5,9 @@ reason_password_failed = 'password_failed'
 reason_password_decrypt_failed = 'password_decrypt_failed'
 reason_mfa_failed = 'mfa_failed'
 reason_mfa_unset = 'mfa_unset'
+reason_usb_key_failed = 'usb_key_failed'
+reason_usb_key_unset = 'usb_key_unset'
+reason_usb_key_cert_verify_failed = 'usb_key_cert_verify_failed'
 reason_user_not_exist = 'user_not_exist'
 reason_password_expired = 'password_expired'
 reason_user_invalid = 'user_invalid'
@@ -19,6 +22,9 @@ reason_choices = {
     reason_password_decrypt_failed: _('Password decrypt failed'),
     reason_mfa_failed: _('MFA failed'),
     reason_mfa_unset: _('MFA unset'),
+    reason_usb_key_failed: _('UKey check failed'),
+    reason_usb_key_unset: _('UKey unset'),
+    reason_usb_key_cert_verify_failed: _('UKey public key check failed'),
     reason_user_not_exist: _("Username does not exist"),
     reason_password_expired: _("Password expired"),
     reason_user_invalid: _('Disabled or expired'),
@@ -62,6 +68,8 @@ mfa_error_msg = _(
 )
 mfa_required_msg = _("MFA required")
 mfa_unset_msg = _("MFA not set, please set it first")
+usb_key_unset_msg = _("USB Key not set，Please contact the administrator")
+usb_key_failed_msg = _('UKey check failed')
 login_confirm_required_msg = _("Login confirm required")
 login_confirm_wait_msg = _("Wait login confirm ticket for accept")
 login_confirm_error_msg = _("Login confirm ticket was {}")

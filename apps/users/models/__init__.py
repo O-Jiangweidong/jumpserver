@@ -5,4 +5,5 @@
 from .group import *
 from .preference import *
 from .user import *
+from .ukey import *
 from .utils import *

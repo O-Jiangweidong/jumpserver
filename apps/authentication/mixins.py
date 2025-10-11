@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 #
+import base64
 import inspect
 import time
 import uuid
@@ -13,7 +14,7 @@ from django.contrib.auth import (
     PermissionDenied, user_login_failed, _clean_credentials,
 )
 from django.core.cache import cache
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.shortcuts import reverse, redirect, get_object_or_404
 from django.utils.http import urlencode
 from django.utils.translation import gettext as _
@@ -22,6 +23,8 @@ from rest_framework.request import Request
 from acls.models import LoginACL
 from apps.jumpserver.settings.auth import AUTHENTICATION_BACKENDS_THIRD_PARTY
 from common.utils import get_request_ip_or_data, get_request_ip, get_logger, bulk_get, FlashMessageUtil
+from common.sdk.gm import piico
+from common.sdk.gm.piico.exception import PiicoError
 from users.models import User
 from users.utils import LoginBlockUtil, MFABlockUtils, LoginIpBlockUtil
 from . import errors
@@ -590,6 +593,41 @@ class AuthMixin(CommonMixin, AuthPreCheckMixin, AuthACLMixin, AuthFaceMixin, MFA
 
         self.mark_password_ok(user, False, auth_backend)
         return user
+
+    def check_user_ukey_if_need(self, user):
+        if self.request.session.get('auth_ukey') and \
+                self.request.session.get('auth_ukey_username') == user.username:
+            return
+        if not settings.PIICO_DEVICE_ENABLE or not settings.XPACK_ENABLED:
+            return
+        try:
+            if user.user_usb_key.get():
+                raise errors.LoginCheckKeyError()
+        except ObjectDoesNotExist:
+            if settings.SECURITY_UKEY_FORCED_MODE:
+                raise errors.UKeyUnsetError()
+
+    def check_ukey_auth(self, user, ukey_token):
+        try:
+            user.user_usb_key.get()
+        except ObjectDoesNotExist:
+            raise errors.UKeyUnsetError()
+        ukey_serial, digest, sign = ukey_token.split('$')
+        user_key = user.user_usb_key.get()
+        if ukey_serial != user_key.u_key_serial:
+            raise errors.LoginCheckKeyError()
+        piico_driver_path = settings.PIICO_DRIVER_PATH or "./lib/libpiico_ccmu.so"
+        try:
+            device = piico.open_piico_device(piico_driver_path)
+            ret = device.verify_sign(base64.b64decode(user_key.u_key_public_key),
+                                     base64.b64decode(digest), base64.b64decode(sign))
+            self.request.session['auth_ukey'] = 1
+            self.request.session['auth_ukey_username'] = user.username
+            logger.debug('verify_sign:{}-{}'.format(user, ret))
+            return ret
+        except PiicoError as e:
+            logger.error('verify_sign:{}'.format(e))
+        raise errors.LoginCheckKeyError()
 
     def get_user_or_auth(self, valid_data):
         request = self.request
