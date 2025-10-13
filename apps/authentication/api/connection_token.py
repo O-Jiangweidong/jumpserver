@@ -424,6 +424,12 @@ class ConnectionTokenViewSet(AuthFaceMixin, ExtraActionApiMixin, RootOrgViewMixi
         if account_alias == AliasAccount.ANON and asset.category not in ['web', 'custom']:
             raise ValidationError(_('Anonymous account is not supported for this asset'))
 
+        if asset.is_offline:
+            raise ValidationError(_('The asset is already offline and cannot be connected'))
+
+        if asset.is_unique_session_status:
+            raise ValidationError(_('The current asset can only maintain one online session. Please wait.'))
+
         account = self._validate_perm(user, asset, account_alias, protocol)
         if account.has_secret:
             data['input_secret'] = ''

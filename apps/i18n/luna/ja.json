@@ -1,4 +1,6 @@
 {
+    "OfflineAsset": "この資産（しさん）はすでにオフラインになっています、管理者に連絡してください",
+    "connectDisabledTipsUniqueSession": "現在（げんざい）ログイン中（ちゅう）のユーザーが存在（そんざい）しています。しばらくして再度（さいど）お試（ため）しください",
     "ACL reject login asset": "アクセス制御ポリシーの制限により、このログインは拒否されました",
     "Account info": "アカウント情報",
     "Account not found": "アカウントが見つかりません",

@@ -170,8 +170,7 @@ class SessionViewSet(OrgBulkModelViewSet):
             return Response({'count': None})
 
         queryset = Session.objects.filter(is_finished=False) \
-            .filter(asset_id=asset) \
-            .filter(protocol='rdp')  # 当前只统计 rdp 协议的会话
+            .filter(asset_id=asset)
         if '(' in account and ')' in account:
             queryset = queryset.filter(account=account)
         else:

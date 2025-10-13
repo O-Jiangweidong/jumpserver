@@ -1,4 +1,6 @@
 {
+    "OfflineAsset": "This asset has taken offline, please contact an administrator",
+    "connectDisabledTipsUniqueSession": "A login user already exists. Please try again later.",
     "ACL reject login asset": "This login has been rejected due to access control policy restrictions",
     "Account info": "Account info",
     "Account not found": "Account not found",

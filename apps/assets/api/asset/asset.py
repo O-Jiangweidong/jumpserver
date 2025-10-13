@@ -104,16 +104,19 @@ class BaseAssetViewSet(OrgBulkModelViewSet):
     model = Asset
     filterset_class = AssetFilterSet
     search_fields = ("name", "address", "comment")
-    ordering_fields = ('name', 'address', 'connectivity', 'platform', 'date_updated', 'date_created')
+    ordering = ('-weight', )
+    ordering_fields = ('weight', 'name', 'address', 'connectivity', 'platform', 'date_updated', 'date_created')
     serializer_classes = (
         ("default", serializers.AssetSerializer),
         ("platform", serializers.PlatformSerializer),
         ("suggestion", serializers.MiniAssetSerializer),
         ("gateways", serializers.GatewaySerializer),
+        ("weights", serializers.WeightSerializer),
         ("accounts", AccountSerializer),
     )
     rbac_perms = (
         ("match", "assets.match_asset"),
+        ("weights", "assets.change_asset"),
         ("platform", "assets.view_platform"),
         ("gateways", "assets.view_gateway"),
         ("accounts", "assets.view_account"),
@@ -162,6 +165,18 @@ class BaseAssetViewSet(OrgBulkModelViewSet):
 
 
 class AssetViewSet(SuggestionMixin, BaseAssetViewSet):
+    @action(methods=['POST', ], detail=False, url_path='weights')
+    def weights(self, request):
+        serializer = super().get_serializer(data=request.data, many=True)
+        serializer.is_valid(raise_exception=True)
+        assets = []
+        for item in serializer.validated_data:
+            asset = item['asset']
+            asset.weight = item['weight']
+            assets.append(asset)
+        Asset.objects.bulk_update(assets, ['weight'])
+        return Response('ok', status=status.HTTP_200_OK)
+
     @action(methods=["GET"], detail=True, url_path="platform")
     def platform(self, *args, **kwargs):
         asset = super().get_object()

@@ -1,3 +1,4 @@
+import ast
 import json
 
 from django.utils.translation import gettext_lazy as _
@@ -29,6 +30,29 @@ class BasicSerializer(serializers.Serializer):
         choices=ConnectDefaultOpenMethod.choices, default=ConnectDefaultOpenMethod.CURRENT,
         label=_('Connect default open method'), required=False
     )
+    shortcut_config_list = serializers.JSONField(
+        label=_('Shortcut key config'), default=[], required=False,
+    )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        shortcut_config = data['shortcut_config_list'] or '[]'
+        data['shortcut_config_list'] = ast.literal_eval(shortcut_config)
+        return data
+
+    @staticmethod
+    def validate_shortcut_config_list(value):
+        if not isinstance(value, list):
+            return []
+
+        result = []
+        for item in value:
+            if not isinstance(item, dict):
+                continue
+            key, value = item.get('key'), item.get('value')
+            if key and value:
+                result.append(item)
+        return result
 
 
 class GraphicsSerializer(serializers.Serializer):

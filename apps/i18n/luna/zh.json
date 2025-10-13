@@ -1,4 +1,6 @@
 {
+    "OfflineAsset": "该资产已被下线，请联系管理员",
+    "connectDisabledTipsUniqueSession": "当前已存在登录用户，请稍后尝试",
     "ACL reject login asset": "本次登录已拒绝，原因是访问控制策略的限制",
     "Account info": "账号信息",
     "Account not found": "账号未找到",

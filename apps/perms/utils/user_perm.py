@@ -139,7 +139,7 @@ class UserPermAssetUtil(AssetPermissionPermAssetUtil):
             assets = self._get_indirect_perm_node_assets(node)
         else:
             assets = Asset.objects.none()
-        assets = assets.order_by('name')
+        assets = assets.order_by('-weight')
         return assets
 
     def get_node_all_assets(self, node_id):

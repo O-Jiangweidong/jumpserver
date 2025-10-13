@@ -182,11 +182,20 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     is_active = models.BooleanField(default=True, verbose_name=_('Active'))
     gathered_info = models.JSONField(verbose_name=_('Gathered info'), default=dict, blank=True)  # 资产的一些信息，如 硬件信息
     custom_info = models.JSONField(verbose_name=_('Custom info'), default=dict)
+    weight = models.PositiveIntegerField(default=0, db_index=True, verbose_name=_('Weight'))
+    is_offline = models.BooleanField(default=False, verbose_name=_('Offline'))
+    unique_session = models.BooleanField(default=False, verbose_name=_('Unique session'))
 
     objects = AssetManager.from_queryset(AssetQuerySet)()
 
     def __str__(self):
         return '{0.name}({0.address})'.format(self)
+
+    @property
+    def is_unique_session_status(self):
+        from terminal.models import Session
+        count_func = Session.objects.filter(is_finished=False, asset_id=self.id).count
+        return self.unique_session and count_func() > 0
 
     def get_labels(self):
         from labels.models import Label, LabeledResource
@@ -422,6 +431,12 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
             asset for asset in assets
             if secret_type in asset_secret_types_mapp.get(asset.id, [])
         ]
+
+    def save(self, *args, **kwargs):
+        if not self.weight:
+            last_weight = Asset.objects.aggregate(models.Max('weight'))['weight__max'] or 0
+            self.weight = last_weight + 1
+        return super().save(*args, **kwargs)
 
     class Meta:
         unique_together = [('org_id', 'name')]

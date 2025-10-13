@@ -24,8 +24,14 @@ __all__ = [
     'AssetSerializer', 'AssetSimpleSerializer', 'MiniAssetSerializer',
     'AssetTaskSerializer', 'AssetsTaskSerializer', 'AssetProtocolsSerializer',
     'AssetDetailSerializer', 'DetailMixin', 'AssetAccountSerializer',
-    'AccountSecretSerializer', 'AssetProtocolsPermsSerializer', 'AssetLabelSerializer'
+    'AccountSecretSerializer', 'AssetProtocolsPermsSerializer', 'AssetLabelSerializer',
+    'WeightSerializer',
 ]
+
+
+class WeightSerializer(serializers.Serializer):
+    asset = serializers.PrimaryKeyRelatedField(queryset=Asset.objects, required=True, write_only=True)
+    weight = serializers.IntegerField(min_value=0, required=True)
 
 
 class AssetProtocolsSerializer(serializers.ModelSerializer):
@@ -157,7 +163,8 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         model = Asset
         fields_fk = ['zone', 'platform']
         fields_mini = ['id', 'name', 'address'] + fields_fk
-        fields_small = fields_mini + ['is_active', 'comment']
+        fields_small = fields_mini + ['is_active', 'comment', 'weight']
+        extra_fields = ['weight', 'is_offline', 'unique_session']
         fields_m2m = [
             'nodes', 'labels', 'protocols',
             'nodes_display', 'accounts',
@@ -167,7 +174,7 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
             'accounts_amount', 'category', 'type', 'connectivity', 'auto_config',
             'date_verified', 'created_by', 'date_created', 'date_updated',
         ]
-        fields = fields_small + fields_fk + fields_m2m + read_only_fields
+        fields = fields_small + fields_fk + fields_m2m + read_only_fields + extra_fields
         fields_unexport = ['auto_config']
         extra_kwargs = {
             'auto_config': {'label': _('Auto info')},
