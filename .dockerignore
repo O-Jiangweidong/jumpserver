@@ -6,7 +6,7 @@ django.db
 celerybeat.pid
 ### Vagrant ###
 .vagrant/
-apps/xpack/.git
+apps/xpack
 .history/
 .idea
 .venv/

@@ -1,7 +1,7 @@
 ARG VERSION=dev
 
 FROM registry.fit2cloud.com/jumpserver/xpack:${VERSION} AS build-xpack
-FROM jumpserver/core:${VERSION}-ce
+FROM registry.fit2cloud.com/jumpserver/core:${VERSION}-ce
 
 COPY --from=build-xpack /opt/xpack /opt/jumpserver/apps/xpack
 

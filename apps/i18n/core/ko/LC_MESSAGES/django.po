@@ -11505,6 +11505,26 @@ msgstr "라이센스 가져오기 성공"
 msgid "Invalid license"
 msgstr "라이센스가 유효하지 않습니다."
 
+#: assets/models/asset/common.py:185
+msgid "가중치"
+msgstr "权重"
+
+#: assets/models/asset/common.py:187
+msgid "Unique session"
+msgstr "단일 세션"
+
+#: authentication/api/connection_token.py:428
+msgid "The asset is already offline and cannot be connected"
+msgstr "이 자산 은 이미 오프라인 상태이므로 연결할 수 없습니다"
+
+#: authentication/api/connection_token.py:431
+msgid "The current asset can only maintain one online session. Please wait."
+msgstr "현재 자산은 온라인 세션을 하나만 유지할 수 있습니다. 기다려 주세요"
+
+#: users/serializers/preference/luna.py:34
+msgid "Shortcut key config"
+msgstr "단축키 설정"
+
 #~ msgid "Task execution id"
 #~ msgstr "작업 실행 ID"
 

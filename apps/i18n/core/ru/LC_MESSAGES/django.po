@@ -11914,6 +11914,26 @@ msgstr "Лицензия успешно импортирована"
 msgid "Invalid license"
 msgstr "Лицензия недействительна"
 
+#: assets/models/asset/common.py:185
+msgid "Weight"
+msgstr "Вес"
+
+#: assets/models/asset/common.py:187
+msgid "Unique session"
+msgstr "Одиночная сессия"
+
+#: authentication/api/connection_token.py:428
+msgid "The asset is already offline and cannot be connected"
+msgstr "Данное средство уже офлайн, невозможно подключиться"
+
+#: authentication/api/connection_token.py:431
+msgid "The current asset can only maintain one online session. Please wait."
+msgstr "Данное средство может поддерживать только одну онлайн-сессию, пожалуйста, подождите"
+
+#: users/serializers/preference/luna.py:34
+msgid "Shortcut key config"
+msgstr "сочетания клавиш"
+
 #~ msgid "Task execution id"
 #~ msgstr "ID выполнения задачи"
 
