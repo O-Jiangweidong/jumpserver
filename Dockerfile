@@ -1,4 +1,3 @@
-# v4.10.9-lts
 FROM jumpserver/core-base:20250827_025554 AS stage-build
 
 ARG VERSION
@@ -12,12 +11,6 @@ RUN echo > /opt/jumpserver/config.yml \
     if [ -n "${VERSION}" ]; then \
         sed -i "s@VERSION = .*@VERSION = '${VERSION}'@g" apps/jumpserver/const.py; \
     fi
-
-ARG PIP_MIRROR=https://pypi.org/simple
-
-RUN set -ex \
-    && uv pip install -i${PIP_MIRROR} --group xpack \
-    && playwright install chromium  --with-deps --only-shell
 
 RUN set -ex \
     && export SECRET_KEY=$(head -c100 < /dev/urandom | base64 | tr -dc A-Za-z0-9 | head -c 48) \
@@ -41,17 +34,7 @@ ARG TOOLS="                           \
         openssh-client                \
         sshpass                       \
         nmap                          \
-        bubblewrap                    \
-        g++                           \
-        curl                          \
-        iputils-ping                  \
-        netcat-openbsd                \
-        nmap                          \
-        telnet                        \
-        vim                           \
-        postgresql-client-13          \
-        wget                          \
-        poppler-utils"
+        bubblewrap"
 
 ARG APT_MIRROR=http://deb.debian.org
 
