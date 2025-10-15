@@ -187,6 +187,7 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
                 'allow_empty': True,
                 'default': list, 'label': _("Directory service")
             },
+            'is_offline': {'label': _('Maintain')},
         }
 
     def __init__(self, *args, **kwargs):
