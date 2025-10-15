@@ -1,6 +1,9 @@
 {
-    "OfflineAsset": "該資產已被下線，請聯絡管理員",
-    "connectDisabledTipsUniqueSession": "當前已存在登入用戶，請稍後嘗試",
+    "Maintain": "維護",
+    "Maintenance": "維護中",
+    "Cancel maintenance": "取消維護",
+    "OfflineAsset": "該資産正在維護中，請稍候片刻後重新整理再試",
+    "connectDisabledTipsUniqueSession": "使用者 {username} 正在使用目前資產，請稍後重試",
     "ACL reject login asset": "本次登入已拒絕，原因是訪問控制策略的限制",
     "Account info": "帳號資訊",
     "Account not found": "帳號未找到",

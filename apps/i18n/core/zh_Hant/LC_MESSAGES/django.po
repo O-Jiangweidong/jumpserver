@@ -11339,6 +11339,33 @@ msgstr "許可證匯入成功"
 msgid "Invalid license"
 msgstr "許可證無效"
 
+#: assets/models/asset/common.py:185
+msgid "Weight"
+msgstr "權重"
+
+#: assets/models/asset/common.py:187
+msgid "Unique session"
+msgstr "唯一會話"
+
+#: authentication/api/connection_token.py:428
+msgid "This asset is under maintenance. Please wait a moment and refresh to try again"
+msgstr "此資產目前正在維護中，請稍後刷新頁面"
+
+#: authentication/api/connection_token.py:431
+#, python-format
+msgid "User %s is currently using this asset. Please try again later."
+msgstr "用戶 %s 當前正在使用此資產，請稍後"
+
+#: users/serializers/preference/luna.py:34
+msgid "Shortcut key config"
+msgstr "快捷鍵配置"
+
+msgid "Maintain"
+msgstr "維護"
+
+msgid "Maintenance"
+msgstr "維護中"
+
 #~ msgid "Task execution id"
 #~ msgstr "任務執行 ID"
 

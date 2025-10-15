@@ -34,7 +34,7 @@ class AssetPermedSerializer(OrgResourceModelSerializerMixin, ResourceLabelsMixin
             'id', 'name', 'address', 'zone', 'platform',
             'comment', 'org_id', 'is_active', 'date_verified',
             'created_by', 'date_created', 'connectivity', 'nodes', 'labels',
-            'is_unique_session_status',
+            'special_session_info',
         ]
         fields = only_fields + ['category', 'type'] + ['org_name']
         read_only_fields = fields

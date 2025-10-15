@@ -425,10 +425,11 @@ class ConnectionTokenViewSet(AuthFaceMixin, ExtraActionApiMixin, RootOrgViewMixi
             raise ValidationError(_('Anonymous account is not supported for this asset'))
 
         if asset.is_offline:
-            raise ValidationError(_('The asset is already offline and cannot be connected'))
+            raise ValidationError(_('This asset is under maintenance. Please wait a moment and refresh to try again'))
 
-        if asset.is_unique_session_status:
-            raise ValidationError(_('The current asset can only maintain one online session. Please wait.'))
+        if asset.special_session_info['is_unique_session_status']:
+            user_display = asset.special_session_info['online_user_display']
+            raise ValidationError(_('User %s is currently using this asset. Please try again later.') % user_display)
 
         account = self._validate_perm(user, asset, account_alias, protocol)
         if account.has_secret:

@@ -1,6 +1,9 @@
 {
-    "OfflineAsset": "This asset has taken offline, please contact an administrator",
-    "connectDisabledTipsUniqueSession": "A login user already exists. Please try again later.",
+    "Maintain": "Maintain",
+    "Maintenance": "Maintenance",
+    "Cancel maintenance": "Cancel maintenance",
+    "OfflineAsset": "This asset is currently under maintenance. Please wait a moment and refresh to try again",
+    "connectDisabledTipsUniqueSession": "User {username} is currently using this asset. Please try again later.",
     "ACL reject login asset": "This login has been rejected due to access control policy restrictions",
     "Account info": "Account info",
     "Account not found": "Account not found",

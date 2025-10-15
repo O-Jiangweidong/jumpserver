@@ -183,7 +183,7 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     gathered_info = models.JSONField(verbose_name=_('Gathered info'), default=dict, blank=True)  # 资产的一些信息，如 硬件信息
     custom_info = models.JSONField(verbose_name=_('Custom info'), default=dict)
     weight = models.PositiveIntegerField(default=0, db_index=True, verbose_name=_('Weight'))
-    is_offline = models.BooleanField(default=False, verbose_name=_('Offline'))
+    is_offline = models.BooleanField(default=False, verbose_name=_('Maintain'))
     unique_session = models.BooleanField(default=False, verbose_name=_('Unique session'))
 
     objects = AssetManager.from_queryset(AssetQuerySet)()
@@ -192,10 +192,16 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
         return '{0.name}({0.address})'.format(self)
 
     @property
-    def is_unique_session_status(self):
+    def special_session_info(self):
         from terminal.models import Session
-        count_func = Session.objects.filter(is_finished=False, asset_id=self.id).count
-        return self.unique_session and count_func() > 0
+
+        if not self.unique_session:
+            return {'is_unique_session_status': False, 'online_user_display': ''}
+
+        session = Session.objects.filter(is_finished=False, asset_id=self.id).first()
+        if not session:
+            return {'is_unique_session_status': False, 'online_user_display': ''}
+        return {'is_unique_session_status': True, 'online_user_display': session.user}
 
     def get_labels(self):
         from labels.models import Label, LabeledResource

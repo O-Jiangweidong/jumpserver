@@ -1,4 +1,9 @@
 {
+    "Maintain": "Duy trì",
+    "Maintenance": "Duy trì",
+    "Cancel maintenance": "Hủy duy trì",
+    "OfflineAsset": "Tài sản này đang được duy trì. Vui lòng đợi một lúc và thử lại.",
+    "connectDisabledTipsUniqueSession": "Người dùng {username} đang sử dụng tài sản này. Vui lòng thử lại sau.",
     "ACL reject login asset": "Đăng nhập lần này đã bị từ chối, lý do là do hạn chế của chính sách kiểm soát truy cập",
     "Account info": "Thông tin tài khoản",
     "Account not found": "Không tìm thấy tài khoản",

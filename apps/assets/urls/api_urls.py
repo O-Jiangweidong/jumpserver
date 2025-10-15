@@ -31,6 +31,7 @@ urlpatterns = [
     # path('assets/<uuid:pk>/gateways/', api.AssetGatewayListApi.as_view(), name='asset-gateway-list'),
     path('protocols/', api.ProtocolListApi.as_view(), name='asset-protocol'),
     path('assets/<uuid:pk>/tasks/', api.AssetTaskCreateApi.as_view(), name='asset-task-create'),
+    path('maintain-assets/<uuid:pk>/', api.MaintainAssetApi.as_view(), name='asset-maintain'),
     path('assets/tasks/', api.AssetsTaskCreateApi.as_view(), name='assets-task-create'),
     path('assets/<uuid:pk>/perm-users/', api.AssetPermUserListApi.as_view(), name='asset-perm-user-list'),
     path('assets/<uuid:pk>/perm-users/<uuid:perm_user_id>/permissions/', api.AssetPermUserPermissionsListApi.as_view(),

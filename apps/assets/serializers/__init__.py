@@ -10,3 +10,4 @@ from .gateway import *
 from .node import *
 from .platform import *
 from .my_asset import *
+from .maintain_asset import *
