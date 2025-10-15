@@ -14,3 +14,12 @@ class MaintainAssetApi(UpdateAPIView):
     serializer_class = MaintainAssetSerializer
     permission_classes = (IsValidUser,)
     page_no_limit = True
+
+    def check_permissions(self, request):
+        obj = self.get_object()
+        user = request.user
+        if obj.is_offline and not user.is_superuser and f'{user.name}' != obj.maintainer:
+            self.permission_denied(request)
+
+    def perform_update(self, serializer):
+        serializer.save(maintainer=self.request.user.name)

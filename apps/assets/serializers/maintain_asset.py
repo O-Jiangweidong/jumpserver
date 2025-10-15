@@ -11,4 +11,5 @@ __all__ = ['MaintainAssetSerializer']
 class MaintainAssetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
-        fields = ['is_offline']
+        fields = ['is_offline', 'maintainer']
+        read_only_fields = ['maintainer']

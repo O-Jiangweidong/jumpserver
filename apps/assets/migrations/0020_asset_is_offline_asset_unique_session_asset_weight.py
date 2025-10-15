@@ -32,7 +32,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='asset',
             name='is_offline',
-            field=models.BooleanField(default=False, verbose_name='Offline'),
+            field=models.BooleanField(default=False, verbose_name='Maintain'),
         ),
         migrations.AddField(
             model_name='asset',
@@ -43,6 +43,11 @@ class Migration(migrations.Migration):
             model_name='asset',
             name='weight',
             field=models.PositiveIntegerField(db_index=True, default=0, verbose_name='Weight'),
+        ),
+        migrations.AddField(
+            model_name='asset',
+            name='maintainer',
+            field=models.CharField(default='', max_length=128, verbose_name='Maintainer'),
         ),
         migrations.RunPython(set_old_assets_weight_value)
     ]

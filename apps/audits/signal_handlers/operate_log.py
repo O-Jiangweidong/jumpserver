@@ -175,7 +175,7 @@ def on_django_start_set_operate_log_monitor_models(sender, **kwargs):
         'django_celery_beat', 'contenttypes', 'sessions', 'auth',
     }
     exclude_models = {
-        'UserPasswordHistory', 'ContentType', 'Asset',
+        'UserPasswordHistory', 'ContentType',
         'MessageContent', 'SiteMessage',
         'PlatformAutomation', 'PlatformProtocol', 'Protocol',
         'HistoricalAccount', 'GatheredUser', 'ApprovalRule',

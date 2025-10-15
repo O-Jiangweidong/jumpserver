@@ -185,6 +185,7 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     weight = models.PositiveIntegerField(default=0, db_index=True, verbose_name=_('Weight'))
     is_offline = models.BooleanField(default=False, verbose_name=_('Maintain'))
     unique_session = models.BooleanField(default=False, verbose_name=_('Unique session'))
+    maintainer = models.CharField(max_length=128, verbose_name=_('Maintainer'), default='')
 
     objects = AssetManager.from_queryset(AssetQuerySet)()
 

@@ -235,6 +235,7 @@ class AllTypes(ChoicesMixin):
             'iconSkin': asset.type,
             'chkDisabled': not asset.is_active,
             'chkOffline': asset.is_offline,
+            'maintainer': asset.maintainer,
             'meta': {
                 'type': 'platform',
                 'data': {
