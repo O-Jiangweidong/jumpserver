@@ -179,6 +179,16 @@ class ConnectionToken(JMSOrgBaseModel):
         if not self.asset or not self.asset.is_active:
             error = _('No asset or inactive asset')
             raise PermissionDenied(error)
+
+        if self.asset.is_offline:
+            raise ValidationError(
+                _('This asset is under maintenance. Please wait a moment and refresh to try again')
+            )
+
+        if self.asset.special_session_info['is_unique_session_status']:
+            user_display = self.asset.special_session_info['online_user_display']
+            raise ValidationError(_('User %s is currently using this asset. Please try again later.') % user_display)
+
         if not self.account:
             error = _('No account')
             raise PermissionDenied(error)
