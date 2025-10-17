@@ -227,7 +227,7 @@ class AllTypes(ChoicesMixin):
     def asset_to_node(cls, asset, pid):
         node = {
             'id': '{}'.format(asset.id),
-            'name': asset.name,
+            'name': asset.get_tree_display(),
             'title': f'{asset.address}\n{asset.comment}',
             'pId': pid,
             'isParent': False,

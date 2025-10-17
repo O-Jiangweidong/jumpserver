@@ -192,6 +192,11 @@ class Asset(NodesRelationMixin, LabeledMixin, AbsConnectivity, JSONFilterMixin, 
     def __str__(self):
         return '{0.name}({0.address})'.format(self)
 
+    def get_tree_display(self):
+        if not self.is_offline:
+            return self.name
+        return f'⚠️ {self.maintainer} {_("Maintenance")} [{self.name}]'
+
     @property
     def special_session_info(self):
         from terminal.models import Session

@@ -97,7 +97,7 @@ class SerializeToTreeNodeMixin:
                 root_assets_count += 1
             data.append({
                 'id': str(asset.id),
-                'name': asset.name,
+                'name': asset.get_tree_display(),
                 'title': f'{asset.address}\n{asset.comment}'.strip(),
                 'pId': pid,
                 'isParent': False,
