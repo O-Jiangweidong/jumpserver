@@ -11634,6 +11634,37 @@ msgstr "许可证导入成功"
 msgid "Invalid license"
 msgstr "许可证无效"
 
+msgid "Encrypt fields"
+msgstr "加密字段"
+
+msgid "Encrypt value"
+msgstr "加密值"
+
+msgid "HMac verify"
+msgstr "HMac 验证"
+
+msgid "USB Key Bind"
+msgstr "USB 密钥绑定"
+
+msgid "Key serial"
+msgstr "密钥序列号"
+
+msgid "Key public key"
+msgstr "密钥公钥"
+
+msgid "Click to get USB Key information"
+msgstr "点击获取 USB 密钥信息"
+
+msgid "Remove USB Key binding"
+msgstr "移除 USB 密钥绑定"
+
+msgid "USB Key Auth"
+msgstr "USB 密钥认证"
+
+msgid "Key PIN code"
+msgstr "密钥 PIN 码"
+
+
 #~ msgid "Task execution id"
 #~ msgstr "任务执行 ID"
 

@@ -11275,3 +11275,33 @@ msgstr ""
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr ""
+
+msgid "Encrypt fields"
+msgstr ""
+
+msgid "Encrypt value"
+msgstr ""
+
+msgid "HMac verify"
+msgstr ""
+
+msgid "USB Key Bind"
+msgstr ""
+
+msgid "Key serial"
+msgstr ""
+
+msgid "Key public key"
+msgstr ""
+
+msgid "Click to get USB Key information"
+msgstr ""
+
+msgid "Remove USB Key binding"
+msgstr ""
+
+msgid "USB Key Auth"
+msgstr ""
+
+msgid "Key PIN code"
+msgstr ""

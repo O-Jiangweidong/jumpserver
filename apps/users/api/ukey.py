@@ -24,7 +24,7 @@ class UserUKeyViewSet(viewsets.ModelViewSet):
     permission_classes = (AllowAny,)
 
     @action(detail=False, methods=['get'], url_path='random')
-    def get_ukey_random(self):
+    def get_ukey_random(self, *args, **kwargs):
         if not settings.PIICO_DEVICE_ENABLE:
             return Response({'msg': 'piico device not enable'}, status=400)
 

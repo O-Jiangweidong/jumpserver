@@ -24,10 +24,6 @@ class AuditEncryptMixin:
     hmac_verify = serializers.BooleanField(default=True, label=_('HMac verify'))
     encrypt_value = serializers.CharField(read_only=True, label=_('Encrypt value'))
 
-    def save(self, **kwargs):
-        data = audit_crypto_handler.fill_data(kwargs)
-        return super().save(**data)
-
 
 class JobLogSerializer(JobExecutionSerializer):
     class Meta:

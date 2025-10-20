@@ -36,9 +36,8 @@ def on_user_change_password(sender, user=None, **kwargs):
             change_by = str(current_request.user)
 
     data = {'user': str(user), 'change_by': change_by, 'remote_addr': remote_addr}
-    encrypt_value = audit_crypto_handler.fill_data(data)
     with transaction.atomic():
-        PasswordChangeLog.objects.create(**encrypt_value)
+        PasswordChangeLog.objects.create(**data)
 
 
 def on_audits_log_create(sender, instance=None, **kwargs):

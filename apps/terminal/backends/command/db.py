@@ -5,7 +5,6 @@ from django.db import transaction
 from django.db.utils import OperationalError
 from django.utils import timezone
 
-from audits.encrypt import audit_crypto_handler
 from common.utils.common import pretty_string
 from .base import CommandBase
 
@@ -28,7 +27,6 @@ class CommandStore(CommandBase):
             'risk_level': command.get("risk_level", 0), 'org_id': command["org_id"],
             'timestamp': command["timestamp"]
         }
-        data = audit_crypto_handler.fill_data(data)
         self.model.objects.create(**data)
 
     def bulk_save(self, commands):
@@ -46,8 +44,7 @@ class CommandStore(CommandBase):
                 'risk_level': c.get("risk_level", 0), 'org_id': c["org_id"],
                 'timestamp': c["timestamp"]
             }
-            command_data = audit_crypto_handler.fill_data(data)
-            _commands.append(self.model(**command_data))
+            _commands.append(self.model(**data))
         error = False
         try:
             with transaction.atomic():

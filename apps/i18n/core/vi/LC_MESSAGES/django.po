@@ -11964,6 +11964,36 @@ msgstr "Nhập giấy phép thành công"
 msgid "Invalid license"
 msgstr "Giấy phép không hợp lệ"
 
+msgid "Encrypt fields"
+msgstr "Mã hóa trường"
+
+msgid "Encrypt value"
+msgstr "Mã hóa giá trị"
+
+msgid "HMac verify"
+msgstr "Xác minh HMac"
+
+msgid "USB Key Bind"
+msgstr "Ràng buộc Khóa USB"
+
+msgid "Key serial"
+msgstr "Serial khóa"
+
+msgid "Key public key"
+msgstr "Khóa công khai của khóa"
+
+msgid "Click to get USB Key information"
+msgstr "Nhấp để lấy thông tin Khóa USB"
+
+msgid "Remove USB Key binding"
+msgstr "Xóa ràng buộc Khóa USB"
+
+msgid "USB Key Auth"
+msgstr "Xác thực Khóa USB"
+
+msgid "Key PIN code"
+msgstr "Mã PIN của khóa"
+
 #~ msgid "Task execution id"
 #~ msgstr "ID thực hiện nhiệm vụ"
 

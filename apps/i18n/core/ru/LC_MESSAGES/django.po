@@ -11914,6 +11914,36 @@ msgstr "Лицензия успешно импортирована"
 msgid "Invalid license"
 msgstr "Лицензия недействительна"
 
+msgid "Encrypt fields"
+msgstr "Шифровать поля"
+
+msgid "Encrypt value"
+msgstr "Шифровать значение"
+
+msgid "HMac verify"
+msgstr "Проверка HMac"
+
+msgid "USB Key Bind"
+msgstr "Привязка ключа USB"
+
+msgid "Key serial"
+msgstr "Серийный номер ключа"
+
+msgid "Key public key"
+msgstr "Открытый ключ ключа"
+
+msgid "Click to get USB Key information"
+msgstr "Нажмите для получения информации о ключе USB"
+
+msgid "Remove USB Key binding"
+msgstr "Удалить привязку ключа USB"
+
+msgid "USB Key Auth"
+msgstr "Аутентификация по ключу USB"
+
+msgid "Key PIN code"
+msgstr "PIN-код ключа"
+
 #~ msgid "Task execution id"
 #~ msgstr "ID выполнения задачи"
 

@@ -50,7 +50,7 @@ class JobLog(JobExecution):
         verbose_name = _("Job audit log")
 
 
-class FTPLog(OrgModelMixin):
+class FTPLog(AuditEncryptModel, OrgModelMixin):
     upload_to = 'FTP_FILES'
 
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
@@ -95,6 +95,11 @@ class FTPLog(OrgModelMixin):
 
 
 class OperateLog(AuditEncryptModel, OrgModelMixin):
+    need_encrypt_fields = [
+        'id', 'user', 'action', 'resource_type',
+        'resource', 'remote_addr', 'org_id'
+    ]
+
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     user = models.CharField(max_length=128, verbose_name=_("User"))
     action = models.CharField(
@@ -120,17 +125,9 @@ class OperateLog(AuditEncryptModel, OrgModelMixin):
     def save(self, *args, **kwargs):
         if current_org.is_root() and not self.org_id:
             self.org_id = Organization.ROOT_ID
-        encrypt_fields = [
-            'id', 'user', 'action', 'resource_type',
-            'resource', 'remote_addr', 'org_id'
-        ]
         if not getattr(self, 'id', None):
             self.id = uuid.uuid4()
-        raw_value = ''.join(map(lambda x: str(getattr(self, x, '')), encrypt_fields))
-        encrypt_value = audit_crypto_handler.encrypt(raw_value)
-        self.encrypt_fields = ','.join(encrypt_fields)
-        self.encrypt_value = encrypt_value
-        return super(OperateLog, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     @classmethod
     def from_dict(cls, d):
@@ -187,6 +184,10 @@ class ActivityLog(OrgModelMixin):
 
 
 class PasswordChangeLog(AuditEncryptModel, models.Model):
+    need_encrypt_fields = [
+        'user', 'change_by', 'remote_addr',
+    ]
+
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     user = models.CharField(max_length=128, verbose_name=_("User"))
     change_by = models.CharField(max_length=128, verbose_name=_("Change by"))
@@ -212,6 +213,11 @@ class PasswordChangeLog(AuditEncryptModel, models.Model):
 
 
 class UserLoginLog(AuditEncryptModel, models.Model):
+    need_encrypt_fields = [
+        'username', 'type', 'ip', 'city', 'user_agent', 'mfa',
+        'reason', 'status', 'datetime', 'backend'
+    ]
+
     id = models.UUIDField(default=uuid.uuid4, primary_key=True)
     username = models.CharField(max_length=128, verbose_name=_("Username"))
     type = models.CharField(

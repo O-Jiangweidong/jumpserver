@@ -139,5 +139,3 @@ if CONFIG.SYSLOG_ADDR != '' and len(CONFIG.SYSLOG_ADDR.split(':')) == 2:
 if not os.path.isdir(LOG_DIR):
     os.makedirs(LOG_DIR, mode=0o755)
 
-
-ENABLE_LOG_MAC_CALCULATION = CONFIG.ENABLE_LOG_MAC_CALCULATION

@@ -11339,6 +11339,36 @@ msgstr "許可證匯入成功"
 msgid "Invalid license"
 msgstr "許可證無效"
 
+msgid "Encrypt fields"
+msgstr "加密欄位"
+
+msgid "Encrypt value"
+msgstr "加密值"
+
+msgid "HMac verify"
+msgstr "HMac 驗證"
+
+msgid "USB Key Bind"
+msgstr "USB 金鑰綁定"
+
+msgid "Key serial"
+msgstr "金鑰序號"
+
+msgid "Key public key"
+msgstr "金鑰公鑰"
+
+msgid "Click to get USB Key information"
+msgstr "點選取得 USB 金鑰資訊"
+
+msgid "Remove USB Key binding"
+msgstr "移除 USB 金鑰綁定"
+
+msgid "USB Key Auth"
+msgstr "USB 金鑰認證"
+
+msgid "Key PIN code"
+msgstr "金鑰 PIN 碼"
+
 #~ msgid "Task execution id"
 #~ msgstr "任務執行 ID"
 

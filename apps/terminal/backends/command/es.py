@@ -4,6 +4,7 @@ import pytz
 
 from datetime import datetime
 
+from audits.encrypt import audit_crypto_handler
 from common.utils import get_logger
 from common.plugins.es import ES
 
@@ -43,6 +44,7 @@ class CommandStore(ES):
             session=command["session"], timestamp=command["timestamp"],
             org_id=command["org_id"]
         )
+        data = audit_crypto_handler.fill_data(data)
         data["date"] = datetime.fromtimestamp(command['timestamp'], tz=pytz.UTC)
         return data
 

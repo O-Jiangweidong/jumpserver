@@ -7,18 +7,28 @@ from ctypes import *
 
 from django.conf import settings
 
-from common.utils import get_logger, is_true
+from common.utils import get_logger, is_true, lazyproperty
 
 
 logger = get_logger(__name__)
 
 
-class HmacEncryptor:
+class EmptyEncryptor(object):
+    CAN_ENCRYPT = False
+
     def __init__(self, secret_key):
         self.secret_key = secret_key
 
     def encrypt(self, data, default=''):
-        hmac_obj = hmac.new(self.secret_key, msg=data, digestmod=hashlib.sha256)
+        return ''
+
+
+class HmacEncryptor(EmptyEncryptor):
+    CAN_ENCRYPT = True
+
+    def encrypt(self, data, default=''):
+        msg = bytes(data, encoding='utf-8')
+        hmac_obj = hmac.new(self.secret_key, msg=msg, digestmod=hashlib.sha256)
         return hmac_obj.hexdigest().upper()
 
 
@@ -86,17 +96,24 @@ class AuditCryptoHandler(object):
     def __init__(self):
         self._encryptor = self._get_encryptor()
 
+    @lazyproperty
+    def enable(self):
+        return self._encryptor.CAN_ENCRYPT
+
     def _get_encryptor(self):
+        if is_true(os.environ.get('USE_LOCAL_HMAC', '0')):
+            return HmacEncryptor(self.SECRET_KEY)
+
         use_piico_hmac = is_true(os.environ.get('USE_PIICO_HMAC', '0'))
         if settings.GMSSL_ENABLED and settings.PIICO_DEVICE_ENABLE and use_piico_hmac:
             return PIICOHmacEncryptor(self.SECRET_KEY)
-        return HmacEncryptor(self.SECRET_KEY)
+        return EmptyEncryptor(self.SECRET_KEY)
 
     def encrypt(self, data, default=''):
         return self._encryptor.encrypt(data, default)
 
     def fill_data(self, data):
-        if not settings.ENABLE_LOG_MAC_CALCULATION:
+        if not self._encryptor.CAN_ENCRYPT:
             return data
 
         encrypt_fields = ','.join(data.keys())

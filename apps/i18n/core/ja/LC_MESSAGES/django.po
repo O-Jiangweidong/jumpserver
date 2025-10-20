@@ -11413,6 +11413,36 @@ msgstr "ライセンスのインポートに成功"
 msgid "Invalid license"
 msgstr "ライセンスが無効です"
 
+msgid "Encrypt fields"
+msgstr "フィールドの暗号化"
+
+msgid "Encrypt value"
+msgstr "値の暗号化"
+
+msgid "HMac verify"
+msgstr "HMac 検証"
+
+msgid "USB Key Bind"
+msgstr "USB キーのバインド"
+
+msgid "Key serial"
+msgstr "キーシリアル番号"
+
+msgid "Key public key"
+msgstr "キーの公開鍵"
+
+msgid "Click to get USB Key information"
+msgstr "USB キー情報を取得するにはクリック"
+
+msgid "Remove USB Key binding"
+msgstr "USB キーのバインド解除"
+
+msgid "USB Key Auth"
+msgstr "USB キー認証"
+
+msgid "Key PIN code"
+msgstr "キーの PIN コード"
+
 #~ msgid "Task execution id"
 #~ msgstr "タスク実行ID"
 

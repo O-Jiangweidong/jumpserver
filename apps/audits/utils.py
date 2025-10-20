@@ -30,8 +30,7 @@ def write_login_log(*args, **kwargs):
     else:
         city = get_ip_city(ip) or DEFAULT_CITY
     kwargs.update({'ip': ip, 'city': city})
-    data = audit_crypto_handler.fill_data(kwargs)
-    return UserLoginLog.objects.create(**data)
+    return UserLoginLog.objects.create(**kwargs)
 
 
 def _get_instance_field_value(

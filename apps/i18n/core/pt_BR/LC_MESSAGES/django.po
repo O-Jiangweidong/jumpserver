@@ -11924,6 +11924,36 @@ msgstr "Importação de licença bem-sucedida"
 msgid "Invalid license"
 msgstr "Licença inválida"
 
+msgid "Encrypt fields"
+msgstr "Criptografar campos"
+
+msgid "Encrypt value"
+msgstr "Criptografar valor"
+
+msgid "HMac verify"
+msgstr "Verificação HMac"
+
+msgid "USB Key Bind"
+msgstr "Vinculação de Chave USB"
+
+msgid "Key serial"
+msgstr "Número de série da chave"
+
+msgid "Key public key"
+msgstr "Chave pública da chave"
+
+msgid "Click to get USB Key information"
+msgstr "Clique para obter informações da Chave USB"
+
+msgid "Remove USB Key binding"
+msgstr "Remover vinculação de Chave USB"
+
+msgid "USB Key Auth"
+msgstr "Autenticação de Chave USB"
+
+msgid "Key PIN code"
+msgstr "Código PIN da chave"
+
 #~ msgid "Task execution id"
 #~ msgstr "ID de execução da tarefa"
 

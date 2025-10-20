@@ -11505,6 +11505,36 @@ msgstr "라이센스 가져오기 성공"
 msgid "Invalid license"
 msgstr "라이센스가 유효하지 않습니다."
 
+msgid "Encrypt fields"
+msgstr "필드 암호화"
+
+msgid "Encrypt value"
+msgstr "값 암호화"
+
+msgid "HMac verify"
+msgstr "HMac 확인"
+
+msgid "USB Key Bind"
+msgstr "USB 키 바인딩"
+
+msgid "Key serial"
+msgstr "키 시리얼"
+
+msgid "Key public key"
+msgstr "키 공개 키"
+
+msgid "Click to get USB Key information"
+msgstr "USB 키 정보 가져오기를 클릭"
+
+msgid "Remove USB Key binding"
+msgstr "USB 키 바인딩 제거"
+
+msgid "USB Key Auth"
+msgstr "USB 키 인증"
+
+msgid "Key PIN code"
+msgstr "키 PIN 코드"
+
 #~ msgid "Task execution id"
 #~ msgstr "작업 실행 ID"
 
