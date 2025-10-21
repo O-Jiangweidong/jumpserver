@@ -425,7 +425,7 @@ class ConnectionTokenViewSet(AuthFaceMixin, ExtraActionApiMixin, RootOrgViewMixi
             raise ValidationError(_('Anonymous account is not supported for this asset'))
 
         if asset.is_offline:
-            raise ValidationError(_('This asset is under maintenance. Please wait a moment and refresh to try again'))
+            raise ValidationError(_('This asset is under maintenance. Please contact the relevant maintenance personnel'))
 
         if asset.special_session_info['is_unique_session_status']:
             user_display = asset.special_session_info['online_user_display']

@@ -182,7 +182,7 @@ class ConnectionToken(JMSOrgBaseModel):
 
         if self.asset.is_offline:
             raise ValidationError(
-                _('This asset is under maintenance. Please wait a moment and refresh to try again')
+                _('This asset is under maintenance. Please contact the relevant maintenance personnel')
             )
 
         if self.asset.special_session_info['is_unique_session_status']:

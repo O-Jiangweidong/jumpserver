@@ -2,7 +2,7 @@
     "Maintain": "Manutenção",
     "Maintenance": "Manutenção",
     "Cancel maintenance": "Cancelar manutenção",
-    "OfflineAsset": "O ativo está atualmente em manutenção. Por favor, aguarde um momento e tente novamente.",
+    "OfflineAsset": "Este ativo está atualmente em manutenção. Entre em contato com o pessoal de manutenção responsável",
     "connectDisabledTipsUniqueSession": "O usuário {username} está atualmente usando este ativo. Por favor, tente novamente mais tarde.",
     "ACL reject login asset": "O login foi recusado, a razão é a restrição da política de controle de acesso",
     "Account info": "Informações da Conta",

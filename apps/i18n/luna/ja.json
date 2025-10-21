@@ -2,7 +2,7 @@
     "Maintain": "メンテナンス",
     "Maintenance": "メンテナンス中",
     "Cancel maintenance": "メンテナンスをキャンセル",
-    "OfflineAsset": "この資産は現在メンテナンス中です。しばらくお待ちいただき、リフレッシュして再試行してください",
+    "OfflineAsset": "この資産は現在メンテナンス中です。関連する保守担当者にお問い合わせください",
     "connectDisabledTipsUniqueSession": "ユーザー {username} が現在この資産を使用しています。後で再試行してください",
     "ACL reject login asset": "アクセス制御ポリシーの制限により、このログインは拒否されました",
     "Account info": "アカウント情報",

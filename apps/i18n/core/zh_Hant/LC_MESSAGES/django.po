@@ -11348,8 +11348,8 @@ msgid "Unique session"
 msgstr "唯一會話"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please wait a moment and refresh to try again"
-msgstr "此資產目前正在維護中，請稍後刷新頁面"
+msgid "This asset is under maintenance. Please contact the relevant maintenance personnel"
+msgstr "該資產正在維護中，請聯繫相關維護人員"
 
 #: authentication/api/connection_token.py:431
 #, python-format
