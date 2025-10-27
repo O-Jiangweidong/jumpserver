@@ -40,17 +40,15 @@ class UserPermedAssetRetrieveApi(SelfOrPKUserMixin, RetrieveAPIView):
 
 
 class BaseUserPermedAssetsApi(SelfOrPKUserMixin, ExtraFilterFieldsMixin, ListAPIView):
-    ordering = []
+    ordering = ('-weight', )
     search_fields = ('name', 'address', 'comment')
-    ordering_fields = ("name", "address", "connectivity", "date_updated")
+    ordering_fields = ('weight', "name", "address", "connectivity", "date_updated")
     filterset_class = AssetFilterSet
     serializer_class = serializers.AssetPermedSerializer
 
     def get_queryset(self):
         if getattr(self, 'swagger_fake_view', False):
             return Asset.objects.none()
-        if settings.ASSET_SIZE == 'small':
-            self.ordering = ['name']
         assets = self.get_assets()
         assets = self.serializer_class.setup_eager_loading(assets)
         return assets
