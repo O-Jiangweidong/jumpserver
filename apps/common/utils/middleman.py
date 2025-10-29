@@ -11,6 +11,7 @@ from django.core.cache import cache
 from django.db.models import Model
 
 from common.utils import lazyproperty, get_logger
+from common.exceptions import JMSException
 
 
 logger = get_logger(__name__)
@@ -61,7 +62,15 @@ class MiddlemanClient(object):
         kwargs.setdefault('headers', {})
         kwargs['headers']['Authorization'] = self._auth_token
         logger.debug(f'({method}) Request url: {url}')
-        return requests.request(method, url, **kwargs)
+        try:
+            resp = requests.request(method, url, **kwargs)
+        except Exception as e:
+            logger.error(f'({method}) Request url: {url} failed, error: {e}')
+            raise JMSException("Request failed, middleman may not work")
+
+        if resp.status_code >= 300:
+            raise JMSException(resp.text)
+        return resp
 
     @property
     def enable(self):
