@@ -11933,8 +11933,8 @@ msgid "Unique session"
 msgstr "Sessão única"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please contact the relevant maintenance personnel"
-msgstr "Este ativo está em manutenção, por favor entre em contato com o pessoal de manutenção."
+msgid "This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser"
+msgstr "Este ativo está em manutenção. Entre em contato com a equipe de manutenção {} e atualize o navegador."
 
 #: authentication/api/connection_token.py:431
 #, python-format

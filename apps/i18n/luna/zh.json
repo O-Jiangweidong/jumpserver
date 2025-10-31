@@ -2,7 +2,7 @@
     "Maintain": "维护",
     "Maintenance": "维护中",
     "Cancel maintenance": "取消维护",
-    "OfflineAsset": "该资产正在维护中，请联系相关维护人员",
+    "OfflineAsset": "该资产正在维护中，请联系 {username} 维护人员，同时刷新浏览器",
     "connectDisabledTipsUniqueSession": "用户 {username} 正在使用当前资产，请稍候重试",
     "ACL reject login asset": "本次登录已拒绝，原因是访问控制策略的限制",
     "Account info": "账号信息",

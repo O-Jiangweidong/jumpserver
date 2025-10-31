@@ -2,7 +2,7 @@
     "Maintain": "Duy trì",
     "Maintenance": "Duy trì",
     "Cancel maintenance": "Hủy duy trì",
-    "OfflineAsset": "Tài sản này đang trong quá trình bảo trì. Vui lòng liên hệ với nhân viên bảo trì liên quan",
+    "OfflineAsset": "Tài sản này đang trong quá trình bảo trì. Vui lòng liên hệ với nhân viên bảo trì {username} và làm mới trình duyệt",
     "connectDisabledTipsUniqueSession": "Người dùng {username} đang sử dụng tài sản này. Vui lòng thử lại sau.",
     "ACL reject login asset": "Đăng nhập lần này đã bị từ chối, lý do là do hạn chế của chính sách kiểm soát truy cập",
     "Account info": "Thông tin tài khoản",

@@ -2,7 +2,7 @@
     "Maintain": "Maintain",
     "Maintenance": "Maintenance",
     "Cancel maintenance": "Cancel maintenance",
-    "OfflineAsset": "This asset is currently under maintenance. Please contact the relevant maintenance personnel.",
+    "OfflineAsset": "This asset is under maintenance. Please contact the {username} maintenance staff and refresh your browser",
     "connectDisabledTipsUniqueSession": "User {username} is currently using this asset. Please try again later.",
     "ACL reject login asset": "This login has been rejected due to access control policy restrictions",
     "Account info": "Account info",

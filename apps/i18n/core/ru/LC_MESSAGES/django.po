@@ -11923,8 +11923,8 @@ msgid "Unique session"
 msgstr "Одиночная сессия"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please contact the relevant maintenance personnel"
-msgstr "Этот активный средство находится в режиме обслуживания. Пожалуйста, свяжитесь с соответствующим персоналом обслуживания."
+msgid "This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser"
+msgstr "Данное средство находится на техническом обслуживании. Пожалуйста, свяжитесь с персоналом технического обслуживания {} и обновите браузер"
 
 #: authentication/api/connection_token.py:431
 #, python-format

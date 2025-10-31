@@ -182,7 +182,7 @@ class ConnectionToken(JMSOrgBaseModel):
 
         if self.asset.is_offline:
             raise PermissionDenied(
-                _('This asset is under maintenance. Please contact the relevant maintenance personnel')
+                _('This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser').format(self.asset.maintainer)
             )
 
         if self.asset.special_session_info['is_unique_session_status']:

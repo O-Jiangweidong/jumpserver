@@ -2,7 +2,7 @@
     "Maintain": "Mantenimiento",
     "Maintenance": "Mantenimiento",
     "Cancel maintenance": "Cancelar mantenimiento",
-    "OfflineAsset": "Este activo se encuentra actualmente en mantenimiento. Por favor, contacte al personal de mantenimiento correspondiente",
+    "OfflineAsset": "El activo se encuentra en mantenimiento. Por favor, contacte al personal de mantenimiento {username} y actualice el navegador",
     "connectDisabledTipsUniqueSession": "El usuario {username} está actualmente usando este activo. Por favor, espere un momento y vuelva a intentarlo.",
     "ACL reject login asset": "Este inicio de sesión ha sido denegado, la razón es la limitación de la política de control de acceso",
     "Account info": "Información de la cuenta",
