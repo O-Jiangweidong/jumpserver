@@ -59,7 +59,7 @@ class LDAPTestingConfigAPI(AsyncApiMixin, CreateAPIView):
         attr_map = serializer.validated_data["AUTH_LDAP_USER_ATTR_MAP"]
         auth_ldap = serializer.validated_data.get('AUTH_LDAP', False)
 
-        if not password:
+        if not password and server_uri == settings.AUTH_LDAP_SERVER_URI:
             password = settings.AUTH_LDAP_BIND_PASSWORD
 
         config = {

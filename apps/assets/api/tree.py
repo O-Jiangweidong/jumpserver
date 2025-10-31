@@ -124,7 +124,7 @@ class NodeChildrenAsTreeApi(SerializeToTreeNodeMixin, NodeChildrenApi):
     def get_queryset_for_assets(self):
         query_all = self.request.query_params.get("all", "0") == "all"
         include_assets = self.request.query_params.get('assets', '0') == '1'
-        if not self.instance or not include_assets:
+        if not self.instance or not include_assets or self.instance.is_org_root():
             return Asset.objects.none()
         if query_all:
             assets = self.instance.get_all_assets()

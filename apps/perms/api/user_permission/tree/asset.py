@@ -38,7 +38,7 @@ class AssetTreeMixin(RebuildTreeMixin, SerializeToTreeNodeMixin):
         if request.query_params.get('search'):
             """ 限制返回数量, 搜索的条件不精准时，会返回大量的无意义数据 """
             assets = assets[:999]
-        data = self.serialize_assets(assets, None)
+        data = self.serialize_assets(assets, 'root')
         return Response(data=data)
 
 

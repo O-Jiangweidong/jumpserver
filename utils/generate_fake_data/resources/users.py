@@ -1,6 +1,8 @@
-from random import choice, sample
+from random import sample
 import forgery_py
 
+from orgs.utils import current_org
+from rbac.models import RoleBinding, Role
 from .base import FakeDataGenerator
 
 from users.models import *
@@ -33,6 +35,14 @@ class UserGenerator(FakeDataGenerator):
             relations.extend(_relations)
         User.groups.through.objects.bulk_create(relations, ignore_conflicts=True)
 
+    def set_to_org(self, users):
+        bindings = []
+        role = Role.objects.get(name='OrgUser')
+        for u in users:
+            b = RoleBinding(user=u, role=role, org_id=current_org.id, scope='org')
+            bindings.append(b)
+        RoleBinding.objects.bulk_create(bindings, ignore_conflicts=True)
+
     def do_generate(self, batch, batch_size):
         users = []
         for i in batch:
@@ -47,3 +57,4 @@ class UserGenerator(FakeDataGenerator):
             users.append(u)
         users = User.objects.bulk_create(users, ignore_conflicts=True)
         self.set_groups(users)
+        self.set_to_org(users)
