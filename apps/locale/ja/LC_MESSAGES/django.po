@@ -9470,3 +9470,27 @@ msgstr "エンタープライズプロフェッショナル版"
 #: xpack/plugins/license/models.py:86
 msgid "Ultimate edition"
 msgstr "エンタープライズ・フラッグシップ・エディション"
+
+#: orgs/notifications.py:21
+#: orgs/templates/orgs/_msg_check_org_asset_limit.html:4
+msgid "Organization asset limit warning"
+msgstr "組織の資産上限警告"
+
+msgid "Periodic check organization asset limit"
+msgstr "組織の資産上限を定期的にチェックする"
+
+#: orgs/templates/orgs/_msg_check_org_asset_limit.html:6
+#, python-format
+msgid ""
+"\n"
+"            Organization %(org_name)s has <span style='font-weight: 600; "
+"color: #d35400;'>%(current_asset_count)s</span> assets, which exceeds the "
+"configured limit of <span style='font-weight: 600; color: "
+"#d35400;'>%(asset_limit)s</span>\n"
+"        "
+msgstr ""
+"\n"
+"            組織 %(org_name)s は <span style='font-weight: 600; "
+"color: #d35400;'>%(current_asset_count)s</span> 個の資産を保有しており、設定された上限 <span style='font-weight: 600; color: "
+"#d35400;'>%(asset_limit)s を超えています</span>\n"
+"        "

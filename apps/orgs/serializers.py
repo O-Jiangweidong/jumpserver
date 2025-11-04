@@ -19,10 +19,11 @@ class ResourceStatisticsSerializer(serializers.Serializer):
 
 class OrgSerializer(ModelSerializer):
     resource_statistics = ResourceStatisticsSerializer(source='resource_statistics_cache', read_only=True)
+    asset_limit = serializers.IntegerField(required=False, default=1000)
 
     class Meta:
         model = Organization
-        fields_mini = ['id', 'name']
+        fields_mini = ['id', 'name', 'asset_limit']
         fields_small = fields_mini + [
             'resource_statistics',
             'is_default', 'is_root', 'internal',
@@ -39,6 +40,11 @@ class CurrentOrgSerializer(ModelSerializer):
     class Meta:
         model = Organization
         fields = ['id', 'name', 'is_default', 'is_root', 'comment']
+
+
+class CurrentOrgWithAssetLimitSerializer(CurrentOrgSerializer):
+    class Meta(CurrentOrgSerializer.Meta):
+        fields = CurrentOrgSerializer.Meta.fields + ['is_over_asset_limit']
 
 
 class CurrentOrgDefault:

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-25 15:33+0800\n"
+"POT-Creation-Date: 2025-11-04 15:43+0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -19,6 +19,7 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: accounts/api/automations/base.py:79 tickets/api/ticket.py:132
+#, python-brace-format
 msgid "The parameter 'action' must be [{}]"
 msgstr ""
 
@@ -319,7 +320,7 @@ msgstr ""
 #: accounts/serializers/automations/change_secret.py:141
 #: accounts/templates/accounts/change_secret_failed_info.html:12
 #: acls/serializers/base.py:124 acls/templates/acls/asset_login_reminder.html:7
-#: assets/serializers/asset/common.py:129 assets/serializers/gateway.py:28
+#: assets/serializers/asset/common.py:131 assets/serializers/gateway.py:28
 #: audits/models.py:59 authentication/api/connection_token.py:411
 #: ops/models/base.py:18 perms/models/asset_permission.py:75
 #: perms/serializers/permission.py:40 settings/serializers/msg.py:33
@@ -587,7 +588,6 @@ msgstr ""
 #: audits/models.py:92 audits/serializers.py:84
 #: authentication/serializers/connect_token_secret.py:119
 #: authentication/templates/authentication/_access_key_modal.html:34
-#: behemoth/serializers/environment.py:13
 #: tickets/serializers/ticket/ticket.py:21
 msgid "Action"
 msgstr ""
@@ -635,14 +635,14 @@ msgstr ""
 #: assets/models/asset/common.py:159 assets/models/cmd_filter.py:21
 #: assets/models/domain.py:19 assets/models/group.py:17
 #: assets/models/label.py:18 assets/models/platform.py:15
-#: assets/models/platform.py:94 assets/serializers/asset/common.py:150
+#: assets/models/platform.py:94 assets/serializers/asset/common.py:152
 #: assets/serializers/platform.py:118 assets/serializers/platform.py:221
 #: authentication/backends/passkey/models.py:10
 #: authentication/serializers/connect_token_secret.py:113
 #: authentication/serializers/connect_token_secret.py:169 labels/models.py:11
 #: ops/mixin.py:21 ops/models/adhoc.py:20 ops/models/celery.py:15
 #: ops/models/celery.py:80 ops/models/job.py:142 ops/models/playbook.py:28
-#: ops/serializers/job.py:18 orgs/models.py:82
+#: ops/serializers/job.py:18 orgs/models.py:83
 #: perms/models/asset_permission.py:61 rbac/models/role.py:29
 #: settings/models.py:33 settings/models.py:181 settings/serializers/msg.py:89
 #: terminal/models/applet/applet.py:34 terminal/models/component/endpoint.py:12
@@ -727,12 +727,14 @@ msgid "Notification of account backup route task results"
 msgstr ""
 
 #: accounts/notifications.py:22 accounts/notifications.py:46
+#, python-brace-format
 msgid ""
 "{} - The account backup passage task has been completed. See the attachment "
 "for details"
 msgstr ""
 
 #: accounts/notifications.py:25
+#, python-brace-format
 msgid ""
 "{} - The account backup passage task has been completed: the encryption "
 "password has not been set - please go to personal information -> Basic file "
@@ -744,12 +746,14 @@ msgid "Notification of implementation result of encryption change plan"
 msgstr ""
 
 #: accounts/notifications.py:67
+#, python-brace-format
 msgid ""
 "{} - The encryption change task has been completed. See the attachment for "
 "details"
 msgstr ""
 
 #: accounts/notifications.py:71
+#, python-brace-format
 msgid ""
 "{} - The encryption change task has been completed: the encryption password "
 "has not been set - please go to personal information -> set encryption "
@@ -775,7 +779,7 @@ msgstr ""
 
 #: accounts/serializers/account/account.py:204 applications/models.py:11
 #: assets/models/label.py:21 assets/models/platform.py:95
-#: assets/serializers/asset/common.py:126 assets/serializers/cagegory.py:12
+#: assets/serializers/asset/common.py:128 assets/serializers/cagegory.py:12
 #: assets/serializers/platform.py:133 assets/serializers/platform.py:222
 #: perms/serializers/user_permission.py:26 settings/models.py:35
 #: tickets/models/ticket/apply_application.py:13 users/models/preference.py:12
@@ -787,7 +791,7 @@ msgstr ""
 #: acls/serializers/command_acl.py:19 applications/models.py:14
 #: assets/models/_user.py:50 assets/models/automations/base.py:20
 #: assets/models/cmd_filter.py:74 assets/models/platform.py:96
-#: assets/serializers/asset/common.py:127 assets/serializers/platform.py:120
+#: assets/serializers/asset/common.py:129 assets/serializers/platform.py:120
 #: assets/serializers/platform.py:132 audits/serializers.py:53
 #: audits/serializers.py:170
 #: authentication/serializers/connect_token_secret.py:126 ops/models/job.py:150
@@ -825,9 +829,7 @@ msgstr ""
 #: acls/templates/acls/asset_login_reminder.html:6
 #: assets/models/automations/base.py:19
 #: assets/serializers/automations/base.py:20
-#: authentication/api/connection_token.py:410
-#: behemoth/serializers/environment.py:11
-#: behemoth/serializers/environment.py:22 ops/models/base.py:17
+#: authentication/api/connection_token.py:410 ops/models/base.py:17
 #: ops/models/job.py:152 ops/serializers/job.py:19
 #: terminal/templates/terminal/_msg_command_execute_alert.html:16
 msgid "Assets"
@@ -848,7 +850,7 @@ msgstr ""
 
 #: accounts/serializers/account/account.py:456
 #: accounts/serializers/account/template.py:72
-#: assets/serializers/asset/common.py:388
+#: assets/serializers/asset/common.py:390
 msgid "Spec info"
 msgstr ""
 
@@ -1163,7 +1165,7 @@ msgid "Users"
 msgstr ""
 
 #: acls/models/base.py:98 assets/models/automations/base.py:17
-#: assets/models/cmd_filter.py:38 assets/serializers/asset/common.py:387
+#: assets/models/cmd_filter.py:38 assets/serializers/asset/common.py:389
 #: perms/serializers/user_permission.py:75 rbac/tree.py:35
 msgid "Accounts"
 msgstr ""
@@ -1204,6 +1206,7 @@ msgid "Command group"
 msgstr ""
 
 #: acls/models/command_acl.py:86
+#, python-brace-format
 msgid "The generated regular expression is incorrect: {}"
 msgstr ""
 
@@ -1273,15 +1276,18 @@ msgid "Recipients"
 msgstr ""
 
 #: acls/serializers/base.py:103 tickets/serializers/ticket/ticket.py:77
+#, python-brace-format
 msgid "The organization `{}` does not exist"
 msgstr ""
 
 #: acls/serializers/base.py:109
+#, python-brace-format
 msgid "None of the reviewers belong to Organization `{}`"
 msgstr ""
 
 #: acls/serializers/rules/rules.py:20
 #: xpack/plugins/cloud/serializers/task.py:145
+#, python-brace-format
 msgid "IP address invalid: `{}`"
 msgstr ""
 
@@ -1364,6 +1370,7 @@ msgid "You can't update the root node name"
 msgstr ""
 
 #: assets/api/node.py:65
+#, python-brace-format
 msgid "You can't delete the root node ({})"
 msgstr ""
 
@@ -1380,10 +1387,12 @@ msgid "App assets"
 msgstr ""
 
 #: assets/automations/base/manager.py:187
+#, python-brace-format
 msgid "{} disabled"
 msgstr ""
 
 #: assets/automations/base/manager.py:250
+#, python-brace-format
 msgid "  - Platform {} ansible disabled"
 msgstr ""
 
@@ -1393,6 +1402,7 @@ msgid "No account"
 msgstr ""
 
 #: assets/automations/ping_gateway/manager.py:36
+#, python-brace-format
 msgid "Asset, {}, using account {}"
 msgstr ""
 
@@ -1765,14 +1775,14 @@ msgid "Cloud"
 msgstr ""
 
 #: assets/models/asset/common.py:94 assets/models/platform.py:16
-#: assets/serializers/asset/common.py:458
+#: assets/serializers/asset/common.py:460
 #: settings/serializers/auth/radius.py:17 settings/serializers/auth/sms.py:72
 #: settings/serializers/msg.py:32 terminal/serializers/storage.py:133
 #: xpack/plugins/cloud/serializers/account_attrs.py:73
 msgid "Port"
 msgstr ""
 
-#: assets/models/asset/common.py:160 assets/serializers/asset/common.py:151
+#: assets/models/asset/common.py:160 assets/serializers/asset/common.py:153
 msgid "Address"
 msgstr ""
 
@@ -1796,7 +1806,7 @@ msgstr ""
 msgid "Node"
 msgstr ""
 
-#: assets/models/asset/common.py:167 assets/serializers/asset/common.py:389
+#: assets/models/asset/common.py:167 assets/serializers/asset/common.py:391
 #: assets/serializers/asset/host.py:11
 msgid "Gathered info"
 msgstr ""
@@ -2121,7 +2131,7 @@ msgid ""
 "type"
 msgstr ""
 
-#: assets/serializers/asset/common.py:128 assets/serializers/platform.py:134
+#: assets/serializers/asset/common.py:130 assets/serializers/platform.py:134
 #: authentication/serializers/connect_token_secret.py:30
 #: authentication/serializers/connect_token_secret.py:75
 #: perms/models/asset_permission.py:76 perms/serializers/permission.py:41
@@ -2130,33 +2140,34 @@ msgstr ""
 msgid "Protocols"
 msgstr ""
 
-#: assets/serializers/asset/common.py:130
-#: assets/serializers/asset/common.py:152
+#: assets/serializers/asset/common.py:132
+#: assets/serializers/asset/common.py:154
 msgid "Node path"
 msgstr ""
 
-#: assets/serializers/asset/common.py:149
-#: assets/serializers/asset/common.py:390
+#: assets/serializers/asset/common.py:151
+#: assets/serializers/asset/common.py:392
 msgid "Auto info"
 msgstr ""
 
-#: assets/serializers/asset/common.py:246
+#: assets/serializers/asset/common.py:248
 msgid "Platform not exist"
 msgstr ""
 
-#: assets/serializers/asset/common.py:282
+#: assets/serializers/asset/common.py:284
 msgid "port out of range (0-65535)"
 msgstr ""
 
-#: assets/serializers/asset/common.py:289
+#: assets/serializers/asset/common.py:291
+#, python-brace-format
 msgid "Protocol is required: {}"
 msgstr ""
 
-#: assets/serializers/asset/common.py:317 labels/api.py:107
+#: assets/serializers/asset/common.py:319 labels/api.py:107
 msgid "Invalid data"
 msgstr ""
 
-#: assets/serializers/asset/common.py:481
+#: assets/serializers/asset/common.py:486
 msgid "You can only create assets with the same IP that exist in the hosts."
 msgstr ""
 
@@ -2372,6 +2383,7 @@ msgid "Waiting task start"
 msgstr ""
 
 #: assets/tasks/ping.py:81
+#, python-brace-format
 msgid "Total {}, success {}, failure {}"
 msgstr ""
 
@@ -2381,14 +2393,17 @@ msgid "Test gateways connectivity"
 msgstr ""
 
 #: assets/tasks/utils.py:16
+#, python-brace-format
 msgid "Asset has been disabled, skipped: {}"
 msgstr ""
 
 #: assets/tasks/utils.py:20
+#, python-brace-format
 msgid "Asset may not be support ansible, skipped: {}"
 msgstr ""
 
 #: assets/tasks/utils.py:38
+#, python-brace-format
 msgid "For security, do not push user {}"
 msgstr ""
 
@@ -2768,6 +2783,7 @@ msgid "Permission expired"
 msgstr ""
 
 #: authentication/api/connection_token.py:435
+#, python-brace-format
 msgid "ACL action is reject: {}({})"
 msgstr ""
 
@@ -2776,11 +2792,13 @@ msgid "ACL action is review"
 msgstr ""
 
 #: authentication/api/mfa.py:62
+#, python-brace-format
 msgid "Current user not support mfa type: {}"
 msgstr ""
 
 #: authentication/api/password.py:33 terminal/api/session/session.py:328
 #: users/views/profile/reset.py:63
+#, python-brace-format
 msgid "User does not exist: {}"
 msgstr ""
 
@@ -2789,6 +2807,7 @@ msgid "No user matched"
 msgstr ""
 
 #: authentication/api/password.py:37
+#, python-brace-format
 msgid ""
 "The user is from {}, please go to the corresponding system to change the "
 "password"
@@ -2860,6 +2879,7 @@ msgid "Authentication failed password incorrect"
 msgstr ""
 
 #: authentication/confirm/relogin.py:10
+#, python-brace-format
 msgid "Login time has exceeded {} minutes, please login again"
 msgstr ""
 
@@ -2924,12 +2944,14 @@ msgid ""
 msgstr ""
 
 #: authentication/errors/const.py:47 authentication/errors/const.py:55
+#, python-brace-format
 msgid ""
 "The account has been locked (please contact admin to unlock it or try again "
 "after {} minutes)"
 msgstr ""
 
 #: authentication/errors/const.py:51
+#, python-brace-format
 msgid ""
 "The address has been locked (please contact admin to unlock it or try again "
 "after {} minutes)"
@@ -2959,6 +2981,7 @@ msgid "Wait login confirm ticket for accept"
 msgstr ""
 
 #: authentication/errors/const.py:67
+#, python-brace-format
 msgid "Login confirm ticket was {}"
 msgstr ""
 
@@ -3123,6 +3146,7 @@ msgid "Clear phone number to disable"
 msgstr ""
 
 #: authentication/middleware.py:95 settings/utils/ldap.py:679
+#, python-brace-format
 msgid "Authentication failed (before login check failed): {}"
 msgstr ""
 
@@ -3131,12 +3155,14 @@ msgid "User is invalid"
 msgstr ""
 
 #: authentication/mixins.py:97
+#, python-brace-format
 msgid ""
 "The administrator has enabled 'Only allow login from user source'. \n"
 "            The current user source is {}. Please contact the administrator."
 msgstr ""
 
 #: authentication/mixins.py:273
+#, python-brace-format
 msgid "The MFA type ({}) is not enabled"
 msgstr ""
 
@@ -3205,6 +3231,7 @@ msgid "Connection token inactive"
 msgstr ""
 
 #: authentication/models/connection_token.py:122
+#, python-brace-format
 msgid "Connection token expired at: {}"
 msgstr ""
 
@@ -3303,6 +3330,7 @@ msgstr ""
 
 #: authentication/serializers/password_mfa.py:29
 #: users/templates/users/forgot_password.html:153
+#, python-brace-format
 msgid "The {} cannot be empty"
 msgstr ""
 
@@ -3632,6 +3660,7 @@ msgid "Redirecting"
 msgstr ""
 
 #: authentication/views/login.py:228
+#, python-brace-format
 msgid "Redirecting to {} authentication"
 msgstr ""
 
@@ -3640,10 +3669,12 @@ msgid "Login timeout, please try again."
 msgstr ""
 
 #: authentication/views/login.py:296
+#, python-brace-format
 msgid "User email already exists ({})"
 msgstr ""
 
 #: authentication/views/login.py:374
+#, python-brace-format
 msgid ""
 "Wait for <b>{}</b> confirm, You also can copy link to her/him <br/>\n"
 "                  Don't close this page"
@@ -3809,6 +3840,7 @@ msgid "Updated by"
 msgstr ""
 
 #: common/db/validators.py:9
+#, python-brace-format
 msgid "Invalid port range, should be like and within {}-{}"
 msgstr ""
 
@@ -3821,10 +3853,12 @@ msgid "Organization ID"
 msgstr ""
 
 #: common/drf/parsers/base.py:21
+#, python-brace-format
 msgid "The file content overflowed (The maximum length `{}` bytes)"
 msgstr ""
 
 #: common/drf/parsers/base.py:199
+#, python-brace-format
 msgid "Parse file error: {}"
 msgstr ""
 
@@ -3833,6 +3867,7 @@ msgid "Invalid excel file"
 msgstr ""
 
 #: common/drf/renders/base.py:208
+#, python-brace-format
 msgid ""
 "{} - The encryption password has not been set - please go to personal "
 "information -> file encryption password to set the encryption password"
@@ -3902,6 +3937,7 @@ msgid "sp_id is 6 bits"
 msgstr ""
 
 #: common/sdk/sms/cmpp2.py:214
+#, python-brace-format
 msgid "Failed to connect to the CMPP gateway server, err: {}"
 msgstr ""
 
@@ -3935,6 +3971,7 @@ msgid "Custom type (File)"
 msgstr ""
 
 #: common/sdk/sms/endpoint.py:32
+#, python-brace-format
 msgid "SMS provider not support: {}"
 msgstr ""
 
@@ -3951,6 +3988,7 @@ msgid "The verification code is incorrect"
 msgstr ""
 
 #: common/sdk/sms/exceptions.py:18
+#, python-brace-format
 msgid "Please wait {} seconds before sending"
 msgstr ""
 
@@ -3973,6 +4011,7 @@ msgid "Invalid data type, should be list"
 msgstr ""
 
 #: common/serializers/fields.py:224
+#, python-brace-format
 msgid "Invalid choice: {}"
 msgstr ""
 
@@ -4050,6 +4089,7 @@ msgid ""
 msgstr ""
 
 #: jumpserver/views/other.py:70
+#, python-brace-format
 msgid "Websocket server run on port: {}, you should proxy it on nginx"
 msgstr ""
 
@@ -4093,6 +4133,7 @@ msgid "User message"
 msgstr ""
 
 #: notifications/models/notification.py:21
+#, python-brace-format
 msgid "{} subscription"
 msgstr ""
 
@@ -4117,10 +4158,12 @@ msgid "Skip hosts below:"
 msgstr ""
 
 #: ops/api/celery.py:262
+#, python-brace-format
 msgid "Task {} not found"
 msgstr ""
 
 #: ops/api/celery.py:269
+#, python-brace-format
 msgid "Task {} args or kwargs error"
 msgstr ""
 
@@ -4302,6 +4345,7 @@ msgid "* Please enter a valid crontab expression"
 msgstr ""
 
 #: ops/mixin.py:127
+#, python-brace-format
 msgid "Range {} to {}"
 msgstr ""
 
@@ -4533,6 +4577,7 @@ msgid "Name of the job"
 msgstr ""
 
 #: orgs/api.py:61
+#, python-brace-format
 msgid "The current organization ({}) cannot be deleted"
 msgstr ""
 
@@ -4543,6 +4588,7 @@ msgid ""
 msgstr ""
 
 #: orgs/api.py:76
+#, python-brace-format
 msgid "The organization have resource ({}) cannot be deleted"
 msgstr ""
 
@@ -4554,7 +4600,7 @@ msgstr ""
 msgid "Please save in a org"
 msgstr ""
 
-#: orgs/mixins/models.py:57 orgs/mixins/serializers.py:25 orgs/models.py:91
+#: orgs/mixins/models.py:57 orgs/mixins/serializers.py:25 orgs/models.py:92
 #: rbac/const.py:7 rbac/models/rolebinding.py:56
 #: rbac/serializers/rolebinding.py:44 settings/serializers/auth/ldap.py:63
 #: terminal/templates/terminal/_msg_command_warning.html:21
@@ -4567,37 +4613,56 @@ msgstr ""
 msgid "Org name"
 msgstr ""
 
-#: orgs/models.py:14
+#: orgs/models.py:15
 msgid "GLOBAL"
 msgstr ""
 
-#: orgs/models.py:16
+#: orgs/models.py:17
 msgid "DEFAULT"
 msgstr ""
 
-#: orgs/models.py:18
+#: orgs/models.py:19
 msgid "SYSTEM"
 msgstr ""
 
-#: orgs/models.py:83 rbac/models/role.py:36 settings/models.py:183
+#: orgs/models.py:84 rbac/models/role.py:36 settings/models.py:183
 #: terminal/models/applet/applet.py:42
 msgid "Builtin"
 msgstr ""
 
-#: orgs/models.py:93
+#: orgs/models.py:94
 msgid "Can view root org"
 msgstr ""
 
-#: orgs/models.py:94
+#: orgs/models.py:95
 msgid "Can view all joined org"
 msgstr ""
 
-#: orgs/models.py:236
+#: orgs/models.py:258
 msgid "Can not delete virtual org"
 msgstr ""
 
-#: orgs/tasks.py:9
+#: orgs/notifications.py:23
+msgid "Organization asset limit warning"
+msgstr ""
+
+#: orgs/tasks.py:14
 msgid "Refresh organization cache"
+msgstr ""
+
+#: orgs/tasks.py:20
+msgid "Periodic check organization asset limit"
+msgstr ""
+
+#: orgs/templates/orgs/_msg_check_org_asset_limit.html:6
+#, python-format
+msgid ""
+"\n"
+"            Organization %(org_name)s has <span style='font-weight: 600; "
+"color: #d35400;'>%(current_asset_count)s</span> assets, which exceeds the "
+"configured limit of <span style='font-weight: 600; color: "
+"#d35400;'>%(asset_limit)s</span>\n"
+"        "
 msgstr ""
 
 #: perms/apps.py:9
@@ -4694,6 +4759,7 @@ msgid "Asset permissions is about to expire"
 msgstr ""
 
 #: perms/notifications.py:64
+#, python-brace-format
 msgid "asset permissions of organization {}"
 msgstr ""
 
@@ -4740,6 +4806,7 @@ msgid "Internal role, can't be update"
 msgstr ""
 
 #: rbac/api/rolebinding.py:45
+#, python-brace-format
 msgid "{} at least one system role"
 msgstr ""
 
@@ -4946,6 +5013,7 @@ msgid "Test success"
 msgstr ""
 
 #: settings/api/email.py:22
+#, python-brace-format
 msgid "Test mail sent to {}, please check"
 msgstr ""
 
@@ -5191,8 +5259,8 @@ msgstr ""
 
 #: settings/serializers/auth/ldap.py:59
 msgid ""
-"User attr map present how to map LDAP user attr to jumpserver, username,name,"
-"email is jumpserver attr"
+"User attr map present how to map LDAP user attr to jumpserver, "
+"username,name,email is jumpserver attr"
 msgstr ""
 
 #: settings/serializers/auth/ldap.py:77
@@ -5287,8 +5355,8 @@ msgstr ""
 
 #: settings/serializers/auth/oidc.py:38
 msgid ""
-"User attr map present how to map OpenID user attr to jumpserver, username,"
-"name,email is jumpserver attr"
+"User attr map present how to map OpenID user attr to jumpserver, "
+"username,name,email is jumpserver attr"
 msgstr ""
 
 #: settings/serializers/auth/oidc.py:41
@@ -6184,19 +6252,23 @@ msgid "ldap:// or ldaps:// protocol is used."
 msgstr ""
 
 #: settings/utils/ldap.py:505
+#, python-brace-format
 msgid "Host or port is disconnected: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:507
+#, python-brace-format
 msgid "The port is not the port of the LDAP service: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:509
+#, python-brace-format
 msgid "Please add certificate: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:513 settings/utils/ldap.py:540
 #: settings/utils/ldap.py:570 settings/utils/ldap.py:598
+#, python-brace-format
 msgid "Unknown error: {}"
 msgstr ""
 
@@ -6205,22 +6277,27 @@ msgid "Bind DN or Password incorrect"
 msgstr ""
 
 #: settings/utils/ldap.py:534
+#, python-brace-format
 msgid "Please enter Bind DN: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:536
+#, python-brace-format
 msgid "Please enter Password: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:538
+#, python-brace-format
 msgid "Please enter correct Bind DN and Password: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:556
+#, python-brace-format
 msgid "Invalid User OU or User search filter: {}"
 msgstr ""
 
 #: settings/utils/ldap.py:587
+#, python-brace-format
 msgid "LDAP User attr map not include: {}"
 msgstr ""
 
@@ -6233,46 +6310,57 @@ msgid "LDAP authentication is not enabled"
 msgstr ""
 
 #: settings/utils/ldap.py:631
+#, python-brace-format
 msgid "Error (Invalid LDAP server): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:633
+#, python-brace-format
 msgid "Error (Invalid Bind DN): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:635
+#, python-brace-format
 msgid "Error (Invalid LDAP User attr map): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:637
+#, python-brace-format
 msgid "Error (Invalid User OU or User search filter): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:639
+#, python-brace-format
 msgid "Error (Not enabled LDAP authentication): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:641
+#, python-brace-format
 msgid "Error (Unknown): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:644
+#, python-brace-format
 msgid "Succeed: Match {} s user"
 msgstr ""
 
 #: settings/utils/ldap.py:677
+#, python-brace-format
 msgid "Authentication failed (configuration incorrect): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:681
+#, python-brace-format
 msgid "Authentication failed (username or password incorrect): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:683
+#, python-brace-format
 msgid "Authentication failed (Unknown): {}"
 msgstr ""
 
 #: settings/utils/ldap.py:686
+#, python-brace-format
 msgid "Authentication success: {}"
 msgstr ""
 
@@ -6281,6 +6369,7 @@ msgid "Get ldap users is None"
 msgstr ""
 
 #: settings/ws.py:205
+#, python-brace-format
 msgid "Imported {} users successfully (Organization: {})"
 msgstr ""
 
@@ -6482,11 +6571,12 @@ msgstr ""
 msgid "Command storages"
 msgstr ""
 
-#: terminal/api/component/storage.py:82 xpack/plugins/cloud/manager.py:84
+#: terminal/api/component/storage.py:82 xpack/plugins/cloud/manager.py:85
 msgid "Invalid"
 msgstr ""
 
 #: terminal/api/component/storage.py:130 terminal/tasks.py:149
+#, python-brace-format
 msgid "Test failure: {}"
 msgstr ""
 
@@ -6508,6 +6598,7 @@ msgid "User %s %s session %s replay"
 msgstr ""
 
 #: terminal/api/session/session.py:320
+#, python-brace-format
 msgid "Session does not exist: {}"
 msgstr ""
 
@@ -6682,10 +6773,12 @@ msgstr ""
 
 #: terminal/models/applet/applet.py:94
 #: terminal/models/virtualapp/virtualapp.py:66
+#, python-brace-format
 msgid "Applet pkg not valid, Missing file {}"
 msgstr ""
 
 #: terminal/models/applet/applet.py:113
+#, python-brace-format
 msgid "Load platform.yml failed: {}"
 msgstr ""
 
@@ -7220,6 +7313,7 @@ msgid "Terminal display"
 msgstr ""
 
 #: terminal/serializers/storage.py:23
+#, python-brace-format
 msgid "Endpoint invalid: remove path `{}`"
 msgstr ""
 
@@ -7237,7 +7331,7 @@ msgstr ""
 msgid "Access key secret"
 msgstr ""
 
-#: terminal/serializers/storage.py:68 xpack/plugins/cloud/manager.py:84
+#: terminal/serializers/storage.py:68 xpack/plugins/cloud/manager.py:85
 #: xpack/plugins/cloud/models.py:267
 msgid "Region"
 msgstr ""
@@ -7470,6 +7564,7 @@ msgid ""
 msgstr ""
 
 #: terminal/utils/db_port_mapper.py:115
+#, python-brace-format
 msgid "All available port count: {}, Already use port count: {}"
 msgstr ""
 
@@ -7542,6 +7637,7 @@ msgid "Ticket already closed"
 msgstr ""
 
 #: tickets/handlers/apply_asset.py:36
+#, python-brace-format
 msgid ""
 "Created by the ticket ticket title: {} ticket applicant: {} ticket "
 "processor: {} ticket ID: {}"
@@ -7560,6 +7656,7 @@ msgid "After change"
 msgstr ""
 
 #: tickets/handlers/base.py:97
+#, python-brace-format
 msgid "{} {} the ticket"
 msgstr ""
 
@@ -7711,18 +7808,22 @@ msgid "Ticket applied info"
 msgstr ""
 
 #: tickets/notifications.py:105
+#, python-brace-format
 msgid "Your has a new ticket, applicant - {}"
 msgstr ""
 
 #: tickets/notifications.py:109
+#, python-brace-format
 msgid "{}: New Ticket - {} ({})"
 msgstr ""
 
 #: tickets/notifications.py:155
+#, python-brace-format
 msgid "Your ticket has been processed, processor - {}"
 msgstr ""
 
 #: tickets/notifications.py:159
+#, python-brace-format
 msgid "Ticket has processed - {} ({})"
 msgstr ""
 
@@ -7760,6 +7861,7 @@ msgstr ""
 
 #: tickets/serializers/ticket/common.py:15
 #: tickets/serializers/ticket/common.py:75
+#, python-brace-format
 msgid "Created by ticket ({}-{})"
 msgstr ""
 
@@ -7768,10 +7870,12 @@ msgid "The expiration date should be greater than the start date"
 msgstr ""
 
 #: tickets/serializers/ticket/common.py:82
+#, python-brace-format
 msgid "Permission named `{}` already exists"
 msgstr ""
 
 #: tickets/serializers/ticket/ticket.py:89
+#, python-brace-format
 msgid "The ticket flow `{}` does not exist"
 msgstr ""
 
@@ -8169,6 +8273,7 @@ msgid "Password does not match security rules"
 msgstr ""
 
 #: users/serializers/profile.py:40
+#, python-brace-format
 msgid "The new password cannot be the last {} passwords"
 msgstr ""
 
@@ -8494,6 +8599,7 @@ msgid "Password invalid"
 msgstr ""
 
 #: users/views/profile/reset.py:66
+#, python-brace-format
 msgid ""
 "Non-local users can log in only from third-party platforms and cannot change "
 "their passwords: {}"
@@ -8504,6 +8610,7 @@ msgid "Token invalid or expired"
 msgstr ""
 
 #: users/views/profile/reset.py:204
+#, python-brace-format
 msgid "User auth from {}, go there change password"
 msgstr ""
 
@@ -8512,6 +8619,7 @@ msgid "* Your password does not meet the requirements"
 msgstr ""
 
 #: users/views/profile/reset.py:217
+#, python-brace-format
 msgid "* The new password cannot be the last {} passwords"
 msgstr ""
 
@@ -8533,6 +8641,7 @@ msgid "Test connection successful"
 msgstr ""
 
 #: xpack/plugins/cloud/api.py:62
+#, python-brace-format
 msgid "Test connection failed: {}"
 msgstr ""
 
@@ -9079,6 +9188,7 @@ msgid "The file is in JSON format"
 msgstr ""
 
 #: xpack/plugins/cloud/serializers/account_attrs.py:159
+#, python-brace-format
 msgid "IP address invalid `{}`, {}"
 msgstr ""
 

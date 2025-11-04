@@ -5,6 +5,7 @@ from rest_framework.serializers import ValidationError
 from common.db.models import JMSBaseModel
 from common.tree import TreeNode
 from common.utils import lazyproperty, settings, get_logger
+from settings.models import Setting
 
 logger = get_logger(__name__)
 
@@ -96,6 +97,27 @@ class Organization(OrgRoleMixin, JMSBaseModel):
 
     def __str__(self):
         return str(self.name)
+
+    @property
+    def is_over_asset_limit(self):
+        if self.is_root():
+            return False
+
+        from .caches import OrgResourceStatisticsCache
+        return OrgResourceStatisticsCache(self).assets_amount > self.asset_limit
+
+    @property
+    def asset_limit_key(self):
+        return f'org_asset_limit_{self.id}'
+
+    @property
+    def asset_limit(self):
+        s, __ = Setting.objects.get_or_create(name=self.asset_limit_key, defaults={'value': 1000})
+        return int(s.value)
+
+    @asset_limit.setter
+    def asset_limit(self, v):
+        Setting.update_or_create(name=self.asset_limit_key, value=v)
 
     @classmethod
     def get_instance(cls, id_or_name, default=None):

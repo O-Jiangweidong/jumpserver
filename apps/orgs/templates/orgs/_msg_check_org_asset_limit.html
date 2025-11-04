@@ -1,0 +1,11 @@
+{% load i18n %}
+
+<div>
+    {% for org_info in org_infos %}
+    <div style="color: #856404; line-height: 1.6;">
+        {% blocktranslate with org_name=org_info.name asset_limit=org_info.asset_limit current_asset_count=org_info.current_asset_count %}
+            Organization {{ org_name }} has <span style='font-weight: 600; color: #d35400;'>{{ current_asset_count }}</span> assets, which exceeds the configured limit of <span style='font-weight: 600; color: #d35400;'>{{ asset_limit }}</span>
+        {% endblocktranslate %}
+    </div>
+    {% endfor %}
+</div>

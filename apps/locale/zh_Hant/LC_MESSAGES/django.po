@@ -9339,3 +9339,27 @@ msgstr "企業專業版"
 #: xpack/plugins/license/models.py:86
 msgid "Ultimate edition"
 msgstr "企業旗艦版"
+
+#: orgs/notifications.py:21
+#: orgs/templates/orgs/_msg_check_org_asset_limit.html:4
+msgid "Organization asset limit warning"
+msgstr "組織資產限制警告"
+
+msgid "Periodic check organization asset limit"
+msgstr "定期檢查組織資產限制"
+
+#: orgs/templates/orgs/_msg_check_org_asset_limit.html:6
+#, python-format
+msgid ""
+"\n"
+"            Organization %(org_name)s has <span style='font-weight: 600; "
+"color: #d35400;'>%(current_asset_count)s</span> assets, which exceeds the "
+"configured limit of <span style='font-weight: 600; color: "
+"#d35400;'>%(asset_limit)s</span>\n"
+"        "
+msgstr ""
+"\n"
+"            組織 %(org_name)s 擁有 <span style='font-weight: 600; "
+"color: #d35400;'>%(current_asset_count)s</span> 個資產，已超過設定的上限 <span style='font-weight: 600; color: "
+"#d35400;'>%(asset_limit)s</span>\n"
+"        "

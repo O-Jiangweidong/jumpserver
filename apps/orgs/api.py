@@ -17,7 +17,7 @@ from perms.models import AssetPermission
 from users.models import User, UserGroup
 from .models import Organization
 from .serializers import (
-    OrgSerializer, CurrentOrgSerializer
+    OrgSerializer, CurrentOrgSerializer, CurrentOrgWithAssetLimitSerializer
 )
 
 logger = get_logger(__file__)
@@ -81,8 +81,12 @@ class OrgViewSet(JMSBulkModelViewSet):
 
 
 class CurrentOrgDetailApi(RetrieveAPIView):
-    serializer_class = CurrentOrgSerializer
     permission_classes = (IsValidUser,)
 
     def get_object(self):
         return current_org
+
+    def get_serializer_class(self):
+        if self.request.user.has_perm('rbac.view_console'):
+            return CurrentOrgWithAssetLimitSerializer
+        return CurrentOrgSerializer
