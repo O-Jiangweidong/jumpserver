@@ -11973,8 +11973,8 @@ msgid "Unique session"
 msgstr "Đơn phiên 会话"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser"
-msgstr "Tài sản này đang trong quá trình bảo trì. Vui lòng liên hệ với nhân viên bảo trì {} và làm mới trình duyệt"
+msgid "This asset is under maintenance. Please contact {}  (maintenance staff) for assistance. Meanwhile, refresh the current page to check the device status"
+msgstr "Tài sản này đang trong quá trình bảo trì. Vui lòng liên hệ với nhân viên bảo trì {}. Đồng thời, làm mới trang hiện tại để xem trạng thái thiết bị"
 
 #: authentication/api/connection_token.py:431
 #, python-format

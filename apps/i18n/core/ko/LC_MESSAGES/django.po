@@ -11514,8 +11514,8 @@ msgid "Unique session"
 msgstr "단일 세션"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser"
-msgstr "이 자산은 유지보수 중입니다. {} 유지보수 담당자에게 연락하시고 동시에 브라우저를 새로 고쳐 주세요"
+msgid "This asset is under maintenance. Please contact {}  (maintenance staff) for assistance. Meanwhile, refresh the current page to check the device status"
+msgstr "이 자산은 유지보수 중입니다. 유지보수 담당자 {} 에게 문의하세요. 동시에 현재 페이지를 새로고침하여 장치 상태를 확인하십시오"
 
 #: authentication/api/connection_token.py:431
 #, python-format

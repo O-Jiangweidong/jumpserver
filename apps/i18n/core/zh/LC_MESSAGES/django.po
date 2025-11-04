@@ -11643,8 +11643,8 @@ msgid "Unique session"
 msgstr "单会话"
 
 #: authentication/api/connection_token.py:428
-msgid "This asset is under maintenance. Please contact the {} maintenance staff and refresh your browser"
-msgstr "该资产正在维护中，请联系 {} 维护人员，同时刷新浏览器"
+msgid "This asset is under maintenance. Please contact {}  (maintenance staff) for assistance. Meanwhile, refresh the current page to check the device status"
+msgstr "该资产正在维护中，请联系 {} 维护人员，同时请刷新当前页面查看设备状态 "
 
 #: authentication/api/connection_token.py:431
 #, python-format
