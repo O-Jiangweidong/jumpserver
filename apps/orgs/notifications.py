@@ -3,8 +3,6 @@ from django.utils.translation import gettext_lazy as _
 
 from common.utils import get_logger
 from notifications.notifications import UserMessage
-from users.models import User
-from orgs.models import Organization
 
 
 logger = get_logger(__name__)
