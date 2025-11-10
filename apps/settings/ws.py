@@ -10,6 +10,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.db.utils import close_old_connections
 from common.utils import get_logger
+from orgs.mixins.ws import OrgMixin
 from settings.serializers import (
     LDAPTestConfigSerializer,
     LDAPTestLoginSerializer
@@ -97,10 +98,10 @@ class ToolsWebsocket(AsyncJsonWebsocketConsumer):
         close_old_connections()
 
 
-class LdapWebsocket(AsyncJsonWebsocketConsumer):
+class LdapWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
     async def connect(self):
         user = self.scope["user"]
-        if user.is_authenticated:
+        if user.is_authenticated and await self.has_perms(user, ['settings.view_setting']):
             await self.accept()
         else:
             await self.close()
@@ -133,7 +134,7 @@ class LdapWebsocket(AsyncJsonWebsocketConsumer):
         attr_map = serializer.validated_data["AUTH_LDAP_USER_ATTR_MAP"]
         auth_ldap = serializer.validated_data.get('AUTH_LDAP', False)
 
-        if not password:
+        if not password and server_uri == settings.AUTH_LDAP_SERVER_URI:
             password = settings.AUTH_LDAP_BIND_PASSWORD
 
         config = {
