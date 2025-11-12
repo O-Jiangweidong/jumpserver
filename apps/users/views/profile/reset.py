@@ -2,6 +2,7 @@
 
 from __future__ import unicode_literals
 
+import os
 import time
 
 from django.conf import settings
@@ -10,6 +11,9 @@ from django.shortcuts import redirect, reverse
 from django.urls import reverse_lazy
 from django.utils.translation import gettext as _
 from django.views.generic import FormView, RedirectView
+from django.http.response import HttpResponseBadRequest
+from rest_framework.throttling import AnonRateThrottle
+from rest_framework.exceptions import Throttled
 
 from authentication.errors import IntervalTooShort
 from authentication.utils import check_user_property_is_correct
@@ -35,9 +39,21 @@ class UserLoginView(RedirectView):
     query_string = True
 
 
+class ForgotPasswordThrottle(AnonRateThrottle):
+    rate = os.environ.get('FORGOT_PASSWORD_THROTTLE_RATE', '5/m')
+
+
 class UserForgotPasswordPreviewingView(FormView):
     template_name = 'users/forgot_password_previewing.html'
     form_class = forms.UserForgotPasswordPreviewingForm
+
+    def dispatch(self, request, *args, **kwargs):
+        from rest_framework.request import Request
+        drf_request = Request(request)
+        for throttle in [ForgotPasswordThrottle()]:
+            if not throttle.allow_request(drf_request, self):
+                return HttpResponseBadRequest(Throttled(throttle.wait()))
+        return super().dispatch(request, *args, **kwargs)
 
     @staticmethod
     def get_redirect_url(token):
