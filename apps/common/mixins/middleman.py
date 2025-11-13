@@ -171,9 +171,6 @@ class MiddlemanMixin(object):
         if not self.tp or not self.use_middleman_destroy:
             return super().destroy(request, *args, **kwargs)
 
-        destroy_func = super().destroy
-        if hasattr(self, 'raw_destroy'):
-            destroy_func = self.raw_destroy
         if self.has_middleman_master_behavior():
             id_ = self._get_id(**kwargs)
             resp = middleman_client.delete_instance(
@@ -186,6 +183,6 @@ class MiddlemanMixin(object):
                 tp=self.tp, id_=id_, slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
-            return destroy_func(request, *args, **kwargs)
+            return super().destroy(request, *args, **kwargs)
         else:
-            return destroy_func(request, *args, **kwargs)
+            return super().destroy(request, *args, **kwargs)

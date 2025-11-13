@@ -82,7 +82,7 @@ class NodeViewSet(MiddlemanMixin, SuggestionMixin, OrgBulkModelViewSet):
             })
         return data
 
-    def raw_destroy(self, request, *args, **kwargs):
+    def destroy(self, request, *args, **kwargs):
         node = self.get_object()
         if node.is_org_root():
             error = _("You can't delete the root node ({})".format(node.value))
