@@ -7,13 +7,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('perms', '0036_auto_20231108_1626'),
+        ('users', '0050_user_lark_id_alter_user_source'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='assetpermission',
+            model_name='user',
             name='date_expired',
-            field=models.DateTimeField(db_index=True, default=common.utils.django.asset_permission_date_expired_default, verbose_name='Date expired'),
+            field=models.DateTimeField(blank=True, db_index=True, default=common.utils.django.user_date_expired_default, null=True, verbose_name='Date expired'),
         ),
     ]
