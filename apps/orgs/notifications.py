@@ -20,13 +20,7 @@ class OrganizationAssetLimitWarning(UserMessage):
     def get_html_msg(self) -> dict:
         subject = str(_('Organization asset limit warning'))
         context = {
-            'org_infos': [
-                {
-                    'name': org.name,
-                    'asset_limit': org.asset_limit,
-                    'current_asset_count': org.resource_statistics_cache.assets_amount,
-                }
-                for org in self.organizations],
+            'org_infos': self.organizations,
         }
         message = render_to_string('orgs/_msg_check_org_asset_limit.html', context)
         return {

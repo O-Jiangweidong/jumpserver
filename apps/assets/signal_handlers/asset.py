@@ -12,6 +12,7 @@ from common.const.signals import POST_REMOVE, PRE_REMOVE
 from common.decorators import on_transaction_commit, merge_delay_run, key_by_org
 from common.utils import get_logger
 from orgs.utils import current_org
+from orgs.tasks import check_server_performance_period
 
 logger = get_logger(__file__)
 
@@ -73,6 +74,8 @@ def on_asset_create(sender, instance=None, created=False, **kwargs):
     if auto_config.get('gather_facts_enabled'):
         logger.debug('Asset {} gather facts enabled, gather facts'.format(instance.name))
         gather_assets_facts_handler(assets=(instance,))
+
+    check_server_performance_period()
 
 
 RELATED_NODE_IDS = '_related_node_ids'
