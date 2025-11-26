@@ -25,6 +25,9 @@ def check_server_performance_period():
         if org.is_over_asset_limit:
             orgs.append(org)
 
+    if not orgs:
+        return
+
     users = User.get_super_admins()
     for user in users:
         OrganizationAssetLimitWarning(user, orgs).publish()
