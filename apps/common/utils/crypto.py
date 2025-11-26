@@ -1,5 +1,6 @@
 import base64
 import logging
+import os
 import re
 
 from Cryptodome import Random
@@ -206,6 +207,9 @@ class Crypto:
     cryptos = []
 
     def __init__(self):
+        if os.environ.get("DJANGO_PERFORMING_UPGRADE_DB") == "1":
+            return
+
         crypt_algo = settings.SECURITY_DATA_CRYPTO_ALGO
         if not crypt_algo:
             if settings.GMSSL_ENABLED:
