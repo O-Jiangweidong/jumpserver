@@ -15,6 +15,7 @@ logger = get_logger(__file__)
 def refresh_org_cache_task(*fields):
     from .caches import OrgResourceStatisticsCache
     OrgResourceStatisticsCache.refresh(*fields)
+    check_server_performance_period()
 
 
 @shared_task(verbose_name=_("Periodic check organization asset limit"))
