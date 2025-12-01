@@ -175,7 +175,7 @@ class UserViewSet(
             setattr(u, 'orgs_roles', orgs_roles)
         return queryset
 
-    def raw_perform_create(self, serializer):
+    def perform_create(self, serializer):
         users = serializer.save()
         if isinstance(users, User):
             users = [users]

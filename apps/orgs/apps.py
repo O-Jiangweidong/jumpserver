@@ -21,7 +21,6 @@ class OrgsConfig(AppConfig):
     @staticmethod
     def _register_middleman():
         from users.models import User
-        from settings.models import Setting
 
         token = settings.BOOTSTRAP_TOKEN
         md_endpoint = settings.MIDDLEMAN_ENDPOINT
@@ -43,6 +42,7 @@ class OrgsConfig(AppConfig):
                 cache.set('MIDDLEMAN_AUTH_TOKEN', f.read().strip(), None)
                 return
 
+        # TODO check token valid
         resp = None
         user = User.get_or_create_middleman(username=name, name=display)
         try:

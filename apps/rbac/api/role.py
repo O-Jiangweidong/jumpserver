@@ -44,15 +44,23 @@ class RoleViewSet(MiddlemanMixin, JMSModelViewSet):
         resp = middleman_client.get_roles(
             slave_name=self.slave_name, query_params=query_params
         )
-        roles = []
-        for role in resp.get('results', []):
-            if role['builtin']:
-                role['display_name'] = _(role['name'])
-            else:
-                role['display_name'] = role['name']
-            roles.append(role)
-        resp['results'] = roles
-        return Response(resp)
+        data = self.raise_failed_request(resp)
+
+        def get_format_role(roles):
+            results = []
+            for r in roles:
+                if r['name'] == 'SystemComponent':
+                    continue
+                display_name = _(r['name']) if r['builtin'] else r['name']
+                results.append({**r, 'display_name': display_name})
+            return results
+
+        if isinstance(data, list):
+            return Response(get_format_role(data))
+        else:
+            data['results'] = get_format_role(data.get('results', []))
+            return Response(data)
+
 
     def perform_destroy(self, instance):
         from orgs.utils import tmp_to_root_org

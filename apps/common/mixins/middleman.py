@@ -3,6 +3,7 @@ from django.http import Http404
 from rest_framework.validators import UniqueValidator
 from rest_framework.request import Request
 from rest_framework.response import Response
+from rest_framework import status
 
 from common.exceptions import JMSException
 from common.serializers.fields import (
@@ -115,19 +116,21 @@ class MiddlemanMixin(object):
     def _build_data(self, *args, **kwargs):
         raise JMSException('Unsupported API request')
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         if not self.tp or not self.use_middleman_create:
             return super().perform_create(serializer)
 
-        perform_create_func = super().perform_create
-        if hasattr(self, 'raw_perform_create'):
-            perform_create_func = self.raw_perform_create
         if self.has_middleman_master_behavior():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
                 type_=self.tp, data=[data], slave_name=self.slave_name
             )
             self.raise_failed_request(resp)
+            serializer.validated_data['id'] = data['id']
+            return_data = serializer.validated_data
         elif self.is_middleman_slave() and not self.from_middleman():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
@@ -135,9 +138,12 @@ class MiddlemanMixin(object):
             )
             self.raise_failed_request(resp)
             serializer.validated_data['id'] = data['id']
-            perform_create_func(serializer)
+            super().perform_create(serializer)
+            return_data = serializer.data
         else:
-            perform_create_func(serializer)
+            super().perform_create(serializer)
+            return_data = serializer.data
+        return Response(return_data, status=status.HTTP_201_CREATED)
 
     def update(self, request, *args, **kwargs):
         if not self.tp or not self.use_middleman_update:

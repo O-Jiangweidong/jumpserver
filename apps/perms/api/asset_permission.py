@@ -15,7 +15,6 @@ from perms.serializers import (
     ActionChoicesField as ActionField,
 )
 
-
 __all__ = ['AssetPermissionViewSet']
 
 
@@ -79,9 +78,12 @@ class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
             slave_name=self.slave_name, query_params=dict(request.query_params.items())
         )
         data = self.raise_failed_request(resp)
-        permissions = []
-        for perm in data.get('results', []):
-            perm['actions'] = ActionField().to_representation(perm['actions'])
-            permissions.append(perm)
-        data['results'] = permissions
-        return Response(data)
+
+        def format_perm(p):
+            return {**p, 'actions': ActionField().to_representation(p['actions'])}
+
+        if isinstance(data, list):
+            return Response([format_perm(perm) for perm in data])
+        else:
+            data['results'] = [format_perm(perm) for perm in data.get('results', [])]
+            return Response(data)
