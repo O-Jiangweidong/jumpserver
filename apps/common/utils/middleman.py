@@ -69,6 +69,7 @@ class MiddlemanClient(object):
             raise JMSException("Request failed, middleman may not work")
 
         if resp.status_code >= 300:
+            logger.error(f'({method}) Request url: {url} failed, error: {resp.text}')
             raise JMSException(resp.text)
         return resp
 
