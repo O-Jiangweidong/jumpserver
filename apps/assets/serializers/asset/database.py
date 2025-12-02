@@ -16,7 +16,8 @@ class DatabaseSerializer(AssetSerializer):
         model = Database
         extra_fields = [
             'db_name', 'use_ssl', 'ca_cert', 'client_cert',
-            'client_key', 'allow_invalid_cert', 'pg_ssl_mode'
+            'client_key', 'allow_invalid_cert', 'pg_ssl_mode',
+            'unique_session',
         ]
         fields = AssetSerializer.Meta.fields + extra_fields
         extra_kwargs = {

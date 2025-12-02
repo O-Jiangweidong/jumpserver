@@ -89,6 +89,7 @@ class AppletHostSerializer(HostSerializer):
             'auto_create_accounts', 'accounts_create_amount',
             'load', 'date_synced', 'deploy_options', 'using_same_account',
         ]
+        fields.remove('unique_session')
         extra_kwargs = {
             **HostSerializer.Meta.extra_kwargs,
             'date_synced': {'read_only': True},

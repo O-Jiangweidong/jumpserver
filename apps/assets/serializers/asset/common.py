@@ -164,7 +164,7 @@ class AssetSerializer(BulkOrgResourceModelSerializer, ResourceLabelsMixin, Writa
         fields_fk = ['zone', 'platform']
         fields_mini = ['id', 'name', 'address'] + fields_fk
         fields_small = fields_mini + ['is_active', 'comment', 'weight']
-        extra_fields = ['weight', 'is_offline', 'unique_session']
+        extra_fields = ['weight', 'is_offline']
         fields_m2m = [
             'nodes', 'labels', 'protocols',
             'nodes_display', 'accounts',

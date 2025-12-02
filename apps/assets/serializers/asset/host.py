@@ -12,7 +12,7 @@ class HostSerializer(AssetSerializer):
 
     class Meta(AssetSerializer.Meta):
         model = Host
-        fields = AssetSerializer.Meta.fields + ['gathered_info']
+        fields = AssetSerializer.Meta.fields + ['gathered_info', 'unique_session']
         extra_kwargs = {
             **AssetSerializer.Meta.extra_kwargs,
             'address': {
