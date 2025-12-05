@@ -488,7 +488,7 @@ class RoleMixin:
 
         from rbac.builtin import BuiltinRole
         ids = [str(r.id) for r in self.system_roles.all()]
-        yes = BuiltinRole.system_admin.id in ids or BuiltinRole.security_admin.id in ids
+        yes = BuiltinRole.system_admin.id in ids or BuiltinRole.sysadmin.id in ids
         self._is_superuser = yes
         return yes
 
@@ -783,7 +783,7 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
         slack = 'slack', _('Slack')
         custom = 'custom', 'Custom'
 
-    admin_usernames = ['admin', 'security_admin', 'auditor_admin', 'authorized_admin']
+    admin_usernames = ['admin', 'sysadmin', 'auadmin', 'secadmin']
     SOURCE_BACKEND_MAPPING = {
         Source.local: [
             settings.AUTH_BACKEND_MODEL,

@@ -78,7 +78,7 @@ def get_password_check_rules(user):
     for rule in settings.SECURITY_PASSWORD_RULES:
         key = "id_{}".format(rule.lower())
         if user.is_org_admin and rule == 'SECURITY_PASSWORD_MIN_LENGTH':
-            rule = 'SECURITY_ADMIN_USER_PASSWORD_MIN_LENGTH'
+            rule = 'SYSADMIN_PASSWORD_MIN_LENGTH'
         value = getattr(settings, rule)
         if not value:
             continue
@@ -98,7 +98,7 @@ def check_password_rules(password, is_org_admin=False):
         pattern += '(?=.*[`~!@#$%^&*()\-=_+\[\]{}|;:\'",.<>/?])'
     pattern += '[a-zA-Z\d`~!@#\$%\^&\*\(\)-=_\+\[\]\{\}\|;:\'\",\.<>\/\?]'
     if is_org_admin:
-        min_length = settings.SECURITY_ADMIN_USER_PASSWORD_MIN_LENGTH
+        min_length = settings.SYSADMIN_PASSWORD_MIN_LENGTH
     else:
         min_length = settings.SECURITY_PASSWORD_MIN_LENGTH
     pattern += '.{' + str(min_length - 1) + ',}$'

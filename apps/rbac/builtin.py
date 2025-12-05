@@ -50,7 +50,7 @@ auditor_perms = user_perms + _auditor_perms
 system_auditor_perms = system_user_perms + _auditor_perms + _view_root_perms
 
 # app, model, action, resource
-security_admin_exclude_perms = (
+sysadmin_exclude_perms = (
     ('audits', '*', '*', '*'),
     ('perms', '*', '*', '*'),
     ('acls', '*', '*', '*'),
@@ -75,8 +75,11 @@ security_admin_exclude_perms = (
     ('users', 'user', 'active', 'user'),
     ('settings', 'setting', 'change', 'security'),
 )
-authorized_admin_perms = (
-    ('perms', 'assetpermission,permedaccount,permnode,userassetgrantedtreenoderelation', '*', '*'),
+secadmin_perms = (
+    ('perms', 'assetpermission', '*', '*'),
+    ('perms', 'permedaccount,permnode,userassetgrantedtreenoderelation', '*', '*'),
+    ('perms', 'permnode,userassetgrantedtreenoderelation', '*', '*'),
+    ('perms', 'userassetgrantedtreenoderelation', '*', '*'),
     ('acls', '*', '*', '*'),
     ('users', 'user', 'view', 'user'),
     ('users', 'user', 'active', 'user'),
@@ -93,7 +96,7 @@ authorized_admin_perms = (
     ('settings', 'setting', 'change', 'security'),
 )
 
-auditor_admin_perms = (
+auadmin_perms = (
     ('rbac', 'menupermission', 'view', 'audit'),
     ('audits', 'operatelog', '*', 'operatelog'),
     ('audits', 'userloginlog', '*', 'userloginlog'),
@@ -156,21 +159,26 @@ class PredefineRole:
     def create_builtin_user(role):
         from users.models import User
         mapping = {
-            BuiltinRole.security_admin.name: 'security_admin',
-            BuiltinRole.auditor_admin.name: 'auditor_admin',
-            BuiltinRole.authorized_admin.name: 'authorized_admin',
+            BuiltinRole.sysadmin.name: 'sysadmin',
+            BuiltinRole.auadmin.name: 'auadmin',
+            BuiltinRole.secadmin.name: 'secadmin',
         }
 
         username = mapping.get(role.name)
         if not username:
             return
 
+        from django.utils import translation
+        from django.utils.translation import gettext_lazy as _
+
+        translation.activate('zh')
         user, created = User.objects.get_or_create(
             username=username, defaults={
-                'name': role.name, 'email': f"{username}@mycomany.com",
+                'name': _(role.name), 'email': f"{username}@mycompany.com",
                 'password': make_password("ChangeMe"), 'is_active': True,
             }
         )
+        translation.deactivate()
         user.system_roles.set([role])
 
     def update_or_create_role(self):
@@ -179,7 +187,6 @@ class PredefineRole:
         permissions = defaults.pop('permissions', [])
         role, created = Role.objects.update_or_create(defaults, id=self.id)
         role.permissions.set(permissions)
-        self.create_builtin_user(role)
         return role, created
 
 
@@ -205,14 +212,14 @@ class BuiltinRole:
     org_user = PredefineRole(
         '7', gettext_noop('OrgUser'), Scope.org, user_perms
     )
-    security_admin = PredefineRole(
-        '10', gettext_noop('SecurityAdmin'), Scope.system, security_admin_exclude_perms, 'exclude'
+    sysadmin = PredefineRole(
+        '10', gettext_noop('SecurityAdmin'), Scope.system, sysadmin_exclude_perms, 'exclude'
     )
-    authorized_admin = PredefineRole(
-        '11', gettext_noop('AuthorizedAdmin'), Scope.system, authorized_admin_perms
+    secadmin = PredefineRole(
+        '11', gettext_noop('AuthorizedAdmin'), Scope.system, secadmin_perms
     )
-    auditor_admin = PredefineRole(
-        '12', gettext_noop('AuditorAdmin'), Scope.system, auditor_admin_perms
+    auadmin = PredefineRole(
+        '12', gettext_noop('AuditorAdmin'), Scope.system, auadmin_perms
     )
     system_role_mapper = None
     org_role_mapper = None
@@ -248,7 +255,7 @@ class BuiltinRole:
         return cls.org_role_mapper.get(name, cls.org_role_mapper['User'])
 
     @classmethod
-    def sync_to_db(cls, show_msg=False):
+    def sync_to_db(cls, show_msg=False, create_user=False):
         roles = cls.get_roles()
         print("  - Update builtin roles")
 
@@ -256,3 +263,5 @@ class BuiltinRole:
             role, created = pre_role.update_or_create_role()
             if show_msg:
                 print("    - Update: {} - {}".format(role.name, created))
+            if create_user:
+                pre_role.create_builtin_user(role)

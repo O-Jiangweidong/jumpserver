@@ -12,7 +12,7 @@ def after_migrate_update_builtin_role_permissions(sender, app_config, **kwargs):
     last_app = list(apps.get_app_configs())[-1]
     if app_config.name == last_app.name:
         print("\nAfter migration, update builtin role permissions")
-        BuiltinRole.sync_to_db()
+        BuiltinRole.sync_to_db(create_user=True)
 
 
 @receiver(post_save, sender=SystemRole)

@@ -4849,11 +4849,11 @@ msgstr "組織ユーザー"
 
 #: rbac/builtin.py:166
 msgid "SecurityAdmin"
-msgstr "セキュリティシステム管理者"
+msgstr "システム管理者"
 
 #: rbac/builtin.py:169
 msgid "AuthorizedAdmin"
-msgstr "権限のある管理者"
+msgstr "安全機密管理員"
 
 #: rbac/builtin.py:172
 msgid "AuditorAdmin"
