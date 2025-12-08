@@ -75,17 +75,13 @@ def create_step_and_assignee(apps, schema_editor):
 
 
 def create_ticket_flow_and_approval_rule(apps, schema_editor):
-    user_model = apps.get_model("users", "User")
     org_id = '00000000-0000-0000-0000-000000000000'
     ticket_flow_model = apps.get_model("tickets", "TicketFlow")
     approval_rule_model = apps.get_model("tickets", "ApprovalRule")
-    super_user = user_model.objects.filter(role='Admin')
-    assignees_display = ['{0.name}({0.username})'.format(i) for i in super_user]
     with transaction.atomic():
         for ticket_type in [TicketType.apply_asset, 'apply_application']:
             ticket_flow_instance = ticket_flow_model.objects.create(created_by='System', type=ticket_type, org_id=org_id)
-            approval_rule_instance = approval_rule_model.objects.create(strategy=TicketApprovalStrategy.super_admin, assignees_display=assignees_display)
-            approval_rule_instance.assignees.set(list(super_user))
+            approval_rule_instance = approval_rule_model.objects.create(strategy=TicketApprovalStrategy.custom_user)
             ticket_flow_instance.rules.set([approval_rule_instance, ])
 
 

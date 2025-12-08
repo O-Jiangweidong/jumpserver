@@ -51,10 +51,7 @@ class TicketLevel(IntegerChoices):
 
 
 class TicketApprovalStrategy(TextChoices):
-    org_admin = 'org_admin', _("Org admin")
     custom_user = 'custom_user', _("Custom user")
-    super_admin = 'super_admin', _("Super admin")
-    super_org_admin = 'super_org_admin', _("Super admin and org admin")
 
 
 class TicketApplyAssetScope(TextChoices):

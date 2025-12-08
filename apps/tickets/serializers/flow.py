@@ -14,7 +14,7 @@ __all__ = ['TicketFlowSerializer']
 
 class TicketFlowApproveSerializer(serializers.ModelSerializer):
     strategy = LabeledChoiceField(
-        choices=TicketApprovalStrategy.choices, required=True, label=_('Approve strategy')
+        choices=TicketApprovalStrategy.custom_user, required=True, label=_('Approve strategy')
     )
     assignees_read_only = serializers.SerializerMethodField(label=_('Assignees'))
     assignees_display = serializers.SerializerMethodField(label=_('Assignees display'))
