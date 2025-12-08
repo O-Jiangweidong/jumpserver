@@ -90,6 +90,7 @@ secadmin_perms = (
     ('accounts', '*', '*', '*'),
     ('audits', 'passwordchangelog', 'view', 'passwordchangelog'),
     ('audits', 'userloginlog', 'view', 'userloginlog'),
+    ('ops', 'celerytaskexecution', 'view', '*'),
     ('rbac', 'menupermission', 'view', 'console|audit'),
     ('audits', '*', 'view', 'loginlog|passwordchangelog'),
     ('settings', 'setting', 'view', 'setting'),
