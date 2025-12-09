@@ -58,6 +58,8 @@ class UserViewSet(CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelV
         qs = super().get_queryset().exclude(username='admin')
         if self.request._request.path.endswith('suggestions/'): # noqa
             qs = qs.exclude(username__in=User.admin_usernames)
+        if self.request.query_params.get('strategy', '') == 'custom_user':
+            qs = qs.exclude(username__in=['secadmin', 'auadmin'])
         return qs
 
     def allow_bulk_destroy(self, qs, filtered):
