@@ -147,5 +147,5 @@ class Migration(migrations.Migration):
                                          verbose_name='user permissions'),
         ),
         migrations.RunPython(add_default_group),
-        migrations.RunPython(add_default_admin),
+        # migrations.RunPython(add_default_admin),
     ]

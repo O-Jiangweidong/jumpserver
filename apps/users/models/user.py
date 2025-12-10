@@ -1067,15 +1067,16 @@ class User(AuthMixin, TokenMixin, RoleMixin, MFAMixin, LabeledMixin, JSONFilterM
     @classmethod
     def initial(cls):
         from .group import UserGroup
-        user = cls(username='admin',
-                   email='admin@jumpserver.org',
-                   name=_('Administrator'),
-                   password_raw='admin',
-                   role='Admin',
-                   comment=_('Administrator is the super user of system'),
-                   created_by=_('System'))
-        user.save()
-        user.groups.add(UserGroup.initial())
+        # user = cls(username='admin',
+        #            email='admin@jumpserver.org',
+        #            name=_('Administrator'),
+        #            password_raw='admin',
+        #            role='Admin',
+        #            comment=_('Administrator is the super user of system'),
+        #            created_by=_('System'))
+        # user.save()
+        # user.groups.add(UserGroup.initial())
+        UserGroup.initial()
 
     def can_send_created_mail(self):
         if self.email and self.source == self.Source.local.value:
