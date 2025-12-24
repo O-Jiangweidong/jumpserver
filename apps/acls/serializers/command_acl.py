@@ -31,7 +31,7 @@ class CommandFilterACLSerializer(BaseSerializer, BulkOrgResourceModelSerializer)
 
     class Meta(BaseSerializer.Meta):
         model = CommandFilterACL
-        fields = BaseSerializer.Meta.fields + ['command_groups']
+        fields = BaseSerializer.Meta.fields + ['command_groups', 'reviewers_2']
         action_choices_exclude = [
             ActionChoices.notice,
             ActionChoices.face_verify,

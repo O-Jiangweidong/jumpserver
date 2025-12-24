@@ -136,8 +136,10 @@ class StatusMixin:
         self.create_process_steps_by_flow()
         self._open()
 
-    def open_by_system(self, assignees):
-        self.create_process_steps_by_assignees(assignees)
+    def open_by_system(self, assignees, assignees_2=None):
+        self.create_process_steps_by_assignees(assignees, level=1)
+        if assignees_2:
+            self.create_process_steps_by_assignees(assignees_2, level=2)
         self._open()
 
     def approve(self, processor):
@@ -235,8 +237,8 @@ class StatusMixin:
             step_assignees = [TicketAssignee(step=step, assignee=user) for user in assignees]
             TicketAssignee.objects.bulk_create(step_assignees)
 
-    def create_process_steps_by_assignees(self, assignees):
-        step = TicketStep.objects.create(ticket=self, level=1)
+    def create_process_steps_by_assignees(self, assignees, level=1):
+        step = TicketStep.objects.create(ticket=self, level=level)
         assignees = self.exclude_applicant(assignees, self.applicant)
         ticket_assignees = [TicketAssignee(step=step, assignee=user) for user in assignees]
         TicketAssignee.objects.bulk_create(ticket_assignees)

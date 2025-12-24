@@ -97,6 +97,10 @@ class CommandFilterACL(UserAssetAccountBaseACL):
         CommandGroup, verbose_name=_('Command group'),
         related_name='command_filters'
     )
+    reviewers_2 = models.ManyToManyField(
+        'users.User', blank=True, verbose_name=_("Reviewers 2"),
+        related_name='command_filter_acl_reviewers_2'
+    )
 
     class Meta(UserAssetAccountBaseACL.Meta):
         abstract = False
@@ -120,5 +124,6 @@ class CommandFilterACL(UserAssetAccountBaseACL):
         }
         ticket = ApplyCommandTicket.objects.create(**data)
         assignees = self.reviewers.all()
-        ticket.open_by_system(assignees)
+        assignees_2 = self.reviewers_2.all()
+        ticket.open_by_system(assignees, assignees_2)
         return ticket
