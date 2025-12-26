@@ -11,7 +11,7 @@ class TicketType(TextChoices):
     login_confirm = 'login_confirm', _("Login confirm")
     command_confirm = 'command_confirm', _('Command confirm')
     login_asset_confirm = 'login_asset_confirm', _('Login asset confirm')
-    file_confirm = 'file_confirm', _('File operate confirm')
+    file_confirm = 'file_confirm', _('Asset file confirm')
 
 
 class TicketState(TextChoices):

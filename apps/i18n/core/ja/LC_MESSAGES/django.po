@@ -11547,3 +11547,30 @@ msgstr "ライセンスのインポートに成功"
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr "ライセンスが無効です"
+
+msgid "Reviewers 2"
+msgstr "承認者 2"
+
+msgid "Asset file operate acl"
+msgstr "ファイル承認ルール"
+
+msgid "Asset file confirm"
+msgstr "ファイル承認確認"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "この操作は担当者の承認が必要です。チケットシステムで詳細な進捗状況を確認してください。"
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "この操作は管理者によって拒否されました。続行する場合は管理者にお問い合わせください。"
+
+msgid "Download File"
+msgstr "ファイルをダウンロード"
+
+msgid "Asset file operate task"
+msgstr "ファイル操作タスク"
+
+msgid "Asset file operate task with ticket"
+msgstr "チケット承認によって制御されるファイル操作タスク"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "ファイル承認チケット申請"

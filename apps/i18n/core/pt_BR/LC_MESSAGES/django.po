@@ -12059,3 +12059,30 @@ msgstr "Importação de licença bem-sucedida"
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr "Licença inválida"
+
+msgid "Reviewers 2"
+msgstr "Revisores 2"
+
+msgid "Asset file operate acl"
+msgstr "Regras de Aprovação de Arquivos"
+
+msgid "Asset file confirm"
+msgstr "Revisão de Aprovação de Arquivos"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "Esta ação requer aprovação do pessoal responsável. Verifique o progresso específico no sistema de tickets."
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "Esta operação foi rejeitada pelo administrador. Entre em contato com o administrador se precisar prosseguir."
+
+msgid "Download File"
+msgstr "Baixar Arquivo"
+
+msgid "Asset file operate task"
+msgstr "Tarefa de Operação de Arquivos"
+
+msgid "Asset file operate task with ticket"
+msgstr "Tarefa de Operação de Arquivos Controlada por Aprovação de Ticket"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "Solicitar Ticket de Aprovação de Arquivos"

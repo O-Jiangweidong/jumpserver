@@ -11650,3 +11650,30 @@ msgstr "许可证无效"
 
 #~ msgid "domain_name"
 #~ msgstr "域名称"
+
+msgid "Reviewers 2"
+msgstr "审批人 2"
+
+msgid "Asset file operate acl"
+msgstr "文件审批规则"
+
+msgid "Asset file confirm"
+msgstr "文件审批复核"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "此操作需要相关人员批准。请在工单系统中查看具体进度。"
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "此操作已被管理员拒绝。如果您需要继续操作，请联系管理员。"
+
+msgid "Download File"
+msgstr "下载文件"
+
+msgid "Asset file operate task"
+msgstr "文件操作任务"
+
+msgid "Asset file operate task with ticket"
+msgstr "通过工单审批控制的文件操作任务"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "文件审批工单"

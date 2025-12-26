@@ -12096,3 +12096,30 @@ msgstr "Nhập giấy phép thành công"
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr "Giấy phép không hợp lệ"
+
+msgid "Reviewers 2"
+msgstr "Người phê duyệt 2"
+
+msgid "Asset file operate acl"
+msgstr "Quy tắc phê duyệt tệp"
+
+msgid "Asset file confirm"
+msgstr "Xác nhận phê duyệt tệp"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "Hành động này yêu cầu sự phê duyệt của nhân viên liên quan. Vui lòng kiểm tra tiến độ cụ thể trong hệ thống vé."
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "Hoạt động này đã bị quản trị viên từ chối. Vui lòng liên hệ quản trị viên nếu bạn cần tiếp tục."
+
+msgid "Download File"
+msgstr "Tải xuống tệp"
+
+msgid "Asset file operate task"
+msgstr "Nhiệm vụ hoạt động tệp"
+
+msgid "Asset file operate task with ticket"
+msgstr "Nhiệm vụ hoạt động tệp được kiểm soát bằng phê duyệt vé"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "Đăng ký vé phê duyệt tệp"

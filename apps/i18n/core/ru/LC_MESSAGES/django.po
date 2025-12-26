@@ -12019,3 +12019,30 @@ msgstr "Лицензия успешно импортирована"
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr "Лицензия недействительна"
+
+msgid "Reviewers 2"
+msgstr "Утверждающие 2"
+
+msgid "Asset file operate acl"
+msgstr "Правила утверждения файлов"
+
+msgid "Asset file confirm"
+msgstr "Проверка утверждения файлов"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "Это действие требует утверждения соответствующего персонала. Проверьте конкретный прогресс в системе тикетов."
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "Эта операция была отклонена администратором. Свяжитесь с администратором, если необходимо продолжить."
+
+msgid "Download File"
+msgstr "Скачать Файл"
+
+msgid "Asset file operate task"
+msgstr "Задача по операциям с файлами"
+
+msgid "Asset file operate task with ticket"
+msgstr "Задача по операциям с файлами, контролируемая утверждением тикета"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "Подать заявку на тикет утверждения файлов"

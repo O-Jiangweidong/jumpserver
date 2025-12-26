@@ -11474,3 +11474,30 @@ msgstr "許可證匯入成功"
 #: xpack/plugins/license/api.py:53
 msgid "Invalid license"
 msgstr "許可證無效"
+
+msgid "Reviewers 2"
+msgstr "審批人 2"
+
+msgid "Asset file operate acl"
+msgstr "檔案審批規則"
+
+msgid "Asset file confirm"
+msgstr "檔案審批複核"
+
+msgid "This action requires approval from the relevant personnel. Please check the specific progress in the ticket system."
+msgstr "此操作需要相關人員批准。請在工單系統中查看具體進度。"
+
+msgid "This operation has been rejected by the administrator. Please contact the administrator if you need to proceed."
+msgstr "此操作已被管理員拒絕。如果您需要繼續操作，請聯繫管理員。"
+
+msgid "Download File"
+msgstr "下載檔案"
+
+msgid "Asset file operate task"
+msgstr "檔案操作任務"
+
+msgid "Asset file operate task with ticket"
+msgstr "透過工單審批控制的檔案操作任務"
+
+msgid "Apply Asset File Operate Ticket"
+msgstr "檔案審批工單申請"
