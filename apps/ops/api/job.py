@@ -15,7 +15,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from acls.models import LoginAssetACL
+from acls.models import LoginAssetACL, AssetFileOperateACL
 from assets.models import Asset
 from common.const.http import POST
 from common.permissions import IsValidUser
@@ -45,9 +45,11 @@ from perms.utils.asset_perm import PermAssetDetailUtil
 from jumpserver.settings import get_file_md5
 
 
-def set_task_to_serializer_data(serializer, task_id):
+def set_task_to_serializer_data(serializer, task_id, message=None):
     data = getattr(serializer, "_data", {})
     data["task_id"] = task_id
+    if message:
+        data["message"] = message
     setattr(serializer, "_data", data)
 
 
@@ -130,26 +132,48 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
         if run_after_save:
             self.run_job(instance, serializer)
 
+    @staticmethod
+    def check_asset_file_operate_acls(user, asset, account, file_info):
+        kwargs = {'user': user, 'asset': asset, 'account_username': account}
+        acl = AssetFileOperateACL.filter_queryset(**kwargs).first()
+        if not acl:
+            return True, ''
+        if acl.is_action(acl.ActionChoices.review):
+            acl.create_asset_file_review_ticket(user, asset, account, file_info)
+            return False, _('This action requires approval from the relevant personnel. '
+                            'Please check the specific progress in the ticket system.')
+        elif acl.is_action(acl.ActionChoices.reject):
+            return False, _('This operation has been rejected by the administrator. '
+                            'Please contact the administrator if you need to proceed.')
+        return True, ''
+
     def run_job(self, job, serializer):
         execution = job.create_execution()
         if self._parameters:
             execution.parameters = JobExecutionSerializer.validate_parameters(self._parameters)
         execution.creator = self.request.user
         execution.save()
-        assets = merge_nodes_and_assets(job.nodes.all(), job.assets.all(), self.request.user)
+        # assets = merge_nodes_and_assets(job.nodes.all(), job.assets.all(), self.request.user)
+        asset = job.assets.first()
+        assets = [asset] if asset else []
         self.check_login_asset_acls(
-            self.request.user,
-            assets,
-            job.runas,
+            self.request.user, assets, job.runas,
             get_request_ip_or_data(self.request)
         )
-
-        set_task_to_serializer_data(serializer, execution.id)
-        transaction.on_commit(
-            lambda: run_ops_job_execution.apply_async(
-                (str(execution.id),), task_id=str(execution.id)
-            )
+        can, message = self.check_asset_file_operate_acls(
+            self.request.user, asset, job.runas, {
+                'job_id': str(job.id),
+                'execution_id': str(execution.id),
+                'action': Types.upload_file, **json.loads(job.args)
+            }
         )
+        set_task_to_serializer_data(serializer, execution.id, message)
+        if can:
+            transaction.on_commit(
+                lambda: run_ops_job_execution.apply_async(
+                    (str(execution.id),), task_id=str(execution.id)
+                )
+            )
 
     @staticmethod
     def get_duplicates_files(files):
@@ -203,12 +227,18 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             with open(saved_path, 'wb+') as destination:
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
-            src_path_info.append({'filename': filename, 'md5': get_file_md5(saved_path)})
+            src_path_info.append({
+                'filename': filename, 'md5': get_file_md5(saved_path),
+                'size': uploaded_file.size, 'status': 'pending',
+            })
         job_args['src_path_info'] = src_path_info
         job.args = json.dumps(job_args)
         job.save()
         self.run_job(job, serializer)
-        return Response({'task_id': serializer.data.get('task_id')}, status=201)
+        return Response({
+            'task_id': serializer.data.get('task_id'),
+            'message': serializer.data.get('message', ''),
+        }, status=201)
 
 
 class JobExecutionViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):

@@ -12,6 +12,7 @@ router.register(r'command-filter-acls', api.CommandFilterACLViewSet, 'command-fi
 router.register(r'command-groups', api.CommandGroupViewSet, 'command-group')
 router.register(r'connect-method-acls', api.ConnectMethodACLViewSet, 'connect-method-acl')
 router.register(r'data-masking-rules', api.DataMaskingRuleViewSet, 'data-masking-rule')
+router.register(r'asset-file-operate-acls', api.AssetFileOperateACLViewSet, 'asset-file-operate-acl')
 
 urlpatterns = [
     path('login-asset/check/', api.LoginAssetCheckAPI.as_view(), name='login-asset-check'),

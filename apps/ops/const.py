@@ -39,6 +39,7 @@ class Types(models.TextChoices):
     adhoc = 'adhoc', _('Adhoc')
     playbook = 'playbook', _('Playbook')
     upload_file = 'upload_file', _('Upload File')
+    download_file = 'download_file', _('Download File')
 
 
 class RunasPolicies(models.TextChoices):

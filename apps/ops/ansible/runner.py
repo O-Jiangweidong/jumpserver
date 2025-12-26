@@ -5,13 +5,21 @@ import uuid
 from django.conf import settings
 from django.utils._os import safe_join
 
+from audits.const import OperateChoices
 from common.utils import is_macos
 from .callback import DefaultCallback
 from .exception import CommandInBlackListException
 from .interface import interface
-from ..utils import get_ansible_log_verbosity
+from ..utils import get_ansible_log_verbosity, get_logger
 
-__all__ = ['AdHocRunner', 'PlaybookRunner', 'SuperPlaybookRunner', 'UploadFileRunner']
+
+logger = get_logger(__name__)
+
+
+__all__ = [
+    'AdHocRunner', 'PlaybookRunner', 'SuperPlaybookRunner',
+    'UploadFileRunner', 'DownloadFileRunner',
+]
 
 
 class AdHocRunner:
@@ -135,31 +143,124 @@ class SuperPlaybookRunner(PlaybookRunner):
         self.isolate = False
 
 
-class UploadFileRunner:
-    def __init__(self, inventory, project_dir, job_id, dest_path, callback=None):
+class FTPLogAuditMixin:
+    @staticmethod
+    def _get_all_files(src_dir):
+        file_paths = []
+        if os.path.isfile(src_dir):
+            file_paths.append(os.path.abspath(src_dir))
+            return file_paths
+
+        if not os.path.isdir(src_dir):
+            return file_paths
+
+        for root, dirs, files in os.walk(src_dir):
+            for file in files:
+                file_abs_path = os.path.join(root, file)
+                file_paths.append(file_abs_path)
+        return file_paths
+
+    def audit_log(self, file_dir, operate, job, user, asset):
+        from audits.models import FTPLog
+
+        logs = []
+        for file in self._get_all_files(file_dir):
+            data = {
+                'user': user,
+                'remote_addr': '127.0.0.1',
+                'asset': asset,
+                'account': job.runas,
+                'operate': operate,
+                'filename': os.path.basename(file),
+                'is_success': True,
+                'session': '00000000-0000-0000-0000-000000000000',
+                'org_id': job.org_id,
+            }
+            log = FTPLog.objects.create(**data)
+            with open(file, 'rb') as f:
+                __, err = log.save_file_to_storage(f)
+            if not err:
+                log.has_file = True
+                logs.append(log)
+            else:
+                logger.error(f'Failed to save file to FTP storage: {err}')
+        FTPLog.objects.bulk_update(logs, fields=['has_file'])
+
+
+class UploadFileRunner(FTPLogAuditMixin):
+    def __init__(self, inventory, project_dir, job, dest_path, callback=None):
         self.id = uuid.uuid4()
+        self.job = job
         self.inventory = inventory
         self.project_dir = project_dir
         self.cb = DefaultCallback()
         upload_file_dir = safe_join(settings.SHARE_DIR, 'job_upload_file')
-        self.src_paths = safe_join(upload_file_dir, str(job_id))
-        self.dest_path = safe_join("/tmp", dest_path)
+        self.src_dir = safe_join(upload_file_dir, str(job.id))
+        self.dest_dir = safe_join("/", dest_path)
+        self.callback = callback
 
-    def run(self, verbosity=0, **kwargs):
-        verbosity = get_ansible_log_verbosity(verbosity)
+    def _run_ansible_copy(self, src, dest, verbosity, **kwargs):
         interface.run(
             private_data_dir=self.project_dir,
             host_pattern="*",
             inventory=self.inventory,
             module='copy',
-            module_args=f"src={self.src_paths}/ dest={self.dest_path}/",
+            module_args=f"src={src} dest={dest}",
             verbosity=verbosity,
             event_handler=self.cb.event_handler,
             status_handler=self.cb.status_handler,
             **kwargs
         )
+
+    @staticmethod
+    def _cleanup_path(path):
         try:
-            shutil.rmtree(self.src_paths)
+            if os.path.isdir(path):
+                shutil.rmtree(path)
+            elif os.path.isfile(path):
+                os.remove(path)
         except OSError as e:
-            print(f"del upload tmp dir {self.src_paths} failed! {e}")
+            print(f"del upload tmp dir {path} failed! {e}")
+
+    def run(self, verbosity=0, **kwargs):
+        __ = kwargs.pop('is_pack_run', True)
+        asset = kwargs.pop('asset', '')
+        user = kwargs.pop('user', '')
+        verbosity = get_ansible_log_verbosity(verbosity)
+        self._run_ansible_copy(f'{self.src_dir}/', f'{self.dest_dir}/', verbosity, **kwargs)
+        self.audit_log(
+            self.src_dir, operate=OperateChoices.upload,
+            job=self.job, asset=asset, user=user,
+        )
+        self._cleanup_path(self.src_dir)
+        return self.cb
+
+
+class DownloadFileRunner:
+    def __init__(self, inventory, project_dir, job, src_path, callback=None):
+        self.id = uuid.uuid4()
+        self.job = job
+        self.inventory = inventory
+        self.project_dir = project_dir
+        self.cb = callback or DefaultCallback()
+        download_file_dir = safe_join(settings.SHARE_DIR, 'job_download_file')
+        self.src_path = src_path
+        self.dest_path = safe_join(download_file_dir, str(job.id))
+
+    def run(self, verbosity=0, **kwargs):
+        if not self.src_path:
+            raise ValueError("src_path must be set")
+
+        verbosity = get_ansible_log_verbosity(verbosity)
+        interface.run(
+            private_data_dir=self.project_dir,
+            host_pattern="*",
+            inventory=self.inventory,
+            module='fetch',
+            module_args=f"src={self.src_path} dest={self.dest_path}",
+            verbosity=verbosity,
+            event_handler=self.cb.event_handler,
+            status_handler=self.cb.status_handler,
+            **kwargs
+        )
         return self.cb

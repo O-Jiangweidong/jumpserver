@@ -22,7 +22,10 @@ from acls.models import CommandFilterACL, DataMaskingRule
 from assets.models import Asset
 from assets.automations.base.manager import SSHTunnelManager
 from common.db.encoder import ModelJSONFieldEncoder
-from ops.ansible import JMSInventory, AdHocRunner, PlaybookRunner, UploadFileRunner
+from ops.ansible import (
+    JMSInventory, AdHocRunner, PlaybookRunner,
+    UploadFileRunner, DownloadFileRunner,
+)
 
 """stop all ssh child processes of the given ansible process pid."""
 from ops.ansible.exception import CommandInBlackListException
@@ -355,10 +358,13 @@ class JobExecution(JMSOrgBaseModel):
                 extra_vars=extra_vars,
             )
         elif self.current_job.type == Types.upload_file:
-            job_id = self.current_job.id
             args = json.loads(self.current_job.args)
             dst_path = args.get('dst_path', '/')
-            runner = UploadFileRunner(self.inventory_path, self.private_dir, job_id, dst_path)
+            runner = UploadFileRunner(self.inventory_path, self.private_dir, self.current_job, dst_path)
+        elif self.current_job.type == Types.download_file:
+            args = json.loads(self.current_job.args)
+            src_path = args.get('src_path', '/')
+            runner = DownloadFileRunner(self.inventory_path, self.private_dir, self.current_job, src_path)
         else:
             raise Exception("unsupported job type")
         return runner

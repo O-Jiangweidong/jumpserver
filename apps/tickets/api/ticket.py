@@ -16,7 +16,7 @@ from tickets import filters
 from tickets import serializers
 from tickets.models import (
     Ticket, ApplyAssetTicket, ApplyLoginTicket,
-    ApplyLoginAssetTicket, ApplyCommandTicket
+    ApplyLoginAssetTicket, ApplyCommandTicket, ApplyAssetFileTicket,
 )
 from tickets.permissions.ticket import IsAssignee, IsApplicant
 from ..const import TicketAction
@@ -24,7 +24,7 @@ from ..const import TicketAction
 __all__ = [
     'TicketViewSet', 'ApplyAssetTicketViewSet',
     'ApplyLoginTicketViewSet', 'ApplyLoginAssetTicketViewSet',
-    'ApplyCommandTicketViewSet'
+    'ApplyCommandTicketViewSet', 'ApplyFileTicketViewSet',
 ]
 
 
@@ -158,6 +158,12 @@ class ApplyLoginTicketViewSet(TicketViewSet):
     model = ApplyLoginTicket
     filterset_class = filters.ApplyLoginTicketFilter
     serializer_class = serializers.LoginReviewSerializer
+
+
+class ApplyFileTicketViewSet(TicketViewSet):
+    model = ApplyAssetFileTicket
+    filterset_class = filters.ApplyAssetFileTicketFilter
+    serializer_class = serializers.ApplyAssetFileReviewSerializer
 
 
 class ApplyLoginAssetTicketViewSet(TicketViewSet):

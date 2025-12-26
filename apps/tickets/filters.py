@@ -5,7 +5,7 @@ from django_filters import rest_framework as filters
 from common.drf.filters import BaseFilterSet
 from orgs.models import Organization
 from tickets.models import (
-    Ticket, ApplyAssetTicket,
+    Ticket, ApplyAssetTicket, ApplyAssetFileTicket,
     ApplyLoginTicket, ApplyLoginAssetTicket, ApplyCommandTicket
 )
 
@@ -101,6 +101,12 @@ class ApplyAssetTicketFilter(BaseFilterSet):
 class ApplyLoginTicketFilter(BaseFilterSet):
     class Meta:
         model = ApplyLoginTicket
+        fields = ('id',)
+
+
+class ApplyAssetFileTicketFilter(BaseFilterSet):
+    class Meta:
+        model = ApplyAssetFileTicket
         fields = ('id',)
 
 
