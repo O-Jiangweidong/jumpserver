@@ -32,7 +32,7 @@ class Handler(BaseHandler):
     def __handle_reject_or_closed(self):
         if self.ticket.meta.get('action') == 'upload_file':
             self.__clear_files()
-        self.ticket.set_file_status('cancel')
+        self.ticket.set_file_status(status='cancel')
 
     def _on_step_approved(self, step):
         is_finished = super()._on_step_approved(step)

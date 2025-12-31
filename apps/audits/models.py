@@ -12,7 +12,7 @@ from django.utils.translation import gettext, gettext_lazy as _
 
 from common.db.encoder import ModelJSONFieldEncoder
 from common.sessions.cache import user_session_manager
-from common.utils import lazyproperty, i18n_trans
+from common.utils import lazyproperty, i18n_trans, get_logger
 from ops.models import JobExecution
 from orgs.mixins.models import OrgModelMixin, Organization
 from orgs.utils import current_org
@@ -36,6 +36,9 @@ __all__ = [
     "PasswordChangeLog",
     "IntegrationApplicationLog",
 ]
+
+
+logger = get_logger(__name__)
 
 
 class JobLog(JobExecution):
@@ -79,6 +82,19 @@ class FTPLog(OrgModelMixin):
     @property
     def filepath(self):
         return os.path.join(self.upload_to, self.date_start.strftime('%Y-%m-%d'), str(self.id))
+
+    @classmethod
+    def save_with_file(cls, log_data, file_path):
+        log = cls.objects.create(**log_data)
+        if int(settings.FTP_FILE_MAX_STORE) > 0:
+            with open(file_path, 'rb') as f:
+                __, err = log.save_file_to_storage(f)
+            if not err:
+                log.has_file = True
+                log.save(update_fields=['has_file'])
+            else:
+                logger.error(f'Failed to save file to FTP storage: {err}')
+
 
     def save_file_to_storage(self, file):
         try:

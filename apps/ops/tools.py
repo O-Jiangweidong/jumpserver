@@ -8,11 +8,13 @@ from io import StringIO
 
 from django.core.cache import cache
 
+from common.utils import get_log_keep_day
 from accounts.const.account import SecretType
 
 
-TASK_CACHE_PREFIX = 'sftp_download_progress_'
+TASK_CACHE_PREFIX = 'sftp_download_task_'
 FILE_CACHE_PREFIX = 'sftp_download_file_'
+TASK_PROGRESS_CACHE_PREFIX = 'sftp_download_progress_'
 
 
 class SFTPTool(object):
@@ -20,6 +22,7 @@ class SFTPTool(object):
         self.ssh_client = None
         self.sftp_client = None
         self.connected = False
+        self._timeout = get_log_keep_day('JOB_EXECUTION_KEEP_DAYS') * 24 * 60 * 60
         self.__auth_info = {
             'hostname': host,
             'port': port,
@@ -76,7 +79,7 @@ class SFTPTool(object):
         if not self.connected:
             self.connect()
 
-        task_cache_key = f'{TASK_CACHE_PREFIX}{task_id}'
+        task_cache_key = f'{TASK_PROGRESS_CACHE_PREFIX}{task_id}'
         init_progress = {
             'files': {}, 'task_status': 'running'
         }
@@ -102,16 +105,17 @@ class SFTPTool(object):
                     'error': str(e)
                 }
 
-        cache.set(task_cache_key, init_progress, timeout=3600)
+        cache.set(task_cache_key, init_progress, timeout=self._timeout)
+        task_cache_info = {}
         for remote_path in remote_filepaths:
             file_progress = init_progress['files'][remote_path]
             if file_progress['status'] == 'failed':
                 continue
 
             file_progress['status'] = 'running'
-            cache.set(task_cache_key, init_progress, timeout=3600)
+            cache.set(task_cache_key, init_progress, timeout=self._timeout)
+            local_path = init_progress['files'][remote_path]['local_path']
             try:
-                local_path = init_progress['files'][remote_path]['local_path']
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with self.sftp_client.open(remote_path, 'rb') as remote_f, open(local_path, 'wb') as local_f:
                     downloaded = 0
@@ -126,28 +130,30 @@ class SFTPTool(object):
                         file_progress['downloaded'] = downloaded
                         file_progress['percent'] = round(percent, 2)
                         init_progress['files'][remote_path] = file_progress
-                        cache.set(task_cache_key, init_progress, timeout=3600)
+                        cache.set(task_cache_key, init_progress, timeout=self._timeout)
 
-                file_info_id = str(uuid.uuid4())
-                cache.set(f'{FILE_CACHE_PREFIX}{file_info_id}', {
-                    'remote_path': remote_path, 'local_path': local_path,
-                }, timeout=3600)
-                file_progress['id'] = file_info_id
+                file_id = str(uuid.uuid4())
+                cache.set(f'{FILE_CACHE_PREFIX}{file_id}', {
+                    'remote_path': remote_path, 'local_path': local_path, 'task_id': task_id
+                }, timeout=self._timeout)
+                file_progress['id'] = file_id
                 file_progress['status'] = 'success'
                 init_progress['files'][remote_path] = file_progress
+                task_cache_info[remote_path] = {'file_id': file_id, 'status': 'success'}
             except Exception as e:
                 file_progress['status'] = 'failed'
                 file_progress['error'] = str(e)
                 init_progress['files'][remote_path] = file_progress
             finally:
-                cache.set(task_cache_key, init_progress, timeout=3600)
+                cache.set(task_cache_key, init_progress, timeout=self._timeout)
 
         init_progress['task_status'] = 'completed'
-        cache.set(task_cache_key, init_progress, timeout=3600)
+        cache.set(task_cache_key, init_progress, timeout=self._timeout)
+        cache.set(f'{TASK_CACHE_PREFIX}{task_id}', task_cache_info, timeout=self._timeout)
 
     @classmethod
     def get_download_progress(cls, task_id: str):
-        cache_key = f'{TASK_CACHE_PREFIX}{task_id}'
+        cache_key = f'{TASK_PROGRESS_CACHE_PREFIX}{task_id}'
         cache_data = cache.get(cache_key, {})
         file_data = cache_data.get('files', {})
         result = []
@@ -155,6 +161,10 @@ class SFTPTool(object):
             infos.pop('local_path', None)
             result.append({'path': remote_path, **infos})
         return {'task_status': cache_data.get('task_status', ''), 'file_info': result}
+
+    @classmethod
+    def get_task_info(cls, task_id: str):
+        return cache.get(f'{TASK_CACHE_PREFIX}{task_id}', {})
 
     @classmethod
     def get_file_info(cls, file_id: str):

@@ -24,12 +24,17 @@ class ApplyAssetFileTicket(Ticket):
     class Meta:
         verbose_name = _('Apply Asset File Operate Ticket')
 
-    def set_file_status(self, status):
+    def set_file_status(self, status='failed', info_mapping=None):
         meta = self.meta or {}
+        info_mapping = info_mapping or {}
         src_path_info = meta.get('src_path_info', [])
         new_result = []
         for path_info in src_path_info:
-            path_info['status'] = status
+            other = info_mapping.get(path_info['filename'])
+            if isinstance(other, dict):
+                path_info.update(other)
+            else:
+                path_info['status'] = status
             new_result.append(path_info)
         meta['src_path_info'] = new_result
         self.meta = meta

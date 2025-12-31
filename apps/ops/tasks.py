@@ -13,6 +13,7 @@ from common.utils import get_logger, get_object_or_none, get_log_keep_day
 from ops.celery import app
 from ops.const import Types
 from ops.serializers.job import JobExecutionSerializer
+from ops.tools import SFTPTool
 from orgs.utils import tmp_to_org, tmp_to_root_org
 from tickets.models import ApplyAssetFileTicket
 from .celery.decorator import (
@@ -99,15 +100,15 @@ def run_file_job_execution_with_ticket(ticket_id):
     if not asset:
         asset_obj = ticket.apply_login_asset
         asset = f'{asset_obj.name}({asset_obj.address})'
-    user = ticket.rel_snapshot.get('user')
-    if not user:
-        user = ticket.apply_login_user
-        user = f'{user.name}({user.username})'
-    _run_ops_job_execution(execution, asset=asset, user=user)
+    _run_ops_job_execution(execution, asset=asset)
+
     with tmp_to_root_org():
         execution = get_object_or_none(JobExecution, id=execution_id)
+        task_id = str(execution.id) if execution else ''
         status = execution.status if execution else 'failed'
-    ticket.set_file_status(status)
+
+    file_info = SFTPTool.get_task_info(task_id)
+    ticket.set_file_status(status, file_info)
 
 
 def job_execution_task_activity_callback(self, execution_id, *args, **kwargs):

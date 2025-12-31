@@ -147,45 +147,31 @@ class SuperPlaybookRunner(PlaybookRunner):
 
 class FTPLogAuditMixin:
     @staticmethod
-    def _get_all_files(src_dir):
-        file_paths = []
-        if os.path.isfile(src_dir):
-            file_paths.append(os.path.abspath(src_dir))
-            return file_paths
-
-        if not os.path.isdir(src_dir):
-            return file_paths
-
-        for root, dirs, files in os.walk(src_dir):
-            for file in files:
-                file_abs_path = os.path.join(root, file)
-                file_paths.append(file_abs_path)
-        return file_paths
-
-    def audit_log(self, file_dir, operate, job, user, asset):
+    def audit_log(files, operate, job, asset):
         from audits.models import FTPLog
 
         logs = []
-        for file in self._get_all_files(file_dir):
+        for file in files:
             data = {
-                'user': user,
+                'user': str(job.creator),
                 'remote_addr': '127.0.0.1',
                 'asset': asset,
                 'account': job.runas,
                 'operate': operate,
-                'filename': os.path.basename(file),
-                'is_success': True,
+                'filename': os.path.basename(file['path']),
+                'is_success': file['status'],
                 'session': '00000000-0000-0000-0000-000000000000',
                 'org_id': job.org_id,
             }
             log = FTPLog.objects.create(**data)
-            with open(file, 'rb') as f:
-                __, err = log.save_file_to_storage(f)
-            if not err:
-                log.has_file = True
-                logs.append(log)
-            else:
-                logger.error(f'Failed to save file to FTP storage: {err}')
+            if int(settings.FTP_FILE_MAX_STORE) > 0:
+                with open(file['path'], 'rb') as f:
+                    __, err = log.save_file_to_storage(f)
+                if not err:
+                    log.has_file = True
+                    logs.append(log)
+                else:
+                    logger.error(f'Failed to save file to FTP storage: {err}')
         FTPLog.objects.bulk_update(logs, fields=['has_file'])
 
 
@@ -223,15 +209,30 @@ class UploadFileRunner(FTPLogAuditMixin):
         except OSError as e:
             print(f"del upload tmp dir {path} failed! {e}")
 
+    def get_all_files(self):
+        file_paths = []
+        if os.path.isfile(self.src_dir):
+            file_paths.append({
+                'status': True, 'path': os.path.abspath(self.src_dir)
+            })
+            return file_paths
+
+        if not os.path.isdir(self.src_dir):
+            return file_paths
+
+        for root, dirs, files in os.walk(self.src_dir):
+            for file in files:
+                file_abs_path = os.path.join(root, file)
+                file_paths.append({ 'status': True, 'path': file_abs_path})
+        return file_paths
+
     def run(self, verbosity=0, **kwargs):
         __ = kwargs.pop('is_pack_run', True)
         asset = kwargs.pop('asset', '')
-        user = kwargs.pop('user', '')
         verbosity = get_ansible_log_verbosity(verbosity)
         self._run_ansible_copy(f'{self.src_dir}/', f'{self.dest_dir}/', verbosity, **kwargs)
         self.audit_log(
-            self.src_dir, operate=OperateChoices.upload,
-            job=self.job, asset=asset, user=user,
+            files=self.get_all_files(), operate=OperateChoices.upload, job=self.job, asset=asset,
         )
         self._cleanup_path(self.src_dir)
         return self.cb
@@ -254,17 +255,18 @@ class DownloadFileRunner:
         if not self.src_paths:
             raise ValueError("src_paths must be set")
 
-        asset_info = self._other_info['all']['hosts']['local']
+        base_info = self._other_info['all']['hosts']['local']
         sftp_port = 0
-        for i in asset_info['jms_asset'].get('protocols', []):
+        for i in base_info['jms_asset'].get('protocols', []):
             if i['name'] == 'sftp':
                 sftp_port = i['port']
+
+        asset = base_info['jms_asset']
+        account = base_info['jms_account']
         tool = SFTPTool(
-            host=asset_info['jms_asset']['address'],
-            port=sftp_port,
-            username=asset_info['jms_account']['username'],
-            secret=asset_info['jms_account']['secret'],
-            secret_type=asset_info['jms_account']['secret_type'],
+            host=asset['address'],  port=sftp_port,
+            username=account['username'], secret=account['secret'],
+            secret_type=account['secret_type'],
         )
         tool.download_files(str(self.task_id), self.dest_root, self.src_paths)
         self.cb.status = 'successful'

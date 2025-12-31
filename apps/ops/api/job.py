@@ -9,7 +9,6 @@ from django.db.models import Count
 from django.http import Http404, FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils._os import safe_join
-from django.utils.encoding import escape_uri_path
 from django.utils.translation import gettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -17,6 +16,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from acls.models import LoginAssetACL, AssetFileOperateACL
+from audits.const import OperateChoices
+from audits.models import FTPLog
 from assets.models import Asset
 from common.const.http import POST, GET
 from common.permissions import IsValidUser
@@ -30,6 +31,7 @@ from ops.serializers.job import (
 )
 from ops.utils import merge_nodes_and_assets
 from ops.tools import SFTPTool
+from common.utils import get_request_ip
 
 __all__ = [
     'JobViewSet', 'JobExecutionViewSet', 'JobRunVariableHelpAPIView', 'JobExecutionTaskDetail', 'UsernameHintsAPI',
@@ -45,7 +47,6 @@ from accounts.models import Account
 from assets.const import Protocol
 from perms.const import ActionChoices
 from perms.utils.asset_perm import PermAssetDetailUtil
-from jumpserver.settings import get_file_md5
 
 
 def set_task_to_serializer_data(serializer, task_id, message=None):
@@ -250,8 +251,7 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
                 for chunk in uploaded_file.chunks():
                     destination.write(chunk)
             src_path_info.append({
-                'filename': filename, 'md5': get_file_md5(saved_path),
-                'size': uploaded_file.size, 'status': 'pending',
+                'filename': filename, 'size': uploaded_file.size, 'status': 'pending',
             })
         job_args['src_path_info'] = src_path_info
         job.args = json.dumps(job_args)
@@ -289,11 +289,25 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
         if not os.path.exists(local_path):
             raise Http404()
 
+        task_id = file_info.get('task_id')
+        execution = get_object_or_404(JobExecution, pk=task_id)
+        asset = execution.job.assets.first()
+        data = {
+            'user': str(request.user),  'remote_addr': get_request_ip(request),
+            'asset': asset, 'account': execution.job.runas, 'operate': OperateChoices.download,
+            'filename': os.path.basename(local_path), 'is_success': True,
+            'session': '00000000-0000-0000-0000-000000000000', 'org_id': execution.job.org_id,
+        }
+        FTPLog.save_with_file(log_data=data, file_path=local_path)
+
         filename = os.path.basename(file_info.get('remote_path', 'unknown'))
-        response = FileResponse(open(local_path, 'rb'))
-        response['Content-Type'] = 'application/octet-stream'
-        filename = escape_uri_path(filename)
-        response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(filename)
+        response = FileResponse(
+            open(local_path, 'rb',  buffering=65536),
+            content_type='application/octet-stream',
+            as_attachment=True, filename=filename
+        )
+        response['Pragma'] = 'no-cache'
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
         return response
 
 
