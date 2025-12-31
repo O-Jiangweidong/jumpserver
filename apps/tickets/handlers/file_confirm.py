@@ -30,7 +30,8 @@ class Handler(BaseHandler):
             print(f"del upload tmp dir {path} failed! {e}")
 
     def __handle_reject_or_closed(self):
-        self.__clear_files()
+        if self.ticket.meta.get('action') == 'upload_file':
+            self.__clear_files()
         self.ticket.set_file_status('cancel')
 
     def _on_step_approved(self, step):

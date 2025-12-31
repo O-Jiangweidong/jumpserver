@@ -31,6 +31,7 @@ class JMSInventory:
         self.exclude_localhost = exclude_localhost
         self.task_type = task_type
         self.protocol = protocol
+        self._data = {}
 
     @staticmethod
     def clean_assets(assets):
@@ -398,7 +399,11 @@ class JMSInventory:
                     'ansible_connection': 'local'
                 }
             })
+        self._data = data
         return data
+
+    def get_data(self):
+        return self._data or {}
 
     def write_to_file(self, path):
         path_dir = os.path.dirname(path)

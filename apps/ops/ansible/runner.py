@@ -1,6 +1,7 @@
 import os
 import shutil
 import uuid
+import json
 
 from django.conf import settings
 from django.utils._os import safe_join
@@ -11,6 +12,7 @@ from .callback import DefaultCallback
 from .exception import CommandInBlackListException
 from .interface import interface
 from ..utils import get_ansible_log_verbosity, get_logger
+from ..tools import SFTPTool
 
 
 logger = get_logger(__name__)
@@ -193,11 +195,10 @@ class UploadFileRunner(FTPLogAuditMixin):
         self.job = job
         self.inventory = inventory
         self.project_dir = project_dir
-        self.cb = DefaultCallback()
+        self.cb = callback or DefaultCallback()
         upload_file_dir = safe_join(settings.SHARE_DIR, 'job_upload_file')
         self.src_dir = safe_join(upload_file_dir, str(job.id))
         self.dest_dir = safe_join("/", dest_path)
-        self.callback = callback
 
     def _run_ansible_copy(self, src, dest, verbosity, **kwargs):
         interface.run(
@@ -237,30 +238,34 @@ class UploadFileRunner(FTPLogAuditMixin):
 
 
 class DownloadFileRunner:
-    def __init__(self, inventory, project_dir, job, src_path, callback=None):
+    def __init__(self, inventory_path, inventory, job, task_id):
         self.id = uuid.uuid4()
         self.job = job
-        self.inventory = inventory
-        self.project_dir = project_dir
-        self.cb = callback or DefaultCallback()
-        download_file_dir = safe_join(settings.SHARE_DIR, 'job_download_file')
-        self.src_path = src_path
-        self.dest_path = safe_join(download_file_dir, str(job.id))
+        self.inventory = inventory_path
+        self.task_id = task_id
+        self.cb = DefaultCallback()
+        self._other_info = inventory.get_data()
+        args = json.loads(job.args)
+        self.src_paths = [p['filename'] for p in args.get('src_path_info', [])]
+        file_dir = safe_join(settings.SHARE_DIR, 'job_download_file')
+        self.dest_root = safe_join(file_dir, str(job.id))
 
-    def run(self, verbosity=0, **kwargs):
-        if not self.src_path:
-            raise ValueError("src_path must be set")
+    def run(self, *args, **kwargs):
+        if not self.src_paths:
+            raise ValueError("src_paths must be set")
 
-        verbosity = get_ansible_log_verbosity(verbosity)
-        interface.run(
-            private_data_dir=self.project_dir,
-            host_pattern="*",
-            inventory=self.inventory,
-            module='fetch',
-            module_args=f"src={self.src_path} dest={self.dest_path}",
-            verbosity=verbosity,
-            event_handler=self.cb.event_handler,
-            status_handler=self.cb.status_handler,
-            **kwargs
+        asset_info = self._other_info['all']['hosts']['local']
+        sftp_port = 0
+        for i in asset_info['jms_asset'].get('protocols', []):
+            if i['name'] == 'sftp':
+                sftp_port = i['port']
+        tool = SFTPTool(
+            host=asset_info['jms_asset']['address'],
+            port=sftp_port,
+            username=asset_info['jms_account']['username'],
+            secret=asset_info['jms_account']['secret'],
+            secret_type=asset_info['jms_account']['secret_type'],
         )
+        tool.download_files(str(self.task_id), self.dest_root, self.src_paths)
+        self.cb.status = 'successful'
         return self.cb

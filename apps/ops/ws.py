@@ -4,16 +4,19 @@ import os
 import aiofiles
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncJsonWebsocketConsumer
-
+from django.utils.translation import gettext_lazy as _
+from assets.models import Asset
 from common.db.utils import close_old_connections
-from common.utils import get_logger
+from common.utils import get_logger, get_object_or_none
 from orgs.mixins.ws import OrgMixin
 from orgs.utils import tmp_to_org
+from perms.utils import PermAssetDetailUtil
 from rbac.builtin import BuiltinRole
 from .ansible.utils import get_ansible_task_log_path
 from .celery.utils import get_celery_task_log_path
 from .const import CELERY_LOG_MAGIC_MARK
 from .models import CeleryTaskExecution
+from .tools import SFTPTool
 
 logger = get_logger(__name__)
 
@@ -130,4 +133,134 @@ class TaskLogWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
 
     async def disconnect(self, close_code):
         self.disconnected = True
+        close_old_connections()
+
+
+class TaskFilesWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.sftp_tool = None
+        self.current_session = ''
+
+    async def connect(self):
+        user = self.scope["user"]
+        if user.is_authenticated:
+            await self.accept()
+            self.cookie = self.get_cookie()
+            self.org = self.get_current_org()
+        else:
+            await self.close()
+
+    @sync_to_async
+    def get_asset(self, asset_id):
+        with tmp_to_org(self.org):
+            return get_object_or_none(Asset, id=asset_id)
+
+    @sync_to_async
+    def get_sftp_port(self, asset):
+        return asset.get_protocol_port('sftp')
+
+    @sync_to_async
+    def get_permed_account(self, asset, run_as):
+        tool = PermAssetDetailUtil(self.scope["user"], asset)
+        with tmp_to_org(asset.org):
+            protocols = tool.get_permed_protocols_for_user(only_name=True)
+            if 'all' not in protocols and 'sftp' not in protocols:
+                return None
+            permed_accounts = tool.get_permed_accounts_for_user()
+            accounts_mapper = {account.username: account for account in permed_accounts}
+            account = accounts_mapper.get(run_as)
+            return account
+
+    @sync_to_async(thread_sensitive=False)
+    def get_sftp_tool(self, asset, account, sftp_port):
+        if self.sftp_tool:
+            self.sftp_tool.close()
+
+        self.sftp_tool = SFTPTool(
+            host=asset.address,
+            port=sftp_port,
+            username=account.username,
+            secret=account.secret,
+            secret_type=account.secret_type,
+        )
+        self.sftp_tool.connect()
+        self.current_session = ''
+
+    @sync_to_async(thread_sensitive=False)
+    def sftp_list_path(self, target_path, show_hidden_file):
+        return self.sftp_tool.list_path(target_path, show_hidden_file)
+
+    @sync_to_async
+    def close_sftp_tool(self):
+        if self.sftp_tool:
+            self.sftp_tool.close()
+            self.sftp_tool = None
+        self.current_session = ''
+
+    async def handle_list_path(self, content):
+        asset_id = content.get('asset_id')
+        run_as = content.get('run_as')
+        target = content.get('target')
+        if not all([asset_id, run_as, target]):
+            params = 'asset_id, run_as, target'
+            await self.send_json({'error': _('The value in the parameter must contain %s') % params})
+            return
+
+        if not target.startswith('/'):
+            await self.send_json({'error': f"{_('Invalid file path')}: {target}"})
+            return
+
+        session = f'{asset_id}_{run_as}'
+        if not (self.sftp_tool and self.current_session == session):
+            asset = await self.get_asset(asset_id)
+            if not asset:
+                err_msg = _('Invalid pk \"{pk_value}\" - object does not exist.')
+                await self.send_json({'error': err_msg.format(pk_value=asset_id)})
+                return
+
+            sftp_port = await self.get_sftp_port(asset)
+            if not sftp_port:
+                await self.send_json({'error': _('Protocol not found or port incorrect: %s') % sftp_port})
+                return
+
+            account = await self.get_permed_account(asset, run_as)
+            if not account:
+                await self.send_json({'error': _('%s object does not exist.') % run_as})
+                return
+
+            await self.get_sftp_tool(asset, account, sftp_port)
+            self.current_session = session
+        try:
+            show_hidden_file = content.get('show_hidden_file', False)
+            paths = await self.sftp_list_path(target, show_hidden_file)
+            await self.send_json({'action': 'list_path', 'items': paths})
+        except Exception as e:
+            await self.close_sftp_tool()
+            await self.send_json({'error': str(e)})
+
+    @sync_to_async
+    def get_info_from_cache(self, task_id):
+        return SFTPTool.get_download_progress(task_id)
+
+    async def handle_download_info(self, content):
+        task_id = content.get('task_id')
+        if not task_id:
+            await self.send_json({'error': _('%s object does not exist.') % task_id})
+            return
+
+        info = await self.get_info_from_cache(task_id)
+        await self.send_json({'action': 'download_info', 'items': info})
+
+    async def receive_json(self, content, **kwargs):
+        action = content.get('action')
+        if action == 'list_path':
+            await self.handle_list_path(content)
+        elif action == 'download_info':
+            await self.handle_download_info(content)
+        else:
+            await self.send_json({'error': _('Invalid choice: {}').format(action)})
+
+    async def disconnect(self, close_code):
+        self.current_session = ''
         close_old_connections()

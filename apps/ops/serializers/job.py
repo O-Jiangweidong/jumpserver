@@ -32,6 +32,8 @@ class JobSerializer(BulkOrgResourceModelSerializer, PeriodTaskSerializerMixin, W
             data['name'] = f'job-{_uid}'
         if job_type == 'upload_file':
             data['name'] = f'upload_file-{_uid}'
+        elif job_type == 'download_file':
+            data['name'] = f'download_file-{_uid}'
         return super().to_internal_value(data)
 
     def get_request_user(self):
@@ -70,6 +72,10 @@ class JobSerializer(BulkOrgResourceModelSerializer, PeriodTaskSerializerMixin, W
         extra_kwargs = {
             'average_time_cost': {'label': _('Duration')},
         }
+
+
+class JobIDSerializer(serializers.Serializer):
+    job_id = serializers.CharField(max_length=36)
 
 
 class FileSerializer(serializers.Serializer):

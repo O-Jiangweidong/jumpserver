@@ -6,9 +6,10 @@ from celery.result import AsyncResult
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
-from django.http import Http404
+from django.http import Http404, FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils._os import safe_join
+from django.utils.encoding import escape_uri_path
 from django.utils.translation import gettext_lazy as _
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -17,16 +18,18 @@ from rest_framework.views import APIView
 
 from acls.models import LoginAssetACL, AssetFileOperateACL
 from assets.models import Asset
-from common.const.http import POST
+from common.const.http import POST, GET
 from common.permissions import IsValidUser
 from common.utils import get_request_ip_or_data
 from ops.celery import app
 from ops.const import Types
 from ops.models import Job, JobExecution, JMSPermedInventory
 from ops.serializers.job import (
-    JobSerializer, JobExecutionSerializer, FileSerializer, JobTaskStopSerializer
+    JobSerializer, JobExecutionSerializer, FileSerializer,
+    JobTaskStopSerializer, JobIDSerializer
 )
 from ops.utils import merge_nodes_and_assets
+from ops.tools import SFTPTool
 
 __all__ = [
     'JobViewSet', 'JobExecutionViewSet', 'JobRunVariableHelpAPIView', 'JobExecutionTaskDetail', 'UsernameHintsAPI',
@@ -79,6 +82,8 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
         # job: upload_file
         if self.action == 'upload' or request.data.get('type') == Types.upload_file:
             return super().check_permissions(request)
+        elif self.action.startswith('download') or request.data.get('type') == Types.download_file:
+            return super().check_permissions(request)
         # job: adhoc, playbook
         if not settings.SECURITY_COMMAND_EXECUTION:
             return self.permission_denied(request, COMMAND_EXECUTION_DISABLED)
@@ -100,6 +105,21 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             if not util.check_perm_actions(account_name, [ActionChoices.upload.value]):
                 self.permission_denied(self.request, error_msg_auth_missing_upload.format(asset=asset.name))
 
+    def check_download_permission(self, assets, account_name):
+        protocols_required = {}
+        error_msg_missing_protocol = _('Asset ({asset}) must have protocol SFTP')
+        error_msg_auth_missing_protocol = _('Asset ({asset}) authorization is missing SFTP protocol')
+        error_msg_auth_missing_download = _("Asset ({asset}) authorization lacks download permissions")
+        for asset in assets:
+            protocols = asset.protocols.values_list("name", flat=True)
+            if Protocol.sftp not in set(protocols):
+                self.permission_denied(self.request, error_msg_missing_protocol.format(asset=asset.name))
+            util = PermAssetDetailUtil(self.request.user, asset)
+            if not util.check_perm_protocols(protocols_required):
+                self.permission_denied(self.request, error_msg_auth_missing_protocol.format(asset=asset.name))
+            if not util.check_perm_actions(account_name, [ActionChoices.download.value]):
+                self.permission_denied(self.request, error_msg_auth_missing_download.format(asset=asset.name))
+
     def get_queryset(self):
         queryset = super().get_queryset()
         queryset = queryset \
@@ -120,6 +140,9 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
         if serializer.validated_data.get('type') == Types.upload_file:
             account_name = serializer.validated_data.get('runas')
             self.check_upload_permission(assets, account_name)
+        elif serializer.validated_data.get('type') == Types.download_file:
+            account_name = serializer.validated_data.get('runas')
+            self.check_download_permission(assets, account_name)
         instance = serializer.save()
 
         if instance.instant or run_after_save:
@@ -162,9 +185,8 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
         )
         can, message = self.check_asset_file_operate_acls(
             self.request.user, asset, job.runas, {
-                'job_id': str(job.id),
-                'execution_id': str(execution.id),
-                'action': Types.upload_file, **json.loads(job.args)
+                'job_id': str(job.id), 'execution_id': str(execution.id),
+                'action': job.type, **json.loads(job.args)
             }
         )
         set_task_to_serializer_data(serializer, execution.id, message)
@@ -239,6 +261,40 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             'task_id': serializer.data.get('task_id'),
             'message': serializer.data.get('message', ''),
         }, status=201)
+
+    @action(methods=[POST], detail=False, serializer_class=JobIDSerializer,
+            permission_classes=[IsValidUser, ], url_path='download')
+    def download(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if not serializer.is_valid():
+            return Response({'error': serializer.errors}, status=400)
+
+        job_id = serializer.validated_data['job_id']
+        job = get_object_or_404(Job, pk=job_id, creator=request.user)
+        self.run_job(job, serializer)
+        return Response({
+            'task_id': serializer.data.get('task_id'),
+            'message': serializer.data.get('message', ''),
+        }, status=201)
+
+    @action(methods=[GET], detail=False, permission_classes=[IsValidUser, ], url_path='download-file')
+    def download_file(self, request, *args, **kwargs):
+        file_id = request.query_params.get('file_id', '')
+        file_info = SFTPTool.get_file_info(file_id)
+        from django.http import Http404
+        if not file_info:
+            raise Http404()
+
+        local_path = file_info.get('local_path', '')
+        if not os.path.exists(local_path):
+            raise Http404()
+
+        filename = os.path.basename(file_info.get('remote_path', 'unknown'))
+        response = FileResponse(open(local_path, 'rb'))
+        response['Content-Type'] = 'application/octet-stream'
+        filename = escape_uri_path(filename)
+        response["Content-Disposition"] = "attachment; filename*=UTF-8''{}".format(filename)
+        return response
 
 
 class JobExecutionViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):

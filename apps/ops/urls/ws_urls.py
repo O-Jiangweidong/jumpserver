@@ -6,4 +6,5 @@ app_name = 'ops'
 
 urlpatterns = [
     path('ws/ops/tasks/log/', ws.TaskLogWebsocket.as_asgi(), name='task-log-ws'),
+    path('ws/ops/tasks/files/', ws.TaskFilesWebsocket.as_asgi(), name='task-file-ws'),
 ]

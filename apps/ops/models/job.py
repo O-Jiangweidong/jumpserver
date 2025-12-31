@@ -362,9 +362,7 @@ class JobExecution(JMSOrgBaseModel):
             dst_path = args.get('dst_path', '/')
             runner = UploadFileRunner(self.inventory_path, self.private_dir, self.current_job, dst_path)
         elif self.current_job.type == Types.download_file:
-            args = json.loads(self.current_job.args)
-            src_path = args.get('src_path', '/')
-            runner = DownloadFileRunner(self.inventory_path, self.private_dir, self.current_job, src_path)
+            return DownloadFileRunner(self.inventory_path, inv, self.current_job, self.id)
         else:
             raise Exception("unsupported job type")
         return runner

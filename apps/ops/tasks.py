@@ -134,7 +134,8 @@ def run_ops_job_execution(execution_id, **kwargs):
     if not execution:
         logger.error("Did not get the execution: {}".format(execution_id))
         return
-    if not settings.SECURITY_COMMAND_EXECUTION and execution.job.type != Types.upload_file:
+    if (not settings.SECURITY_COMMAND_EXECUTION and execution.job.type
+            not in [Types.upload_file, Types.download_file]):
         return
     _run_ops_job_execution(execution)
 

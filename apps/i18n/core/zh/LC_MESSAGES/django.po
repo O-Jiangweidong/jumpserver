@@ -11677,3 +11677,15 @@ msgstr "通过工单审批控制的文件操作任务"
 
 msgid "Apply Asset File Operate Ticket"
 msgstr "文件审批工单"
+
+#, python-brace-format
+msgid "Asset ({asset}) must have protocol SFTP"
+msgstr "资产({asset})必须要添加sftp协议"
+
+#, python-brace-format
+msgid "Asset ({asset}) authorization is missing SFTP protocol"
+msgstr "资产({asset})授权缺少sftp协议"
+
+#, python-brace-format
+msgid "Asset ({asset}) authorization lacks download permissions"
+msgstr "资产({asset})授权缺少下载权限"
