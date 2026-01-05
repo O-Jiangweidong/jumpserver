@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "El archivo se está transfiriendo. No actualice la página, de lo contrario la transferencia fallará.",
+     "RepeatFileTip": "Existen archivos con nombres duplicados, lo que provocará sobrescritura durante la transferencia. Modifíquelos manualmente antes de cargarlos.",
     "AssetFileOperate": "Operación de Archivos",
     "AssetFileOperateList": "Lista de Control de Operaciones de Archivos",
     "AssetFileOperateDetail": "Detalles de Control de Operaciones de Archivos",

@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "파일이 전송 중입니다. 페이지를 새로 고침하지 마세요. 그렇지 않으면 전송이 실패합니다.",
+    "RepeatFileTip": "중복된 이름의 파일이 존재하여 전송 시 덮어쓰기가 발생합니다. 업로드하기 전에 수동으로 수정해 주십시오.",
     "AssetFileOperate": "파일 작업",
     "AssetFileOperateList": "파일 작업 제어 목록",
     "AssetFileOperateDetail": "파일 작업 제어 상세 정보",

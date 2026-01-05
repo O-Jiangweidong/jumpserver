@@ -6,6 +6,7 @@ from celery.result import AsyncResult
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
+from django.core.cache import cache
 from django.http import Http404, FileResponse
 from django.shortcuts import get_object_or_404
 from django.utils._os import safe_join
@@ -217,50 +218,71 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
                 exceeds_limit_files.append(file)
         return exceeds_limit_files
 
-    @action(methods=[POST], detail=False, serializer_class=FileSerializer,
-            permission_classes=[IsValidUser, ], url_path='upload')
+    @action(methods=[POST], detail=False, permission_classes=[IsValidUser, ], url_path='upload')
     def upload(self, request, *args, **kwargs):
-        uploaded_files = request.FILES.getlist('files')
-        serializer = self.get_serializer(data=request.data)
+        serializer = FileSerializer(data=request.data)
 
         if not serializer.is_valid():
             msg = 'Upload data invalid: {}'.format(serializer.errors)
             return Response({'error': msg}, status=400)
 
-        same_files = self.get_duplicates_files(uploaded_files)
-        if same_files:
-            return Response({'error': _("Duplicate file exists")}, status=400)
+        validated_data = serializer.validated_data
+        job_id = str(validated_data['job_id'])
+        file_chunk = validated_data['chunk']
+        file_id = validated_data['file_id']
+        filename = validated_data['filename']
+        is_last_chunk = validated_data['is_last_chunk']
+        is_task_end = validated_data['is_task_end']
+        cache_key = f'job_upload_{job_id}_{file_id}'
 
-        exceeds_limit_files = self.get_exceeds_limit_files(uploaded_files)
-        if exceeds_limit_files:
-            return Response(
-                {'error': _("File size exceeds maximum limit. Please select a file smaller than {limit}MB").format(
-                    limit=settings.FILE_UPLOAD_SIZE_LIMIT_MB)},
-                status=400)
-
-        job_id = request.data.get('job_id', '')
-        job = get_object_or_404(Job, pk=job_id, creator=request.user)
-        job_args = json.loads(job.args)
-        src_path_info = []
-        upload_file_dir = safe_join(settings.SHARE_DIR, 'job_upload_file', job_id)
-        for uploaded_file in uploaded_files:
-            filename = uploaded_file.name
+        upload_context = cache.get(cache_key)
+        if not upload_context:
+            job = get_object_or_404(Job, pk=job_id, creator=request.user)
+            upload_file_dir = safe_join(settings.SHARE_DIR, 'job_upload_file', job_id)
             saved_path = safe_join(upload_file_dir, f'{filename}')
             os.makedirs(os.path.dirname(saved_path), exist_ok=True)
-            with open(saved_path, 'wb+') as destination:
-                for chunk in uploaded_file.chunks():
-                    destination.write(chunk)
-            src_path_info.append({
-                'filename': filename, 'size': uploaded_file.size, 'status': 'pending',
-            })
-        job_args['src_path_info'] = src_path_info
-        job.args = json.dumps(job_args)
-        job.save()
-        self.run_job(job, serializer)
-        return Response({
-            'task_id': serializer.data.get('task_id'),
-            'message': serializer.data.get('message', ''),
-        }, status=201)
+            upload_context = {
+                'job_id': job_id,
+                'user_id': request.user.id,
+                'job_args': json.loads(job.args),
+                'saved_path': saved_path,
+                'filename': filename,
+                'uploaded_size': 0,
+            }
+            cache.set(cache_key, upload_context)
+
+        if upload_context['user_id'] != request.user.id:
+            cache.delete(cache_key)
+            raise PermissionDenied()
+
+        saved_path = upload_context['saved_path']
+        with open(saved_path, 'ab') as destination:
+            for chunk in file_chunk.chunks(chunk_size=1024*100):
+                destination.write(chunk)
+
+        upload_context['uploaded_size'] += file_chunk.size
+        cache.set(cache_key, upload_context)
+
+        if is_last_chunk:
+            src_path_info = upload_context['job_args'].get('src_path_info', [])
+            src_path_info.append(
+                {'filename': filename, 'size': os.path.getsize(saved_path), 'status': 'pending'}
+            )
+            upload_context['job_args']['src_path_info'] = src_path_info
+            cache.set(cache_key, upload_context)
+
+            if is_task_end:
+                upload_context = cache.get(cache_key)
+                job = get_object_or_404(Job, pk=job_id, creator=request.user)
+                job.args = json.dumps(upload_context['job_args'])
+                job.save()
+                self.run_job(job, serializer)
+                return Response({
+                    'task_id': serializer.data.get('task_id'),
+                    'message': serializer.data.get('message', ''),
+                }, status=201)
+
+        return Response(status=200)
 
     @action(methods=[POST], detail=False, serializer_class=JobIDSerializer,
             permission_classes=[IsValidUser, ], url_path='download')

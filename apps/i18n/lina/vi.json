@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "Tệp đang được truyền. Đừng làm mới trang, nếu không sẽ gây thất bại truyền tệp.",
+    "RepeatFileTip": "Có tồn tại tệp có tên trùng lặp, sẽ gây ghi đè khi truyền. Vui lòng sửa thủ công trước khi tải lên.",
     "AssetFileOperate": "Hoạt động tệp",
     "AssetFileOperateList": "Danh sách kiểm soát hoạt động tệp",
     "AssetFileOperateDetail": "Chi tiết kiểm soát hoạt động tệp",

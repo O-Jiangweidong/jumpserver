@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "文件正在传输中，请勿刷新页面，否则会导致传输失败",
+    "RepeatFileTip": "存在重复名称文件，会导致传输覆盖，请手动修改后再上传",
     "AssetFileOperate": "文件操作",
     "AssetFileOperateList": "文件操作控制列表",
     "AssetFileOperateDetail": "文件操作控制详情",

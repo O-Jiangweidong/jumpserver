@@ -79,7 +79,12 @@ class JobIDSerializer(serializers.Serializer):
 
 
 class FileSerializer(serializers.Serializer):
-    files = serializers.FileField(allow_empty_file=True, max_length=128)
+    chunk = serializers.FileField(required=True, allow_empty_file=True)
+    job_id = serializers.UUIDField(required=True)
+    file_id = serializers.CharField(required=True)
+    filename = serializers.CharField(required=True)
+    is_last_chunk = serializers.BooleanField(required=True)
+    is_task_end = serializers.BooleanField(required=True)
 
     class Meta:
         ref_name = "JobFileSerializer"

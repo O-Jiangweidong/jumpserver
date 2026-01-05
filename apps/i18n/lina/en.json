@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "The file is being transferred. Do not refresh the page, otherwise the transfer will fail",
+    "RepeatFileTip": "There are files with duplicate names, which will cause overwriting during transfer. Please modify them manually before uploading",
     "AssetFileOperate": "File Operation",
     "AssetFileOperateList": "File Operation List",
     "AssetFileOperateDetail": "File Operation Details",

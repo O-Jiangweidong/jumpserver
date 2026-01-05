@@ -1,4 +1,6 @@
 {
+    "JobUploadTip": "ファイルを転送中です。ページをリフレッシュしないでください。リフレッシュすると転送に失敗します。",
+    "RepeatFileTip": "重複した名前のファイルが存在します。これにより転送時に上書きされる可能性があります。アップロード前に手動でファイル名を修正してください。",
     "AssetFileOperate": "ファイル操作",
     "AssetFileOperateList": "ファイル操作制御リスト",
     "AssetFileOperateDetail": "ファイル操作制御詳細",
