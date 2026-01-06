@@ -22,3 +22,4 @@ class WeComSettingSerializer(serializers.Serializer):
         )
     )
     WECOM_ORG_IDS = OrgListField()
+    WECOM_WEBHOOK_URL = serializers.URLField(required=False, allow_blank=True, label='Webhook URL')
