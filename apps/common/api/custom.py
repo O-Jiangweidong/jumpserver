@@ -1,5 +1,6 @@
-import os
 import json
+import os
+import uuid
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
@@ -8,14 +9,9 @@ from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 
-from assets.models import Node
 from common import serializers
-from common.utils import get_logger, GMSM4EcbCrypto, lazyproperty
-from orgs.api import org_related_models
-from orgs.models import Organization
-from orgs.utils import tmp_to_root_org
-from users.models import User
-from rbac.models import RoleBinding, Role
+from common.utils import get_logger, GMSM4EcbCrypto, lazyproperty, is_uuid
+from users.models import User, UserGroup
 
 
 logger = get_logger(__name__)
@@ -26,6 +22,9 @@ __all__ = [
     'CustomCreateOrg', 'CustomUpdateOrg', 'CustomDeleteOrg',
     'CustomCreateUser', 'CustomUpdateUser', 'CustomDeleteUser',
 ]
+
+
+CREATE_BY_ZHUYUN = '竹云创建'
 
 
 class BaseCustomAPIView(GenericAPIView):
@@ -111,16 +110,20 @@ class CustomCreateOrg(BaseCustomAPIView):
 
     def api_handle(self, serializer):
         data = serializer.validated_data
-        org = Organization.objects.fitler(name=data['name']).first()
-        if org:
+        is_leaf = data['is_leaf']
+        if not is_leaf:
+            return {'uid': str(uuid.uuid4())}
+
+        group = UserGroup.objects.fitler(name=data['name']).first()
+        if group:
             raise ValueError(_('Name already exists'))
         try:
-            org = Organization.objects.create(
-                id=data['id'], name=data['name'], comment=data['comment'],
+            group = UserGroup.objects.create(
+                id=data['id'], name=data['name'], comment=CREATE_BY_ZHUYUN,
             )
         except Exception as e:
             raise ValueError(e)
-        return {'uid': str(org.id)}
+        return {'uid': str( group.id)}
 
 
 class CustomUpdateOrg(BaseCustomAPIView):
@@ -128,14 +131,14 @@ class CustomUpdateOrg(BaseCustomAPIView):
 
     def api_handle(self, serializer):
         data = serializer.validated_data
-        org = Organization.objects.fitler(id=data['bimOrgId']).first()
-        if not org:
+        group = UserGroup.objects.fitler(id=data['bimOrgId']).first()
+        if not group:
             raise ValueError(_('%s object does not exist.') % data['bimOrgId'])
 
-        org.name = data['name']
-        org.comment = data['comment']
+        group.name = data['name']
+        group.comment = CREATE_BY_ZHUYUN
         try:
-            org.save(update_fields=['name', 'comment'])
+            group.save(update_fields=['name', 'comment'])
         except Exception as e:
             raise ValueError(e)
         return {}
@@ -144,43 +147,14 @@ class CustomUpdateOrg(BaseCustomAPIView):
 class CustomDeleteOrg(BaseCustomAPIView):
     serializer_class = serializers.OrgDeleteSerializer
 
-    @tmp_to_root_org()
-    def get_data_from_model(self, org, model):
-        if model == User:
-            data = model.get_org_users(org=org)
-        elif model == Node:
-            data = model.objects.filter(org_id=org.id).exclude(parent_key='', key__regex=r'^[0-9]+$')
-        else:
-            data = model.objects.filter(org_id=org.id)
-        return data
-
-    def delete_org(self, org):
-        if str(org.id) in settings.AUTH_LDAP_SYNC_ORG_IDS:
-            msg = _(
-                'LDAP synchronization is set to the current organization. '
-                'Please switch to another organization before deleting'
-            )
-            raise ValueError(detail=msg)
-
-        for model in org_related_models:
-            data = self.get_data_from_model(org, model)
-            if not data:
-                continue
-            msg = _(
-                'The organization have resource ({}) cannot be deleted'
-            ).format(model._meta.verbose_name)
-            raise ValueError(detail=msg)
-
-        org.delete()
-
     def api_handle(self, serializer):
         data = serializer.validated_data
-        org = Organization.objects.fitler(id=data['bimOrgId']).first()
-        if not org:
+        group = UserGroup.objects.fitler(id=data['bimOrgId']).first()
+        if not group:
             raise ValueError(_('%s object does not exist.') % data['bimOrgId'])
 
         try:
-            self.delete_org(org)
+            group.delete()
         except Exception as e:
             raise ValueError(e)
         return {}
@@ -205,10 +179,6 @@ class CustomCreateUser(BaseCustomAPIView):
         if User.objects.filter(username=email).exists():
             self.raise_unique_error(_('Email'))
 
-        org = Organization.objects.filter(id=data['org_id']).first()
-        if not org:
-            org = Organization.default()
-
         try:
             user = User.objects.create(
                 id=data['id'], name=data['name'], username=data['username'],
@@ -216,8 +186,12 @@ class CustomCreateUser(BaseCustomAPIView):
                 mfa_level=data['mfa_level'], phone=data['phone'],
                 date_expired=data['date_expired'], comment=data['comment'],
             )
-            org_user_role = Role.BuiltinRole.org_user.get_role()
-            RoleBinding.objects.create(user=user, role=org_user_role, org=org, scope='org')
+            if is_uuid(id=data['group_id']):
+                group = UserGroup.objects.get_or_create(
+                    id=data['group_id'],
+                    defaults={'name': data['group_name'], 'comment': CREATE_BY_ZHUYUN}
+                )
+                user.group.add(group)
         except Exception as e:
             raise ValueError(e)
         return {'uid': str(user.id)}
@@ -233,14 +207,18 @@ class CustomUpdateUser(BaseCustomAPIView):
             raise ValueError(_('%s object does not exist.') % data['bimUid'])
 
         update_fields = [
-            'name', 'username', 'email', 'is_active', 'mfa_level',
-            'phone', 'date_expired', 'comment'
+            'name', 'username', 'email', 'is_active', 'mfa_level', 'phone', 'date_expired'
         ]
-
-        for f in update_fields:
-            setattr(user, f, data[f])
         try:
+            for f in update_fields:
+                setattr(user, f, data[f])
             user.save(update_fields=update_fields)
+            if is_uuid(id=data['group_id']):
+                group = UserGroup.objects.get_or_create(
+                    id=data['group_id'],
+                    defaults={'name': data['group_name'], 'comment': CREATE_BY_ZHUYUN}
+                )
+                user.group.add(group)
         except Exception as e:
             raise ValueError(e)
         return {}

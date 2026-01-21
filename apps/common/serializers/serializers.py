@@ -26,8 +26,8 @@ class SchemaServiceSerializer(BaseSerializer):
             {'multivalued': False, 'name': 'mfa_level', 'required': False, 'type': 'int'},
             {'multivalued': False, 'name': 'phone', 'required': False, 'type': 'String'},
             {'multivalued': False, 'name': 'date_expired', 'required': False, 'type': 'String'},
-            {'multivalued': False, 'name': 'comment', 'required': False, 'type': 'String'},
-            {'multivalued': False, 'name': 'org_id', 'required': False, 'type': 'String'},
+            {'multivalued': False, 'name': 'group_id', 'required': False, 'type': 'String'},
+            {'multivalued': False, 'name': 'group_name', 'required': False, 'type': 'String'},
         ]
 
     @staticmethod
@@ -35,15 +35,19 @@ class SchemaServiceSerializer(BaseSerializer):
         return [
             {'multivalued': False, 'name': 'id', 'required': False, 'type': 'String'},
             {'multivalued': False, 'name': 'name', 'required': True, 'type': 'String'},
-            {'multivalued': False, 'name': 'comment', 'required': False, 'type': 'String'},
+            {'multivalued': False, 'name': 'is_leaf', 'required': True, 'type': 'boolean'},
         ]
 
 
 class OrgCreateSerializer(BaseSerializer):
+    id = serializers.UUIDField(required=False)
     name = serializers.CharField(required=True)
     code = serializers.CharField(required=False, allow_blank=True)
-    id = serializers.UUIDField(required=False)
-    comment = serializers.CharField(required=False, allow_blank=True)
+    is_leaf = serializers.BooleanField(required=True)
+
+    @staticmethod
+    def validate_name(name):
+        return name.rsplit('/', 1)[-1]
 
     def validate(self, attrs):
         _id = attrs.get('id', '')
@@ -59,7 +63,10 @@ class OrgCreateSerializer(BaseSerializer):
 class OrgUpdateSerializer(BaseSerializer):
     bimOrgId = serializers.CharField(required=True)
     name = serializers.CharField(required=True)
-    comment = serializers.CharField(required=False, allow_blank=True)
+
+    @staticmethod
+    def validate_name(name):
+        return name.rsplit('/', 1)[-1]
 
 
 class OrgDeleteSerializer(BaseSerializer):
@@ -75,13 +82,16 @@ class UserCreateSerializer(BaseSerializer):
     mfa_level = serializers.ChoiceField(choices=MFAMixin.MFA_LEVEL_CHOICES, default=0, required=False)
     phone = PhoneField(required=False)
     date_expired = serializers.DateTimeField(default=user_date_expired_default, format="%Y/%m/%d %H:%M:%S")
-    comment = serializers.CharField(required=False, allow_blank=True)
-    org_id = serializers.UUIDField(required=False)
+    group_id = serializers.UUIDField(required=False)
+    group_name = serializers.CharField(required=False)
 
     def validate(self, attrs):
         _id = attrs.get('id', '')
         if not is_uuid(_id):
             attrs['id'] = str(uuid.uuid4())
+
+        if attrs.get('group_id') and not attrs['group_name']:
+            raise serializers.ValidationError('group_name cannot be empty when group_id is set')
         return attrs
 
 
@@ -94,8 +104,13 @@ class UserUpdateSerializer(BaseSerializer):
     mfa_level = serializers.ChoiceField(choices=MFAMixin.MFA_LEVEL_CHOICES, default=0, required=False)
     phone = PhoneField(required=False)
     date_expired = serializers.DateTimeField(default=user_date_expired_default, format="%Y/%m/%d %H:%M:%S")
-    comment = serializers.CharField(required=False, allow_blank=True)
-    org_id = serializers.UUIDField(required=False)
+    group_id = serializers.UUIDField(required=False)
+    group_name = serializers.CharField(required=False)
+
+    def validate(self, attrs):
+        if attrs.get('group_id') and not attrs['group_name']:
+            raise serializers.ValidationError('group_name cannot be empty when group_id is set')
+        return attrs
 
 
 class UserDeleteSerializer(BaseSerializer):
