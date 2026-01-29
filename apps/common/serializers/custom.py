@@ -3,7 +3,7 @@ import uuid
 from rest_framework import serializers
 
 from common.serializers.fields import PhoneField
-from common.utils import is_uuid, user_date_expired_default
+from common.utils import user_date_expired_default
 from users.models import MFAMixin
 
 
@@ -40,9 +40,8 @@ class SchemaServiceSerializer(BaseSerializer):
 
 
 class OrgCreateSerializer(BaseSerializer):
-    id = serializers.UUIDField(required=False)
+    id = serializers.CharField(required=False)
     name = serializers.CharField(required=True)
-    code = serializers.CharField(required=False, allow_blank=True)
     is_leaf = serializers.BooleanField(required=True)
 
     @staticmethod
@@ -51,12 +50,11 @@ class OrgCreateSerializer(BaseSerializer):
 
     def validate(self, attrs):
         _id = attrs.get('id', '')
-        if not is_uuid(_id):
-            if attrs.get('code'):
-                real_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, attrs['code']))
-            else:
-                real_id = str(uuid.uuid4())
-            attrs['id'] = real_id
+        if _id:
+            real_id = str(uuid.uuid3(uuid.NAMESPACE_DNS, _id))
+        else:
+            real_id = str(uuid.uuid4())
+        attrs['id'] = real_id
         return attrs
 
 
@@ -73,8 +71,7 @@ class OrgDeleteSerializer(BaseSerializer):
     bimOrgId = serializers.CharField(required=True)
 
 
-class UserCreateSerializer(BaseSerializer):
-    id = serializers.UUIDField(required=False)
+class UserBaseSerializer(BaseSerializer):
     name = serializers.CharField(required=True)
     username = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
@@ -85,33 +82,14 @@ class UserCreateSerializer(BaseSerializer):
     group_id = serializers.UUIDField(required=False)
     group_name = serializers.CharField(required=False)
 
-    def validate(self, attrs):
-        _id = attrs.get('id', '')
-        if not is_uuid(_id):
-            attrs['id'] = str(uuid.uuid4())
 
-        if attrs.get('group_id') and not attrs['group_name']:
-            raise serializers.ValidationError('group_name cannot be empty when group_id is set')
-        return attrs
+class UserCreateSerializer(UserBaseSerializer):
+    id = serializers.UUIDField(required=False, default=uuid.uuid4)
 
 
-class UserUpdateSerializer(BaseSerializer):
+class UserUpdateSerializer(UserBaseSerializer):
     bimUid = serializers.UUIDField(required=True)
-    name = serializers.CharField(required=True)
-    username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=True)
-    is_active = serializers.EmailField(default=True, required=False)
-    mfa_level = serializers.ChoiceField(choices=MFAMixin.MFA_LEVEL_CHOICES, default=0, required=False)
-    phone = PhoneField(required=False)
-    date_expired = serializers.DateTimeField(default=user_date_expired_default, format="%Y/%m/%d %H:%M:%S")
-    group_id = serializers.UUIDField(required=False)
-    group_name = serializers.CharField(required=False)
-
-    def validate(self, attrs):
-        if attrs.get('group_id') and not attrs['group_name']:
-            raise serializers.ValidationError('group_name cannot be empty when group_id is set')
-        return attrs
 
 
 class UserDeleteSerializer(BaseSerializer):
-    bimUid = serializers.CharField(required=True)
+    bimUid = serializers.UUIDField(required=True)
