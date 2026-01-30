@@ -77,9 +77,6 @@ class OAuth2Backend(JMSBaseAuthBackend):
 
         query_dict = {
             'grant_type': 'authorization_code', 'code': code,
-            'redirect_uri': build_absolute_uri(
-                request, path=reverse(settings.AUTH_OAUTH2_AUTH_LOGIN_CALLBACK_URL_NAME)
-            )
         }
         separator = '&' if '?' in settings.AUTH_OAUTH2_ACCESS_TOKEN_ENDPOINT else '?'
         access_token_url = '{url}{separator}{query}'.format(
@@ -93,7 +90,7 @@ class OAuth2Backend(JMSBaseAuthBackend):
             f"{settings.AUTH_OAUTH2_CLIENT_ID}:{settings.AUTH_OAUTH2_CLIENT_SECRET}".encode()
         ).decode()
         headers = {
-            'Accept': 'application/json', 'Authorization': f'Basic {encoded_credentials}'
+            'Accept': 'application/json', 'Authorization': f'{encoded_credentials}'
         }
         if token_method.startswith('post'):
             body_key = 'json' if token_method.endswith('json') else 'data'
@@ -102,7 +99,7 @@ class OAuth2Backend(JMSBaseAuthBackend):
                 'client_secret': settings.AUTH_OAUTH2_CLIENT_SECRET,
             })
             access_token_response = requests.post(
-                access_token_url, headers=headers, **{body_key: query_dict}
+                settings.AUTH_OAUTH2_ACCESS_TOKEN_ENDPOINT, headers=headers, **{body_key: query_dict}
             )
         else:
             access_token_response = requests.get(access_token_url, headers=headers)
@@ -116,8 +113,11 @@ class OAuth2Backend(JMSBaseAuthBackend):
             logger.error(log_prompt.format(error))
             return None
 
+        logger.debug(log_prompt.format(f'access token: {access_token_response_data}'))
+
         headers = {
             'Accept': 'application/json',
+            'Content-Type': 'application/x-www-form-urlencoded',
             'Authorization': 'Bearer {}'.format(response_data.get('access_token', ''))
         }
         logger.debug(log_prompt.format('Get userinfo endpoint'))
@@ -137,7 +137,7 @@ class OAuth2Backend(JMSBaseAuthBackend):
             return None
 
         try:
-            logger.debug(log_prompt.format('Update or create oauth2 user'))
+            logger.debug(log_prompt.format(f'Update or create oauth2 user: {userinfo}'))
             user, created = self.get_or_create_user_from_userinfo(request, userinfo)
         except JMSException:
             return None

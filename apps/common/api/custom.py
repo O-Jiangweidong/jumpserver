@@ -12,7 +12,7 @@ from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 
 from common import serializers
-from common.utils import get_logger, GMSM4EcbCrypto
+from common.utils import get_logger, GMSM4EcbCrypto, is_uuid
 from users.models import User, UserGroup
 
 logger = get_logger(__name__)
@@ -35,6 +35,7 @@ class BaseCustomAPIView(GenericAPIView):
         username = request.data.get('bimRemoteUser', '')
         password = request.data.get('bimRemotePwd', '')
         bim_username = os.environ.get('bimUsername', 'bim')
+        logger.debug('[ZHUYUN] Request body: %s', request.data)
         if not username or not password:
             logger.warning(f'[ZHUYUN] Missing bimRemoteUser or bimRemotePwd')
             raise AuthenticationFailed()
@@ -233,11 +234,11 @@ class CustomCreateUser(BaseCustomAPIView):
                 mfa_level=data['mfa_level'], phone=data['phone'],
                 date_expired=data['date_expired'], comment=CREATE_BY_ZHUYUN,
             )
-            logger.info(f'[ZHUYUN] User created successfully, id: {user.id}, username: {username}')
             if group_id := data.get('group_id'):
                 query = Q(id=group_id) | Q(name=data.get('group_name', 'default'))
                 if g := UserGroup.objects.filter(query).first():
                     user.groups.add(g)
+            logger.info(f'[ZHUYUN] User created successfully, id: {user.id}, username: {username}')
             return {'uid': str(user.id)}
         except Exception as e:
             logger.error(f'[ZHUYUN] User creation failed, username: {username}, error: {str(e)}')
@@ -250,7 +251,7 @@ class CustomUpdateUser(BaseCustomAPIView):
     def api_handle(self, serializer):
         data = serializer.validated_data
         user_id = data['bimUid']
-        user = User.objects.fitler(id=user_id).first()
+        user = User.objects.filter(id=user_id).first()
         if not user:
             logger.error(f'[ZHUYUN] User update failed, id {user_id} does not exist')
             raise ValueError(_('%s object does not exist.') % user_id)
@@ -259,13 +260,20 @@ class CustomUpdateUser(BaseCustomAPIView):
             'name', 'username', 'email', 'is_active', 'mfa_level', 'phone', 'date_expired'
         ]
         try:
+            save_fields = []
             for f in update_fields:
-                setattr(user, f, data[f])
-            user.save(update_fields=update_fields)
-            if group_id := data.get('group_id'):
-                query = Q(id=group_id) | Q(name=data.get('group_name', 'default'))
-                if g := UserGroup.objects.filter(query).first():
-                    user.groups.add(g)
+                item = data.get(f, None)
+                if item is not None:
+                    setattr(user, f, item)
+                    save_fields.append(f)
+            user.save(update_fields=save_fields)
+            group_id = data.get('group_id')
+            if group_id and is_uuid(group_id):
+                query = Q(id=group_id) | Q(name=data.get('group_name', ''))
+                user_group = UserGroup.objects.filter(query).first()
+                if user_group:
+                    user_group.users.add(user)
+            logger.info(f'[ZHUYUN] User updated successfully, id: {user.id}, username: {user.username}')
         except Exception as e:
             logger.error(f'[ZHUYUN] User update failed, id: {user_id}, error: {str(e)}')
             raise ValueError(e)
@@ -278,7 +286,7 @@ class CustomDeleteUser(BaseCustomAPIView):
     def api_handle(self, serializer):
         data = serializer.validated_data
         user_id = data['bimUid']
-        user = User.objects.fitler(id=user_id).first()
+        user = User.objects.filter(id=user_id).first()
         if not user:
             logger.error(f'[ZHUYUN] User deletion failed, id {user_id} does not exist')
             raise ValueError(_('%s object does not exist.') % user_id)
