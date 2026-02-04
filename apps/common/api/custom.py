@@ -232,6 +232,7 @@ class CustomCreateUser(BaseCustomAPIView):
                 id=data['id'], name=data['name'], username=data['username'],
                 email=data['email'], is_active=data['is_active'],
                 mfa_level=data['mfa_level'], phone=data['phone'],
+                wecom_id=data['wecom_id'],
                 date_expired=data['date_expired'], comment=CREATE_BY_ZHUYUN,
             )
             if group_id := data.get('group_id'):
@@ -257,7 +258,8 @@ class CustomUpdateUser(BaseCustomAPIView):
             raise ValueError(_('%s object does not exist.') % user_id)
 
         update_fields = [
-            'name', 'username', 'email', 'is_active', 'mfa_level', 'phone', 'date_expired'
+            'name', 'username', 'email', 'is_active', 'mfa_level',
+            'phone', 'date_expired', 'wecom_id',
         ]
         try:
             save_fields = []

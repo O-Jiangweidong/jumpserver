@@ -445,7 +445,6 @@ class Config(dict):
             'email': 'email'
         },
         'WECOM_ORG_IDS': [DEFAULT_ID],
-        'WECOM_WEBHOOK_URL': '',
 
         # 钉钉
         'AUTH_DINGTALK': False,

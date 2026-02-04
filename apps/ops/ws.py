@@ -199,45 +199,58 @@ class TaskFilesWebsocket(AsyncJsonWebsocketConsumer, OrgMixin):
         self.current_session = ''
 
     async def handle_list_path(self, content):
+        result = {'action': 'list_path'}
         asset_id = content.get('asset_id')
         run_as = content.get('run_as')
         target = content.get('target')
         if not all([asset_id, run_as, target]):
             params = 'asset_id, run_as, target'
-            await self.send_json({'error': _('The value in the parameter must contain %s') % params})
+            result['error'] = _('The value in the parameter must contain %s') % params
+            await self.send_json(result)
             return
 
         if not target.startswith('/'):
-            await self.send_json({'error': f"{_('Invalid file path')}: {target}"})
+            result['error'] = f"{_('Invalid file path')}: {target}"
+            await self.send_json(result)
             return
 
         session = f'{asset_id}_{run_as}'
         if not (self.sftp_tool and self.current_session == session):
             asset = await self.get_asset(asset_id)
             if not asset:
-                err_msg = _('Invalid pk \"{pk_value}\" - object does not exist.')
-                await self.send_json({'error': err_msg.format(pk_value=asset_id)})
+                result['error'] = _('Invalid pk \"{pk_value}\" - object does not exist.').format(pk_value=asset_id)
+                await self.send_json(result)
                 return
 
             sftp_port = await self.get_sftp_port(asset)
             if not sftp_port:
-                await self.send_json({'error': _('Protocol not found or port incorrect: %s') % sftp_port})
+                result['error'] = result
+                await self.send_json(_('Protocol not found or port incorrect: %s') % sftp_port)
                 return
 
             account = await self.get_permed_account(asset, run_as)
             if not account:
-                await self.send_json({'error': _('%s object does not exist.') % run_as})
+                result['error'] =_('%s object does not exist.') % run_as
+                await self.send_json(result)
                 return
 
-            await self.get_sftp_tool(asset, account, sftp_port)
-            self.current_session = session
+            try:
+                await self.get_sftp_tool(asset, account, sftp_port)
+                self.current_session = session
+            except Exception as e:
+                result['error'] = str(e)
+                await self.send_json(result)
+                return
+
         try:
             show_hidden_file = content.get('show_hidden_file', False)
             paths = await self.sftp_list_path(target, show_hidden_file)
-            await self.send_json({'action': 'list_path', 'items': paths})
+            result['items'] = paths
+            await self.send_json(result)
         except Exception as e:
             await self.close_sftp_tool()
-            await self.send_json({'error': str(e)})
+            result['error'] = str(e)
+            await self.send_json(result)
 
     @sync_to_async
     def get_info_from_cache(self, task_id):

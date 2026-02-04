@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 from common.utils import lazyproperty, get_logger
 from orgs.mixins.models import JMSOrgBaseModel
-from .base import UserAssetAccountBaseACL
+from .base import UserAssetAccountBaseACL, CustomACLModelMixin
 
 logger = get_logger(__file__)
 
@@ -92,7 +92,7 @@ class CommandGroup(JMSOrgBaseModel):
         return '{} % {}'.format(self.name, self.type)
 
 
-class CommandFilterACL(UserAssetAccountBaseACL):
+class CommandFilterACL(CustomACLModelMixin, UserAssetAccountBaseACL):
     command_groups = models.ManyToManyField(
         CommandGroup, verbose_name=_('Command group'),
         related_name='command_filters'
@@ -123,7 +123,6 @@ class CommandFilterACL(UserAssetAccountBaseACL):
             'org_id': org_id,
         }
         ticket = ApplyCommandTicket.objects.create(**data)
-        assignees = self.reviewers.all()
-        assignees_2 = self.reviewers_2.all()
-        ticket.open_by_system(assignees, assignees_2)
+        ticket.set_webhook_url(cmd_filter_acl.webhook_url)
+        ticket.open_by_system(self.reviewers.all(), self.reviewers_2.all())
         return ticket

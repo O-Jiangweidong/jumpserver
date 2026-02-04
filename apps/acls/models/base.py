@@ -11,6 +11,7 @@ from ..const import ActionChoices
 
 __all__ = [
     'BaseACL', 'UserBaseACL', 'UserAssetAccountBaseACL',
+    'CustomACLModelMixin',
 ]
 
 from orgs.utils import tmp_to_root_org
@@ -127,3 +128,19 @@ class UserAssetAccountBaseACL(OrgModelMixin, UserBaseACL):
         org_id = asset.org_id if asset else ''
         with tmp_to_org(org_id):
             return cls._get_filter_queryset(asset=asset, **kwargs)
+
+
+class CustomACLModelMixin(models.Model):
+    meta = models.JSONField(default=dict, blank=True, verbose_name=_("Meta"))
+
+    class Meta:
+        abstract = True
+
+    @property
+    def webhook_url(self):
+        return self.meta.get('webhook_url')
+
+    @webhook_url.setter
+    def webhook_url(self, value):
+        self.meta = {'webhook_url': value}
+        self.save(update_fields=['meta'])

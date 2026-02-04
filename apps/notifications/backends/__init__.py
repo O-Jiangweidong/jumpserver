@@ -9,6 +9,7 @@ client_name_mapper = {}
 class BACKEND(models.TextChoices):
     EMAIL = 'email', _('Email')
     WECOM = 'wecom', _('WeCom')
+    WECOM_WEBHOOK = 'wecom_webhook', _('WeCom webhook')
     DINGTALK = 'dingtalk', _('DingTalk')
     SITE_MSG = 'site_msg', _('Site message')
     FEISHU = 'feishu', _('FeiShu')

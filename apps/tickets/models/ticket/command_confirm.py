@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .general import Ticket
+from .general import Ticket, CustomCacheMixin
 from ...const import TicketType
 
 
-class ApplyCommandTicket(Ticket):
+class ApplyCommandTicket(CustomCacheMixin, Ticket):
     apply_run_user = models.ForeignKey(
         'users.User', on_delete=models.SET_NULL, null=True, verbose_name=_('Run user')
     )

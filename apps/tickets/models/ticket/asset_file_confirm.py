@@ -1,14 +1,14 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
-from .general import Ticket
+from .general import Ticket, CustomCacheMixin
 
 __all__ = ['ApplyAssetFileTicket']
 
 from ...const import TicketType
 
 
-class ApplyAssetFileTicket(Ticket):
+class ApplyAssetFileTicket(CustomCacheMixin, Ticket):
     apply_login_user = models.ForeignKey(
         'users.User', on_delete=models.SET_NULL, null=True, verbose_name=_('Login user'),
     )

@@ -1,5 +1,3 @@
-import requests
-
 from typing import Iterable, AnyStr
 from urllib.parse import urlencode
 
@@ -104,31 +102,6 @@ class WeCom(RequestMixin):
     def send_markdown(self, users: Iterable, msg: AnyStr, **kwargs):
         pass
 
-    @staticmethod
-    def send_with_webhook(users, msg, markdown=False):
-        if not settings.WECOM_WEBHOOK_URL:
-            return
-
-        if not markdown:
-            data = {
-                'msgtype': 'text',
-                'text': {'content': msg, 'mentioned_list': users}
-            }
-        else:
-            at_user = ', '.join([f'<@{u}>' for u in users])
-            data = {
-                'msgtype': 'markdown',
-                'markdown': {'content': msg + f'\r\n{at_user}'}
-            }
-
-        try:
-            res = requests.post(settings.WECOM_WEBHOOK_URL, json=data).json()
-            errcode = res.get('errcode', -1)
-            if str(errcode) != '0':
-                raise ValueError(res.get('errmsg', _('Unknown')))
-        except Exception as e:
-            logger.error(f'Wecom send msg with webhook error: {e}')
-
     def send_text(self, users: Iterable, msg: AnyStr, markdown=False, **kwargs):
         """
         https://open.work.weixin.qq.com/api/doc/90000/90135/90236
@@ -153,7 +126,6 @@ class WeCom(RequestMixin):
             body.pop('text', '')
 
         logger.info(f'Wecom send text: users={users} msg={msg}')
-        self.send_with_webhook(users, msg, markdown)
         data = self._requests.post(URL.SEND_MESSAGE, json=body, check_errcode_is_0=False)
         errcode = data['errcode']
         if errcode in (ErrorCode.RECIPIENTS_INVALID, ErrorCode.RECIPIENTS_EMPTY):

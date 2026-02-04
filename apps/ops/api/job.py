@@ -22,7 +22,7 @@ from audits.models import FTPLog
 from assets.models import Asset
 from common.const.http import POST, GET
 from common.permissions import IsValidUser
-from common.utils import get_request_ip_or_data
+from common.utils import get_request_ip_or_data, get_request_ip
 from ops.celery import app
 from ops.const import Types
 from ops.models import Job, JobExecution, JMSPermedInventory
@@ -32,7 +32,7 @@ from ops.serializers.job import (
 )
 from ops.utils import merge_nodes_and_assets
 from ops.tools import SFTPTool
-from common.utils import get_request_ip
+from tickets.models import ApplyAssetFileTicket
 
 __all__ = [
     'JobViewSet', 'JobExecutionViewSet', 'JobRunVariableHelpAPIView', 'JobExecutionTaskDetail', 'UsernameHintsAPI',
@@ -158,13 +158,13 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             self.run_job(instance, serializer)
 
     @staticmethod
-    def check_asset_file_operate_acls(user, asset, account, file_info):
+    def check_asset_file_operate_acls(user, asset, account, extra_info):
         kwargs = {'user': user, 'asset': asset, 'account_username': account}
         acl = AssetFileOperateACL.filter_queryset(**kwargs).first()
         if not acl:
             return True, ''
         if acl.is_action(acl.ActionChoices.review):
-            acl.create_asset_file_review_ticket(user, asset, account, file_info)
+            acl.create_asset_file_review_ticket(user, asset, account, extra_info)
             return False, _('This action requires approval from the relevant personnel. '
                             'Please check the specific progress in the ticket system.')
         elif acl.is_action(acl.ActionChoices.reject):
@@ -301,28 +301,40 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
 
     @action(methods=[GET], detail=False, permission_classes=[IsValidUser, ], url_path='download-file')
     def download_file(self, request, *args, **kwargs):
-        file_id = request.query_params.get('file_id', '')
-        file_info = SFTPTool.get_file_info(file_id)
-        from django.http import Http404
-        if not file_info:
-            raise Http404()
+        ticket_id = request.query_params.get('ticket_id', '')
+        filename = request.query_params.get('filename', '')
+        if ticket_id and filename:
+            ticket = get_object_or_404(ApplyAssetFileTicket, pk=ticket_id)
+            if ticket.has_all_assignee(request.user) or str(ticket.applicant_id) == str(request.user.id):
+                upload_file_dir = safe_join(settings.SHARE_DIR, 'job_upload_file')
+                local_path = safe_join(upload_file_dir, str(ticket.meta.get('job_id', '')), filename)
+                if not os.path.exists(local_path):
+                    raise Http404()
+            else:
+                raise Http404()
+        else:
+            file_id = request.query_params.get('file_id', '')
+            file_info = SFTPTool.get_file_info(file_id)
 
-        local_path = file_info.get('local_path', '')
-        if not os.path.exists(local_path):
-            raise Http404()
+            if not file_info:
+                raise Http404()
 
-        task_id = file_info.get('task_id')
-        execution = get_object_or_404(JobExecution, pk=task_id)
-        asset = execution.job.assets.first()
-        data = {
-            'user': str(request.user),  'remote_addr': get_request_ip(request),
-            'asset': asset, 'account': execution.job.runas, 'operate': OperateChoices.download,
-            'filename': os.path.basename(local_path), 'is_success': True,
-            'session': '00000000-0000-0000-0000-000000000000', 'org_id': execution.job.org_id,
-        }
-        FTPLog.save_with_file(log_data=data, file_path=local_path)
+            local_path = file_info.get('local_path', '')
+            if not os.path.exists(local_path):
+                raise Http404()
 
-        filename = os.path.basename(file_info.get('remote_path', 'unknown'))
+            task_id = file_info.get('task_id')
+            execution = get_object_or_404(JobExecution, pk=task_id)
+            asset = execution.job.assets.first()
+            data = {
+                'user': str(request.user),  'remote_addr': get_request_ip(request),
+                'asset': asset, 'account': execution.job.runas, 'operate': OperateChoices.download,
+                'filename': os.path.basename(local_path), 'is_success': True,
+                'session': '00000000-0000-0000-0000-000000000000', 'org_id': execution.job.org_id,
+            }
+            FTPLog.save_with_file(log_data=data, file_path=local_path)
+            filename = os.path.basename(file_info.get('remote_path', 'unknown'))
+
         response = FileResponse(
             open(local_path, 'rb',  buffering=65536),
             content_type='application/octet-stream',

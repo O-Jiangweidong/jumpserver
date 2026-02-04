@@ -3,6 +3,7 @@
 import json
 from typing import Callable
 
+from django.core.cache import cache
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.db.models.fields import related
@@ -31,7 +32,7 @@ logger = get_logger(__file__)
 
 __all__ = [
     'Ticket', 'TicketStep', 'TicketAssignee',
-    'SuperTicket', 'SubTicketManager'
+    'SuperTicket', 'SubTicketManager', 'CustomCacheMixin',
 ]
 
 
@@ -502,3 +503,14 @@ class SuperTicket(Ticket):
 
 class SubTicketManager(models.Manager):
     pass
+
+
+class CustomCacheMixin:
+    id: str
+    webhook_cache_prefix = 'webhook_cache_'
+
+    def set_webhook_url(self, webhook_url):
+        cache.set(f'{self.webhook_cache_prefix}{self.id}', webhook_url)
+
+    def get_webhook_url(self):
+        return cache.get(f'{self.webhook_cache_prefix}{self.id}')

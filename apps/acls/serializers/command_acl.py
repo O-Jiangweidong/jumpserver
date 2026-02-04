@@ -28,10 +28,11 @@ class CommandFilterACLSerializer(BaseSerializer, BulkOrgResourceModelSerializer)
     command_groups = ObjectRelatedField(
         queryset=CommandGroup.objects, many=True, required=False, label=_('Command group')
     )
+    webhook_url = serializers.CharField(max_length=256, allow_blank=True, required=False)
 
     class Meta(BaseSerializer.Meta):
         model = CommandFilterACL
-        fields = BaseSerializer.Meta.fields + ['command_groups', 'reviewers_2']
+        fields = BaseSerializer.Meta.fields + ['command_groups', 'reviewers_2', 'webhook_url']
         action_choices_exclude = [
             ActionChoices.notice,
             ActionChoices.face_verify,

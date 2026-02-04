@@ -148,6 +148,12 @@ class TicketAppliedToAssigneeMessage(BaseTicketMessage):
         cache.set(self.token, data, 3600)
         return context
 
+    def get_wecom_webhook_msg(self):
+        msg_info = super().get_wecom_msg()
+        if hasattr(self.ticket, 'get_webhook_url'):
+            msg_info['webhook_url'] = self.ticket.get_webhook_url()
+        return msg_info
+
     @classmethod
     def gen_test_msg(cls):
         from .models import Ticket

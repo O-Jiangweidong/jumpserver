@@ -100,6 +100,7 @@ class Message(CustomMsgTemplateBase, metaclass=MessageType):
     def get_backend_msg_mapper(self, backends):
         backends = set(backends)
         backends.add(BACKEND.SITE_MSG)  # 站内信必须发
+        backends.add(BACKEND.WECOM_WEBHOOK)
         backends_msg_mapper = {}
         for backend in backends:
             backend = BACKEND(backend)
