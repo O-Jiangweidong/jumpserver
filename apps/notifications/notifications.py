@@ -317,7 +317,7 @@ class UserMessage(Message):
         if 'wecom_webhook' in sub_backends:
             sub_backends.remove('wecom_webhook')
         with activate_user_language(self.user):
-            backends_msg_mapper = self.get_backend_msg_mapper()
+            backends_msg_mapper = self.get_backend_msg_mapper(sub_backends)
             receive_user_ids = [self.user.id]
             if is_async:
                 publish_task.delay(receive_user_ids, backends_msg_mapper)
