@@ -14,7 +14,7 @@ from users.models import User
 from users.utils import activate_user_language
 from .models import SystemMsgSubscription, UserMsgSubscription
 
-__all__ = ('SystemMessage', 'UserMessage', 'system_msgs', 'Message')
+__all__ = ('SystemMessage', 'UserMessage', 'system_msgs', 'Message', 'publish_task')
 
 system_msgs = []
 user_msgs = []
@@ -100,7 +100,6 @@ class Message(CustomMsgTemplateBase, metaclass=MessageType):
     def get_backend_msg_mapper(self, backends):
         backends = set(backends)
         backends.add(BACKEND.SITE_MSG)  # 站内信必须发
-        backends.add(BACKEND.WECOM_WEBHOOK)
         backends_msg_mapper = {}
         for backend in backends:
             backend = BACKEND(backend)

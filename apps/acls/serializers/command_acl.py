@@ -28,7 +28,7 @@ class CommandFilterACLSerializer(BaseSerializer, BulkOrgResourceModelSerializer)
     command_groups = ObjectRelatedField(
         queryset=CommandGroup.objects, many=True, required=False, label=_('Command group')
     )
-    webhook_url = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    webhook_url = serializers.CharField(max_length=256, allow_blank=True, allow_null=True, required=False)
 
     class Meta(BaseSerializer.Meta):
         model = CommandFilterACL

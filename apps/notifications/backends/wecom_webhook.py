@@ -21,7 +21,7 @@ class WebhookClient(object):
         at_user = ', '.join([f'<@{u}>' for u in users])
         data = {
             'msgtype': 'markdown',
-            'markdown': {'content': msg + f'\r\n{at_user}'}
+            'markdown': {'content': msg + f'{at_user}'}
         }
 
         try:

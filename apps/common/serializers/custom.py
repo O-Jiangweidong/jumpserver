@@ -76,7 +76,7 @@ class OrgDeleteSerializer(BaseSerializer):
 class UserBaseSerializer(BaseSerializer):
     name = serializers.CharField(required=True)
     username = serializers.CharField(required=True)
-    email = serializers.EmailField(required=False, default='')
+    email = serializers.EmailField(required=False, default='', allow_blank=True)
     wecom_id = serializers.CharField(required=False, default='')
     is_active = serializers.BooleanField(default=True, required=False)
     mfa_level = serializers.ChoiceField(choices=MFAMixin.MFA_LEVEL_CHOICES, default=0, required=False)

@@ -9,7 +9,7 @@ __all__ = ["AssetFileOperateACLSerializer"]
 
 
 class AssetFileOperateACLSerializer(BaseSerializer, BulkOrgResourceModelSerializer):
-    webhook_url = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    webhook_url = serializers.CharField(max_length=256, allow_blank=True, allow_null=True, required=False)
 
     class Meta(BaseSerializer.Meta):
         model = AssetFileOperateACL

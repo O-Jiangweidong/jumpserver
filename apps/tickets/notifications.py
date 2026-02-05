@@ -149,7 +149,8 @@ class TicketAppliedToAssigneeMessage(BaseTicketMessage):
         return context
 
     def get_wecom_webhook_msg(self):
-        msg_info = super().get_wecom_msg()
+        message = super().gen_html_string(ticket_detail_url=self.get_ticket_detail_url())
+        msg_info = self.html_to_markdown(message)
         if hasattr(self.ticket, 'get_webhook_url'):
             msg_info['webhook_url'] = self.ticket.get_webhook_url()
         return msg_info

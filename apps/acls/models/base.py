@@ -143,4 +143,3 @@ class CustomACLModelMixin(models.Model):
     @webhook_url.setter
     def webhook_url(self, value):
         self.meta = {'webhook_url': value}
-        self.save(update_fields=['meta'])

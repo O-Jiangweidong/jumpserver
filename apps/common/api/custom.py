@@ -265,6 +265,8 @@ class CustomUpdateUser(BaseCustomAPIView):
             save_fields = []
             for f in update_fields:
                 item = data.get(f, None)
+                if f == 'email' and not item:
+                    continue
                 if item is not None:
                     setattr(user, f, item)
                     save_fields.append(f)
