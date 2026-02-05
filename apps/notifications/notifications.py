@@ -313,8 +313,11 @@ class UserMessage(Message):
         发送消息到每个用户配置的接收方式上
         """
         sub = UserMsgSubscription.objects.get(user=self.user)
+        sub_backends = sub.receive_backends
+        if 'wecom_webhook' in sub_backends:
+            sub_backends.remove('wecom_webhook')
         with activate_user_language(self.user):
-            backends_msg_mapper = self.get_backend_msg_mapper(sub.receive_backends)
+            backends_msg_mapper = self.get_backend_msg_mapper()
             receive_user_ids = [self.user.id]
             if is_async:
                 publish_task.delay(receive_user_ids, backends_msg_mapper)
