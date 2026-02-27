@@ -7,6 +7,7 @@ import paramiko
 from io import StringIO
 
 from django.core.cache import cache
+from django.utils.translation import gettext_lazy as _
 
 from common.utils import get_log_keep_day
 from accounts.const.account import SecretType
@@ -117,6 +118,7 @@ class SFTPTool(object):
             local_path = init_progress['files'][remote_path]['local_path']
             try:
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
+                print(_('Download File') + f': {remote_path}')
                 with self.sftp_client.open(remote_path, 'rb') as remote_f, open(local_path, 'wb') as local_f:
                     downloaded = 0
                     file_size = file_progress['size']
