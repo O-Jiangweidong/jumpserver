@@ -73,6 +73,12 @@ def raise_timeout(name=''):
     return decorate
 
 
+def _strip_wrapping_quotes(value):
+    if value and len(value) >= 2 and value[0] == value[-1] and value[0] in ("'", '"'):
+        return value[1:-1]
+    return value
+
+
 class OldSSHTransport(paramiko.transport.Transport):
     _preferred_pubkeys = (
         "ssh-ed25519",
@@ -160,6 +166,19 @@ class SSHClient:
         try:
             self.client.connect(**self.connect_params)
             self._channel = self.client.invoke_shell()
+            # Always perform a gentle handshake that works for servers and
+            # network devices: drain banner, brief settle, send newline, then
+            # read in quiet mode to avoid blocking on missing prompt.
+            try:
+                while self._channel.recv_ready():
+                    self._channel.recv(self.buffer_size)
+            except Exception:
+                pass
+            time.sleep(0.5)
+            try:
+                self._channel.send(b'\n')
+            except Exception:
+                pass
             self._get_match_recv()
             self.switch_user()
         except Exception as error:
@@ -186,16 +205,40 @@ class SSHClient:
     def _get_match_recv(self, answer_reg=DEFAULT_RE):
         buffer_str = ''
         prev_str = ''
+        last_change_ts = time.time()
+
+        # Quiet-mode reading only when explicitly requested, or when both
+        # answer regex and prompt are permissive defaults.
+        use_regex_match = True
+        if answer_reg == DEFAULT_RE and self.prompt == DEFAULT_RE:
+            use_regex_match = False
 
         check_reg = self.prompt if answer_reg == DEFAULT_RE else answer_reg
         while True:
             if self.channel.recv_ready():
                 chunk = self.channel.recv(self.buffer_size).decode('utf-8', 'replace')
-                buffer_str += chunk
+                if chunk:
+                    buffer_str += chunk
+                    last_change_ts = time.time()
 
             if buffer_str and buffer_str != prev_str:
-                if self.__match(check_reg, buffer_str):
+                if use_regex_match:
+                    if self.__match(check_reg, buffer_str):
+                        break
+                else:
+                    # Wait for a brief quiet period to approximate completion
+                    if time.time() - last_change_ts > 0.3:
+                        break
+            elif not use_regex_match and buffer_str:
+                # In quiet mode with some data already seen, also break after
+                # a brief quiet window even if buffer hasn't changed this loop.
+                if time.time() - last_change_ts > 0.3:
                     break
+            elif not use_regex_match and not buffer_str:
+                # No data at all in quiet mode; bail after short wait
+                if time.time() - last_change_ts > 1.0:
+                    break
+
             prev_str = buffer_str
             time.sleep(0.01)
 
@@ -234,8 +277,8 @@ class SSHClient:
             return
 
         password, port, username, remote_addr, key_path = match.groups()
-        password = password or None
-        key_path = key_path or None
+        password = _strip_wrapping_quotes(password) or None
+        key_path = _strip_wrapping_quotes(key_path) or None
 
         server = SSHTunnelForwarder(
             (remote_addr, int(port)),

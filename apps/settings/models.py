@@ -201,13 +201,13 @@ def get_chatai_data():
         'url': settings.GPT_BASE_URL,
         'api_key': settings.GPT_API_KEY,
         'proxy': settings.GPT_PROXY,
-        'model': settings.GPT_MODEL,
+        'model': settings.GPT_MODEL if settings.GPT_MODEL != 'custom' else settings.CUSTOM_GPT_MODEL,
     }
     if settings.CHAT_AI_TYPE != ChatAITypeChoices.gpt:
         data['url'] = settings.DEEPSEEK_BASE_URL
         data['api_key'] = settings.DEEPSEEK_API_KEY
         data['proxy'] = settings.DEEPSEEK_PROXY
-        data['model'] = settings.DEEPSEEK_MODEL
+        data['model'] = settings.DEEPSEEK_MODEL if settings.DEEPSEEK_MODEL != 'custom' else settings.CUSTOM_DEEPSEEK_MODEL
 
     return data
 
@@ -242,7 +242,7 @@ def register_sqlite_connection():
 
 
 class LeakPasswords(models.Model):
-    id = models.AutoField(primary_key=True)
+    id = models.AutoField(primary_key=True, verbose_name=_("ID"))
     password = models.CharField(max_length=1024, verbose_name=_("Password"))
 
     class Meta:

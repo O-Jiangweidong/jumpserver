@@ -25,13 +25,16 @@ def activate_user(username):
     print("Activate user: ", username)
     user.is_active = True
 
+    fields = []
     if user.is_expired:
         user.date_expired = timezone.now() + timezone.timedelta(days=365)
+        fields.append('date_expired')
 
     if user.password_has_expired:
         user.date_password_last_updated = timezone.now()
+        fields.append('date_password_last_updated')
 
-    user.save()
+    user.save(update_fields=['is_active'] + fields)
 
 
 if __name__ == "__main__":

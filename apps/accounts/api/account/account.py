@@ -1,16 +1,18 @@
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from django.utils.translation import gettext_lazy as _
+from rest_framework import serializers as drf_serializers
 from rest_framework.decorators import action
 from rest_framework.generics import ListAPIView, CreateAPIView
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK
+from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
 
 from accounts import serializers
-from accounts.const import ChangeSecretRecordStatusChoice
+from accounts.const import ChangeSecretRecordStatusChoice, Source
 from accounts.filters import AccountFilterSet, NodeFilterBackend
 from accounts.mixins import AccountRecordViewLogMixin
-from accounts.models import Account, ChangeSecretRecord
+from accounts.models import Account, ChangeSecretRecord, AccountTemplate
+from assets.const.gpt import create_or_update_chatx_resources
 from assets.models import Asset, Node
 from authentication.permissions import UserConfirmation, ConfirmType
 from common.api.mixin import ExtraFilterFieldsMixin
@@ -18,6 +20,7 @@ from common.drf.filters import AttrRulesFilterBackend
 from common.permissions import IsValidUser
 from common.utils import lazyproperty, get_logger
 from orgs.mixins.api import OrgBulkModelViewSet
+from orgs.utils import tmp_to_root_org
 from rbac.permissions import RBACPermission
 
 logger = get_logger(__file__)
@@ -43,6 +46,7 @@ class AccountViewSet(OrgBulkModelViewSet):
         'clear_secret': 'accounts.change_account',
         'move_to_assets': 'accounts.delete_account',
         'copy_to_assets': 'accounts.add_account',
+        'chat': 'accounts.view_account',
     }
     export_as_zip = True
 
@@ -55,6 +59,57 @@ class AccountViewSet(OrgBulkModelViewSet):
         asset = get_object_or_404(Asset, pk=asset_id)
         queryset = asset.all_accounts.all()
         return queryset
+
+    def perform_bulk_create(self, serializer):
+        result = super().perform_create(serializer)
+
+        template_items = [
+            d for d in serializer.data
+            if d.get("source", {}).get('value') == Source.TEMPLATE and d.get("source_id")
+        ]
+        if len(template_items) < 2:
+            return result
+
+        source_template_accounts = {
+            f"{item['asset']['id']}+{item['source_id']}": item["id"]
+            for item in template_items
+        }
+        template_ids = {item["source_id"] for item in template_items}
+
+        templates = (
+            AccountTemplate.objects
+            .filter(id__in=template_ids, su_from_id__isnull=False)
+            .only("id", "su_from_id")
+        )
+        su_from_map = {str(tpl.id): str(tpl.su_from_id) for tpl in templates}
+        if not su_from_map:
+            return result
+
+        account_su_from_id_map: dict[str] = {}
+
+        for d in template_items:
+            source_tpl_id = d["source_id"]
+            su_from_tpl_id = su_from_map.get(source_tpl_id)
+            if not su_from_tpl_id:
+                continue
+
+            su_from_account_id = source_template_accounts.get(
+                f"{d['asset']['id']}+{su_from_tpl_id}"
+            )
+            if su_from_account_id:
+                account_su_from_id_map[d["id"]] = su_from_account_id
+
+        if not account_su_from_id_map:
+            return result
+
+        accounts = Account.objects.filter(id__in=account_su_from_id_map.keys())
+        for account in accounts:
+            su_from_account_id = account_su_from_id_map.get(str(account.id))
+            if su_from_account_id:
+                account.su_from_id = su_from_account_id
+                account.save(update_fields=['su_from_id'])
+
+        return result
 
     @action(methods=['get'], detail=False, url_path='su-from-accounts')
     def su_from_accounts(self, request, *args, **kwargs):
@@ -152,10 +207,17 @@ class AccountViewSet(OrgBulkModelViewSet):
     def copy_to_assets(self, request, *args, **kwargs):
         return self._copy_or_move_to_assets(request, move=False)
 
+    @action(methods=['get'], detail=False, url_path='chat')
+    def chat(self, request, *args, **kwargs):
+        with tmp_to_root_org():
+            __, account = create_or_update_chatx_resources()
+            serializer = self.get_serializer(account)
+        return Response(serializer.data)
+
 
 class AccountSecretsViewSet(AccountRecordViewLogMixin, AccountViewSet):
     """
-    因为可能要导出所有账号，所以单独建立了一个 viewset
+    因为可能要导出所有账号,所以单独建立了一个 viewset
     """
     serializer_classes = {
         'default': serializers.AccountSecretSerializer,
@@ -174,12 +236,66 @@ class AssetAccountBulkCreateApi(CreateAPIView):
         'POST': 'accounts.add_account',
     }
 
+    @staticmethod
+    def get_all_assets(base_payload: dict):
+        nodes = base_payload.pop('nodes', [])
+        asset_ids = base_payload.pop('assets', [])
+        nodes = Node.objects.filter(id__in=nodes).only('id', 'key')
+
+        node_asset_ids = Node.get_nodes_all_assets(*nodes).values_list('id', flat=True)
+        asset_ids = set(asset_ids + list(node_asset_ids))
+        return Asset.objects.filter(id__in=asset_ids)
+
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        data = serializer.create(serializer.validated_data)
-        serializer = serializers.AssetAccountBulkSerializerResultSerializer(data, many=True)
-        return Response(data=serializer.data, status=HTTP_200_OK)
+        if hasattr(request.data, "copy"):
+            base_payload = request.data.copy()
+        else:
+            base_payload = dict(request.data)
+
+        templates = base_payload.pop("template", None)
+        assets = self.get_all_assets(base_payload)
+        if not assets.exists():
+            error = _("No valid assets found for account creation.")
+            return Response(
+                data={
+                    "detail": error,
+                    "code": "no_valid_assets"
+                },
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        result = []
+        errors = []
+
+        def handle_one(_payload):
+            try:
+                ser = self.get_serializer(data=_payload)
+                ser.is_valid(raise_exception=True)
+                data = ser.bulk_create(ser.validated_data, assets)
+                if isinstance(data, (list, tuple)):
+                    result.extend(data)
+                else:
+                    result.append(data)
+            except drf_serializers.ValidationError as e:
+                errors.extend(list(e.detail))
+            except Exception as e:
+                errors.extend([str(e)])
+
+        if not templates:
+            handle_one(base_payload)
+        else:
+            if not isinstance(templates, (list, tuple)):
+                templates = [templates]
+            for tpl in templates:
+                payload = dict(base_payload)
+                payload["template"] = tpl
+                handle_one(payload)
+
+        if errors:
+            raise drf_serializers.ValidationError(errors)
+
+        out_ser = serializers.AssetAccountBulkSerializerResultSerializer(result, many=True)
+        return Response(data=out_ser.data, status=HTTP_200_OK)
 
 
 class AccountHistoriesSecretAPI(ExtraFilterFieldsMixin, AccountRecordViewLogMixin, ListAPIView):

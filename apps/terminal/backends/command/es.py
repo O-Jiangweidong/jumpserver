@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 #
-import pytz
-
 from datetime import datetime
+
+import pytz
 
 from audits.encrypt import audit_crypto_handler
 from common.utils import get_logger
@@ -28,8 +28,8 @@ class CommandStore(ES):
                 "type": "long"
             }
         }
-        exact_fields = {}
-        fuzzy_fields = {'input', 'risk_level', 'user', 'asset', 'account'}
+        exact_fields = {'risk_level'}
+        fuzzy_fields = {'input', 'user', 'asset', 'account'}
         match_fields = {'input'}
         keyword_fields = {'session', 'org_id'}
 
