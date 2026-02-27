@@ -86,6 +86,8 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             return super().check_permissions(request)
         elif self.action.startswith('download') or request.data.get('type') == Types.download_file:
             return super().check_permissions(request)
+        elif self.action == 'eid2tid':
+            return super().check_permissions(request)
         # job: adhoc, playbook
         if not settings.SECURITY_COMMAND_EXECUTION:
             return self.permission_denied(request, COMMAND_EXECUTION_DISABLED)
@@ -298,6 +300,15 @@ class JobViewSet(LoginAssetACLCheckMixin, OrgBulkModelViewSet):
             'task_id': serializer.data.get('task_id'),
             'message': serializer.data.get('message', ''),
         }, status=201)
+
+    @action(methods=[GET], detail=False, permission_classes=[IsValidUser, ], url_path='eid2tid')
+    def eid2tid(self, request, *args, **kwargs):
+        e_id = request.query_params.get('e_id', '')
+        if not e_id:
+            raise Http404()
+
+        task_id = JobExecution.objects.filter(id=e_id).values_list('task_id', flat=True).first() or ''
+        return Response({'task_id': task_id})
 
     @action(methods=[GET], detail=False, permission_classes=[IsValidUser, ], url_path='download-file')
     def download_file(self, request, *args, **kwargs):

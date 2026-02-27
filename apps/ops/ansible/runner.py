@@ -255,7 +255,11 @@ class DownloadFileRunner:
         if not self.src_paths:
             raise ValueError("src_paths must be set")
 
-        base_info = self._other_info['all']['hosts']['local']
+        other_info = self._other_info['all']['hosts']
+        if not other_info:
+            raise ValueError("asset info must be set")
+
+        base_info = other_info.popitem()[1]
         sftp_port = 0
         for i in base_info['jms_asset'].get('protocols', []):
             if i['name'] == 'sftp':
