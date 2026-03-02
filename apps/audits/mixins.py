@@ -20,7 +20,7 @@ class SpecialLoginLogMixin:
     def _get_special_queryset(self, queryset):
         username = str(self.request.user.username)
         usernames = [
-            '审计管理员(auadmin)', '系统管理员(sysadmin)', 'auadmin', 'sysadmin'
+            'sysadmin', 'secadmin', '系统管理员(sysadmin)', '安全保密管理员(secadmin)'
         ]
         if username == 'auadmin':
             queryset = queryset.filter(username__in=usernames)

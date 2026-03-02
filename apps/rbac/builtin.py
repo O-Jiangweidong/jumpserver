@@ -76,6 +76,8 @@ sysadmin_exclude_perms = (
     ('settings', 'setting', 'change', 'security'),
 )
 secadmin_perms = (
+    ('terminal', 'command', '*', 'command'),
+    ('terminal', 'session', '*', 'session'),
     ('perms', 'assetpermission', '*', '*'),
     ('perms', 'permedaccount,permnode,userassetgrantedtreenoderelation', '*', '*'),
     ('perms', 'permnode,userassetgrantedtreenoderelation', '*', '*'),
