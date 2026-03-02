@@ -1,3 +1,4 @@
+from django.conf import settings
 
 from .ecc import *
 from .exception import PiicoError
@@ -13,8 +14,9 @@ class BaseMixin:
 class SM2Mixin(BaseMixin):
     def ecc_encrypt(self, public_key, plain_text, alg_id):
 
-        pos = 0
+        pos = 1
         k1 = bytes([0] * 32) + bytes(public_key[pos:pos + 32])
+        k1 = (c_ubyte * len(k1))(*k1)
         pos += 32
         k2 = bytes([0] * 32) + bytes(public_key[pos:pos + 32])
 
@@ -102,6 +104,18 @@ class SM4Mixin(BaseMixin):
         if ret != 0:
             raise Exception("destroy key failed")
 
+    @staticmethod
+    def __padding(key, max_length=16):
+        if not isinstance(key, bytes):
+            key = bytes(key, encoding='utf-8')
+
+        if len(key) >= max_length:
+            return key[:max_length]
+
+        while len(key) % 16 != 0:
+            key += b'\0'
+        return key
+
     def encrypt(self, plain_text, key, alg, iv=None):
         return self.__do_cipher_action(plain_text, key, alg, iv, True)
 
@@ -115,14 +129,20 @@ class SM4Mixin(BaseMixin):
 
         temp_data = (c_ubyte * len(text))()
         temp_data_length = c_int()
+        key_val = self.__padding(settings.SECRET_KEY)
+        key_val = (c_ubyte * len(key_val))(*key_val)
         if encrypt:
-            ret = self._driver.SDF_Encrypt(self._session, key, c_int(alg), iv, text, c_int(len(text)), temp_data,
-                                           pointer(temp_data_length))
+            ret = self._driver.SPII_EncryptEx(
+                self._session, text, c_int(len(text)), key_val, c_uint(16), iv, c_uint(0),
+                c_int(alg), temp_data, pointer(temp_data_length)
+            )
             if ret != 0:
                 raise PiicoError("encrypt failed", ret)
         else:
-            ret = self._driver.SDF_Decrypt(self._session, key, c_int(alg), iv, text, c_int(len(text)), temp_data,
-                                           pointer(temp_data_length))
+            ret = self._driver.SPII_DecryptEx(
+                self._session, text, c_int(len(text)), key_val, c_uint(16), iv, c_uint(0),
+                c_int(alg), temp_data, pointer(temp_data_length)
+            )
             if ret != 0:
                 raise PiicoError("decrypt failed", ret)
         return temp_data[:temp_data_length.value]
