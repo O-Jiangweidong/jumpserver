@@ -251,7 +251,8 @@ DB_ENGINE = CONFIG.DB_ENGINE.lower()
 if DB_ENGINE == 'vastbase':
     DB_BACKEND = 'django_vastbase_backend'
 else:
-    DB_BACKEND = f'django.db.backends.{DB_ENGINE}'
+    # DB_BACKEND = f'django.db.backends.{DB_ENGINE}'
+    DB_BACKEND = f'jumpserver.rewriting.db_backends.mysql'
 DATABASES = {
     'default': {
         'ENGINE': DB_BACKEND,

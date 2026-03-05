@@ -740,6 +740,14 @@ class Config(dict):
         # oauth2_provider settings 
         'OAUTH2_PROVIDER_ACCESS_TOKEN_EXPIRE_SECONDS': 60 * 60,
         'OAUTH2_PROVIDER_REFRESH_TOKEN_EXPIRE_SECONDS': 60 * 60 * 24 * 7,
+
+        # middleman settings
+        'MIDDLEMAN_ENDPOINT': '',
+        'MIDDLEMAN_SELF_ENDPOINT': '',
+        'MIDDLEMAN_SERVICE_NAME': '',
+        'MIDDLEMAN_SERVICE_ROLE': '',
+        'MIDDLEMAN_SERVICE_DISPLAY': '',
+        'MIDDLEMAN_IGNORE_SAME_NAME': False,
     }
 
     old_config_map = {
