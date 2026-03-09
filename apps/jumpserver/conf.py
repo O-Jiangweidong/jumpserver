@@ -592,6 +592,8 @@ class Config(dict):
         # 定制化
         'SELECT_JOB_URL': '',
         'AUDIT_CALLBACK_URL': '',
+        'COMMAND_REVIEW_TICKET_MESSAGE_URL': '',
+        'COMMAND_REVIEW_KOKO_TIP': '',
 
         'FORGOT_PASSWORD_URL': '',
         'HEALTH_CHECK_TOKEN': '',

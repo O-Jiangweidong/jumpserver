@@ -3,6 +3,7 @@
 import json
 from typing import Callable
 
+from django.conf import settings
 from django.db import models
 from django.db.models import Prefetch, Q
 from django.db.models.fields import related
@@ -468,6 +469,7 @@ class Ticket(StatusMixin, JMSBaseModel):
             'ticket_detail_page_url': '{url}?type={type}'.format(
                 url=url_ticket_detail_external, type=self.type
             ),
+            'ticket_detail_message': settings.COMMAND_REVIEW_KOKO_TIP,
             'assignees': [str(ticket_assignee.assignee) for ticket_assignee in ticket_assignees]
         }
 

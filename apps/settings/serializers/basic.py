@@ -36,6 +36,10 @@ class BasicSettingSerializer(serializers.Serializer):
     SELECT_JOB_URL = serializers.URLField(
         required=True, allow_blank=False, allow_null=True,
     )
+    COMMAND_REVIEW_TICKET_MESSAGE_URL = serializers.URLField(
+        required=False, allow_blank=False, allow_null=True,
+    )
+    COMMAND_REVIEW_KOKO_TIP = serializers.CharField(max_length=4096, allow_blank=True, allow_null=True,)
 
     @staticmethod
     def validate_SITE_URL(s):
