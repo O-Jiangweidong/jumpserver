@@ -9,4 +9,5 @@ class TicketsConfig(AppConfig):
     def ready(self):
         from . import signal_handlers  # noqa
         from . import notifications  # noqa
+        from . import tasks # noqa
         return super().ready()
