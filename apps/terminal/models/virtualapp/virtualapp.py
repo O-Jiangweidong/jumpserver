@@ -1,7 +1,9 @@
 import os
+import random
 import shutil
 
 from django.conf import settings
+from django.core.cache import cache
 from django.core.files.storage import default_storage
 from django.db import models
 from django.utils._os import safe_join
@@ -9,10 +11,13 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.serializers import ValidationError
 
 from common.db.models import JMSBaseModel
-from common.utils import lazyproperty
+from common.utils import lazyproperty, get_logger
 from common.utils.yml import yaml_load_with_i18n
 
 __all__ = ['VirtualApp', 'VirtualAppPublication']
+
+
+logger = get_logger(__name__)
 
 
 class VirtualApp(JMSBaseModel):
@@ -87,6 +92,51 @@ class VirtualApp(JMSBaseModel):
             shutil.rmtree(pkg_path)
         shutil.copytree(path, pkg_path)
         return instance, serializer
+
+    host_prefer_key_tpl = 'virtual_host_prefer_{}'
+    connect_token_map_host = 'connect_token_map_host_{}'
+
+    def select_panda_host(self, token_id, user, asset):
+        hosts = self.providers.all()
+        only_label_values = asset.get_labels().filter(
+            name__in=['AppletHostOnly', '仅发布机']
+        ).values_list('value', flat=True)
+        if only_label_values:
+            host_matched = [host for host in hosts if host.name in only_label_values]
+            if host_matched:
+                return host_matched[0]
+            else:
+                logger.info("No host for only virtual app: {}".format(self.name))
+                return None
+
+        hosts = [host for host in hosts if host.load != 'offline']
+        if not hosts:
+            logger.info("No online host for virtual app: {}".format(self.name))
+            return None
+
+        spec_label_values = asset.get_labels().filter(
+            name__in=['AppletHost', '发布机']
+        ).values_list('value', flat=True)
+        host_matched = [host for host in hosts if host.name in spec_label_values]
+        if host_matched:
+            return random.choice(host_matched)
+
+        prefer_key = self.host_prefer_key_tpl.format(user.id)
+        prefer_host_id = cache.get(prefer_key, None)
+        pref_host = [host for host in hosts if host.id == prefer_host_id]
+
+        if pref_host:
+            host = pref_host[0]
+        else:
+            host = hosts[0]
+            cache.set(prefer_key, str(host.id), timeout=None)
+
+        cache.set(self.connect_token_map_host.format(token_id), str(host.terminal.remote_addr), timeout=None)
+        return host
+
+    @classmethod
+    def get_host_from_token(cls, token_id):
+        return cache.get(cls.connect_token_map_host.format(token_id))
 
 
 class VirtualAppPublication(JMSBaseModel):

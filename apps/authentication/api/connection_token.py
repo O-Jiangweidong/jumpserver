@@ -25,7 +25,7 @@ from orgs.mixins.api import RootOrgViewMixin
 from orgs.utils import tmp_to_org
 from perms.models import ActionChoices
 from terminal.connect_methods import NativeClient, ConnectMethodUtil, WebMethod
-from terminal.models import EndpointRule, Endpoint
+from terminal.models import EndpointRule, Endpoint, VirtualApp
 from users.const import FileNameConflictResolution
 from users.const import RDPSmartSize, RDPColorQuality
 from users.models import Preference
@@ -582,6 +582,7 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
         'get_applet_info': 'authentication.view_superconnectiontoken',
         'release_applet_account': 'authentication.view_superconnectiontoken',
         'get_virtual_app_info': 'authentication.view_superconnectiontoken',
+        'get_panda_host': 'authentication.view_superconnectiontoken',
     }
 
     def get_queryset(self):
@@ -681,6 +682,11 @@ class SuperConnectionTokenViewSet(ConnectionTokenViewSet):
         data = token.get_virtual_app_option()
         serializer = ConnectTokenVirtualAppOptionSerializer(data)
         return Response(serializer.data)
+
+    @action(methods=['POST'], detail=False, url_path='panda-host')
+    def get_panda_host(self, *args, **kwargs):
+        token_id = self.request.data.get('id')
+        return Response({'host': VirtualApp.get_host_from_token(token_id)})
 
     @action(methods=['DELETE', 'POST'], detail=False, url_path='applet-account/release')
     def release_applet_account(self, *args, **kwargs):

@@ -242,6 +242,7 @@ class ConnectionToken(JMSOrgBaseModel):
         virtual_app = VirtualApp.objects.filter(name=method.get('value')).first()
         if not virtual_app:
             return None
+        virtual_app.select_panda_host(self.id, self.user, self.asset)
         return virtual_app
 
     def get_applet_option(self):
