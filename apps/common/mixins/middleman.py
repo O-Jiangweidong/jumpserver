@@ -117,12 +117,11 @@ class MiddlemanMixin(object):
         raise JMSException('Unsupported API request')
 
     def create(self, request, *args, **kwargs):
+        if not self.tp or not self.use_middleman_create:
+            return super().create(request, *args, **kwargs)
+
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-
-        if not self.tp or not self.use_middleman_create:
-            return super().perform_create(serializer)
-
         if self.has_middleman_master_behavior():
             data = self._build_data(self.request, serializer)
             resp = middleman_client.post_resource(
