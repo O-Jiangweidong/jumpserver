@@ -130,8 +130,7 @@ class MiddlemanClient(metaclass=Singleton):
 
     def get_replicas(self, **kwargs):
         url = f'/middleman/replica-nodes/?{urllib.parse.urlencode(kwargs)}'
-        resp = self._request('GET', url)
-        return resp.json()
+        return self._request('GET', url)
 
     def get_tasks(self, **kwargs):
         url = f'/middleman/tasks/?{urllib.parse.urlencode(kwargs)}'

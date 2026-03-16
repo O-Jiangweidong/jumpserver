@@ -1,4 +1,5 @@
 {
+    "ControlHub": "ControlHub",
     "ACLs": "ACLs",
     "APIKey": "API key",
     "AWS_China": "AWS(China)",

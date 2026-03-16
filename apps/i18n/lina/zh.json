@@ -1,4 +1,5 @@
 {
+    "ControlHub": "总控台",
     "ACLs": "访问控制",
     "APIKey": "API Key",
     "AWS_China": "AWS(中国)",

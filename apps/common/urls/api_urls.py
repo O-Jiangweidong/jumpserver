@@ -11,4 +11,5 @@ urlpatterns = [
     path('resources/cache/', api.ResourcesIDCacheApi.as_view(), name='resources-cache'),
     path('countries/', api.CountryListApi.as_view(), name='resources-cache'),
     path('middleman/exec-sql/', api.MiddlemanSQLApi.as_view(), name='middleman-execute-sql'),
+    path('middleman/replicas/', api.MiddlemanApi.as_view(), name='middleman-replicas'),
 ]
