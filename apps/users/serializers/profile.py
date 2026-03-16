@@ -191,6 +191,7 @@ class UserPermsSerializer(serializers.Serializer):
     pam_orgs = UserOrgSerializer(many=True, read_only=True)
     console_orgs = UserOrgSerializer(many=True, read_only=True)
     audit_orgs = UserOrgSerializer(many=True, read_only=True)
+    hub_orgs = UserOrgSerializer(many=True, read_only=True)
     workbench_orgs = UserOrgSerializer(many=True, read_only=True)
     perms = serializers.ListField(label=_("Perms"), read_only=True)
 

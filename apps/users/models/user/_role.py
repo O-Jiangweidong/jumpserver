@@ -220,6 +220,10 @@ class RoleMixin:
         return self.cached_orgs.get("pam_orgs", [])
 
     @lazyproperty
+    def hub_orgs(self):
+        return self.cached_orgs['hub_orgs']
+
+    @lazyproperty
     def joined_orgs(self):
         from rbac.models import RoleBinding
 
@@ -239,12 +243,14 @@ class RoleMixin:
         workbench_orgs = RoleBinding.get_user_has_the_perm_orgs(
             "rbac.view_workbench", self
         )
+        hub_orgs = RoleBinding.get_user_has_the_perm_orgs('rbac.view_control-hub', self)
 
         if settings.LIMIT_SUPER_PRIV:
             audit_orgs = list(set(audit_orgs) - set(console_orgs))
 
         data = {
             "pam_orgs": pam_orgs,
+            'hub_orgs': hub_orgs,
             "console_orgs": console_orgs,
             "audit_orgs": audit_orgs,
             "workbench_orgs": workbench_orgs,
