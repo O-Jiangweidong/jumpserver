@@ -221,7 +221,7 @@ class RoleMixin:
 
     @lazyproperty
     def hub_orgs(self):
-        return self.cached_orgs['hub_orgs']
+        return self.cached_orgs.get('hub_orgs', [])
 
     @lazyproperty
     def joined_orgs(self):
