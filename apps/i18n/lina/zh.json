@@ -1,4 +1,5 @@
 {
+    "FailedRequestCount": "请求失败数",
     "ControlHub": "总控台",
     "ACLs": "访问控制",
     "APIKey": "API Key",

@@ -138,7 +138,6 @@ class MiddlemanClient(metaclass=Singleton):
         return resp.json()
 
     def sql_sync(self, replica_name, sql_type, sql, params, **kwargs):
-        # TODO 根据 sql_type 判断是否应该下发
         data = {'sql': sql, 'params': params, 'sql_type': sql_type}
         return self._request(
             'POST', f'/middleman/sql-sync/',

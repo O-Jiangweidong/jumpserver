@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.exceptions import EmptyResultSet
 from django.conf import settings
 from django.db.models.sql import compiler
@@ -35,23 +37,49 @@ class Mixin:
             table_name = ''
         return table_name
 
+    @staticmethod
+    def _datetime_parser(obj):
+        if not obj or not isinstance(obj, str):
+            return obj
+
+        try:
+            dt_with_tz = datetime.strptime(obj, '%Y-%m-%dT%H:%M:%S.%f%z')
+            return dt_with_tz.replace(tzinfo=None)
+        except: # noqa
+            return obj
+
+    def handle_special_formats(self, result):
+        if isinstance(result, list) and len(result) > 0 and result[0]:
+            outer = []
+            for i in result[0]:
+                inner = []
+                for j in i:
+                    inner.append(self._datetime_parser(j))
+                outer.append(inner)
+            result[0] = outer
+        return result
+
     def send_middleman(self, sql, params, sql_type):
-        result = None
-        if request and request.path == '/api/v1/common/middleman/exec-sql/':
-            return True, result
+        result, replica_name = None, None
+        if request:
+            replica_name = request.headers.get('x-replica-name')
+            if request.path == '/api/v1/common/middleman/exec-sql/':
+                return True, result
+
+            if not getattr(request, 'can_middleman', False):
+                return True, result
 
         table_name = self._get_table_name()
         if table_name not in c.MIDDLEMAN_TABLE_WHITELIST:
             return True, result
 
-        replica_name = ''
         client = MiddlemanClient()
         if settings.MIDDLEMAN_SERVICE_ROLE.lower() == 'master':
             if not replica_name:
                 return True, result
 
-            # TODO 给 middleman 发送过去，并让 middleman 推送到从节点
-            client.sql_sync(replica_name, sql_type, sql, params)
+            result = client.sql_sync(replica_name, sql_type, sql, params)
+            result = self.handle_special_formats(result)
             return False, result
         elif settings.MIDDLEMAN_SERVICE_ROLE.lower() == 'replica' and sql_type != c.SELECT:
             # TODO 给 middleman 发送过去即可
