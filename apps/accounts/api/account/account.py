@@ -18,6 +18,7 @@ from authentication.permissions import UserConfirmation, ConfirmType
 from common.api.mixin import ExtraFilterFieldsMixin
 from common.drf.filters import AttrRulesFilterBackend
 from common.permissions import IsValidUser
+from common.views.mixins import MiddlewareMixin
 from common.utils import lazyproperty, get_logger
 from orgs.mixins.api import OrgBulkModelViewSet
 from orgs.utils import tmp_to_root_org
@@ -31,11 +32,11 @@ __all__ = [
 ]
 
 
-class AccountViewSet(OrgBulkModelViewSet):
+class AccountViewSet(MiddlewareMixin, OrgBulkModelViewSet):
     model = Account
     search_fields = ('username', 'name', 'asset__name', 'asset__address', 'comment')
     extra_filter_backends = [AttrRulesFilterBackend, NodeFilterBackend]
-    filterset_class = AccountFilterSet
+    # filterset_class = AccountFilterSet
     serializer_classes = {
         'default': serializers.AccountSerializer,
         'retrieve': serializers.AccountDetailSerializer,

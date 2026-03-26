@@ -11,12 +11,12 @@ from assets.models import Platform, Node, Asset, PlatformProtocol, PlatformAutom
 from assets.serializers import PlatformSerializer, PlatformProtocolSerializer, PlatformListSerializer
 from common.api import JMSModelViewSet
 from common.permissions import IsValidUser
+from common.views.mixins import MiddlewareMixin
 from common.serializers import GroupedChoiceSerializer
 from rbac.models import RoleBinding
 
+
 __all__ = ['AssetPlatformViewSet', 'PlatformAutomationMethodsApi', 'PlatformProtocolViewSet']
-
-
 
 
 class PlatformFilter(filters.FilterSet):
@@ -27,14 +27,14 @@ class PlatformFilter(filters.FilterSet):
         fields = ['name', 'category', 'type']
 
 
-class AssetPlatformViewSet(JMSModelViewSet):
+class AssetPlatformViewSet(MiddlewareMixin, JMSModelViewSet):
     queryset = Platform.objects.all()
     serializer_classes = {
         'default': PlatformSerializer,
         'list': PlatformListSerializer,
         'categories': GroupedChoiceSerializer,
     }
-    filterset_class = PlatformFilter
+    # filterset_class = PlatformFilter
     search_fields = ['name']
     ordering = ['-internal', 'name']
     rbac_perms = {

@@ -15,6 +15,7 @@ from common.api import SuggestionMixin
 from common.const.http import POST
 from common.const.signals import PRE_REMOVE, POST_REMOVE
 from common.exceptions import SomeoneIsDoingThis
+from common.views.mixins import MiddlewareMixin
 from common.utils import get_logger
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
@@ -37,7 +38,7 @@ __all__ = [
 ]
 
 
-class NodeViewSet(SuggestionMixin, OrgBulkModelViewSet):
+class NodeViewSet(MiddlewareMixin, SuggestionMixin, OrgBulkModelViewSet):
     model = Node
     filterset_fields = ('value', 'key', 'id')
     search_fields = ('full_value',)

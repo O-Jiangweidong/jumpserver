@@ -53,8 +53,6 @@ class MiddlewareMixin(APIView):
 
         try:
             self.initial(request, *args, **kwargs)
-
-            # Get the appropriate handler method
             setattr(self.request._request, 'can_middleman', True)
             if request.method.lower() in self.http_method_names:
                 handler = getattr(self, request.method.lower(),

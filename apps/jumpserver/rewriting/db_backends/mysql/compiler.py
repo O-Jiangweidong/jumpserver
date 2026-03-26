@@ -24,6 +24,20 @@ from ..middleman import MiddlemanClient
 from jumpserver.utils import current_request as request
 
 
+class MockCursor(object):
+    def __init__(self, rowcount=0):
+        self.rowcount = rowcount
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        pass
+
+    def close(self):
+        pass
+
+
 class Mixin:
     query: type
     model: type
@@ -43,7 +57,7 @@ class Mixin:
             return obj
 
         try:
-            dt_with_tz = datetime.strptime(obj, '%Y-%m-%dT%H:%M:%S.%f%z')
+            dt_with_tz = datetime.fromisoformat(obj)
             return dt_with_tz.replace(tzinfo=None)
         except: # noqa
             return obj
@@ -70,8 +84,8 @@ class Mixin:
                 return True, result
 
         table_name = self._get_table_name()
-        if table_name not in c.MIDDLEMAN_TABLE_WHITELIST:
-            return True, result
+        if table_name in c.MIDDLEMAN_TABLE_BLACKLIST:
+            return False, result
 
         client = MiddlemanClient()
         if settings.MIDDLEMAN_SERVICE_ROLE.lower() == 'master':
@@ -111,7 +125,12 @@ class SQLCompiler(Mixin, MySQLCompiler):
             if result_type == MULTI:
                 return result or []
             elif result_type == SINGLE and isinstance(result, (tuple, list)):
-                return result[0] if len(result) > 0 else None
+                try:
+                    return result[0][0]
+                except: # noqa
+                    return result[0]
+            elif isinstance(result, dict):
+                return MockCursor(result.get('rowcount', 0))
             return result or None
 
         if chunked_fetch:
@@ -207,6 +226,21 @@ class SQLDeleteCompiler(MySQLDeleteCompiler, SQLCompiler):
 
 class SQLUpdateCompiler(MySQLUpdateCompiler, SQLCompiler):
     SQL_TYPE = c.UPDATE
+
+    def execute_sql(self, result_type):
+        cursor = SQLCompiler.execute_sql(self, result_type)
+        try:
+            rows = cursor.rowcount if cursor else 0
+            is_empty = cursor is None
+        finally:
+            if hasattr(cursor, 'close'):
+                cursor.close()
+        for query in self.query.get_related_updates():
+            aux_rows = query.get_compiler(self.using).execute_sql(result_type)
+            if is_empty and aux_rows:
+                rows = aux_rows
+                is_empty = False
+        return rows
 
 
 class SQLAggregateCompiler(MySQLAggregateCompiler):

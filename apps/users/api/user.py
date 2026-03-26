@@ -36,7 +36,7 @@ __all__ = [
 
 
 class UserViewSet(MiddlewareMixin, CommonApiMixin, UserQuerysetMixin, SuggestionMixin, BulkModelViewSet):
-    filterset_class = UserFilter
+    # filterset_class = UserFilter
     extra_filter_backends = [AttrRulesFilterBackend]
     search_fields = ('username', 'email', 'name')
     permission_classes = [RBACPermission, UserObjectPermission]

@@ -134,8 +134,7 @@ class MiddlemanClient(metaclass=Singleton):
 
     def get_tasks(self, **kwargs):
         url = f'/middleman/tasks/?{urllib.parse.urlencode(kwargs)}'
-        resp = self._request('GET', url)
-        return resp.json()
+        return self._request('GET', url)
 
     def sql_sync(self, replica_name, sql_type, sql, params, **kwargs):
         data = {'sql': sql, 'params': params, 'sql_type': sql_type}

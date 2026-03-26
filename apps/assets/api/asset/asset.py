@@ -20,6 +20,7 @@ from assets.tasks import test_assets_connectivity_manual, update_assets_hardware
 from common.api import SuggestionMixin
 from common.drf.filters import BaseFilterSet, AttrRulesFilterBackend
 from common.utils import get_logger, is_uuid
+from common.views.mixins import MiddlewareMixin
 from orgs.mixins import generics
 from orgs.mixins.api import OrgBulkModelViewSet
 from ...const import GATEWAY_NAME
@@ -96,12 +97,12 @@ class AssetFilterSet(BaseFilterSet):
         return queryset.filter(protocols__name__in=value).distinct()
 
 
-class BaseAssetViewSet(OrgBulkModelViewSet):
+class BaseAssetViewSet(MiddlewareMixin, OrgBulkModelViewSet):
     """
       API endpoint that allows Asset to be viewed or edited.
       """
     model = Asset
-    filterset_class = AssetFilterSet
+    # filterset_class = AssetFilterSet
     search_fields = ("name", "address", "comment")
     ordering_fields = ('name', 'address', 'connectivity', 'platform', 'date_updated', 'date_created')
     serializer_classes = (
