@@ -95,7 +95,6 @@ class Mixin:
             result = self.handle_special_formats(result)
             return False, result
         elif settings.MIDDLEMAN_SERVICE_ROLE.lower() == 'replica' and sql_type != c.SELECT:
-            # TODO 给 middleman 发送过去即可
             client.sql_sync(replica_name, sql_type, sql, params)
             return True, result
         else:

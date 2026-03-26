@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 
-from common.views.mixins import MiddlewareMixin
+from common.views.mixins import MiddlemanMixin
 from orgs.mixins.api import OrgBulkModelViewSet
 from perms import serializers
 from perms.filters import AssetPermissionFilter
@@ -10,7 +10,7 @@ from perms.models import AssetPermission
 __all__ = ['AssetPermissionViewSet']
 
 
-class AssetPermissionViewSet(MiddlewareMixin, OrgBulkModelViewSet):
+class AssetPermissionViewSet(MiddlemanMixin, OrgBulkModelViewSet):
     """
     资产授权列表的增删改查api
     """

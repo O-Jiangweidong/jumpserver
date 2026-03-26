@@ -5,7 +5,7 @@ from django.contrib.auth import logout as auth_logout
 from django.core.cache import cache
 from django.http import HttpResponse
 from django.shortcuts import redirect, reverse, render
-from django.utils.deprecation import MiddlewareMixin
+from django.utils.deprecation import MiddlemanMixin
 from django.utils.translation import gettext as _
 
 from apps.authentication import mixins
@@ -117,7 +117,7 @@ class ThirdPartyLoginMiddleware(mixins.AuthMixin):
             return response
 
 
-class SessionCookieMiddleware(MiddlewareMixin):
+class SessionCookieMiddleware(MiddlemanMixin):
     USER_LOGIN_ENCRYPTION_KEY_PAIR = 'user_login_encryption_key_pair'
 
     def set_cookie_public_key(self, request, response):

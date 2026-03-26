@@ -11,7 +11,7 @@ from assets.models import Platform, Node, Asset, PlatformProtocol, PlatformAutom
 from assets.serializers import PlatformSerializer, PlatformProtocolSerializer, PlatformListSerializer
 from common.api import JMSModelViewSet
 from common.permissions import IsValidUser
-from common.views.mixins import MiddlewareMixin
+from common.views.mixins import MiddlemanMixin
 from common.serializers import GroupedChoiceSerializer
 from rbac.models import RoleBinding
 
@@ -27,7 +27,7 @@ class PlatformFilter(filters.FilterSet):
         fields = ['name', 'category', 'type']
 
 
-class AssetPlatformViewSet(MiddlewareMixin, JMSModelViewSet):
+class AssetPlatformViewSet(MiddlemanMixin, JMSModelViewSet):
     queryset = Platform.objects.all()
     serializer_classes = {
         'default': PlatformSerializer,
