@@ -221,6 +221,8 @@ class RoleMixin:
 
     @lazyproperty
     def hub_orgs(self):
+        if settings.MIDDLEMAN_SERVICE_ROLE != 'master':
+            return []
         return self.cached_orgs.get('hub_orgs', [])
 
     @lazyproperty

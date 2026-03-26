@@ -20,6 +20,7 @@ from common.drf.filters import AttrRulesFilterBackend
 from common.permissions import IsValidUser
 from common.views.mixins import MiddlewareMixin
 from common.utils import lazyproperty, get_logger
+from common.views.mixins import MiddlewareMixin
 from orgs.mixins.api import OrgBulkModelViewSet
 from orgs.utils import tmp_to_root_org
 from rbac.permissions import RBACPermission

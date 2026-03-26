@@ -2,19 +2,35 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.permissions import OnlySuperUser, IsServiceAccount
+from common.utils import get_logger
 from jumpserver.rewriting.db_backends.middleman import MiddlemanClient
 
 
-# TODO 下边三个试图一定要把权限做好，执行sql的权限一定要慎重，防止sql注入风险
+logger = get_logger(__name__)
+
+
 class MiddlemanSQLApi(APIView):
-    permission_classes = (AllowAny,)
+    permission_classes = (IsServiceAccount,)
 
     def post(self, request, *args, **kwargs):
+        sql = request.data.get('sql', '')
+        params = request.data.get('params', [])
+        if not sql or not isinstance(params, list):
+            return Response({'error': 'sql or param is invalid'}, status=400)
+
+        with connection.cursor() as cursor:
+            logger.debug('Middleman SQL: {}'.format(cursor.mogrify(sql, params)))
+            try:
+                cursor.execute(sql, params)
+            except django.db.utils.IntegrityError as e:
+                if "for key 'django_content_type.django_content_type" not in str(e):
+                    raise e
         return Response()
 
 
-class MiddlemanReplicaApi(APIView):
-    permission_classes = (AllowAny,)
+class MiddlemanApi(APIView):
+    permission_classes = (OnlySuperUser,)
 
     @staticmethod
     def get(request, *args, **kwargs):
