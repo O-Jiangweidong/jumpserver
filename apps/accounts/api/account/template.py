@@ -10,6 +10,7 @@ from accounts.tasks import template_sync_related_accounts
 from assets.const import Protocol
 from authentication.permissions import UserConfirmation, ConfirmType
 from common.drf.filters import BaseFilterSet
+from common.views.mixins import MiddlewareMixin
 from orgs.mixins.api import OrgBulkModelViewSet
 from rbac.permissions import RBACPermission
 
@@ -37,7 +38,7 @@ class AccountTemplateFilterSet(BaseFilterSet):
         return queryset
 
 
-class AccountTemplateViewSet(OrgBulkModelViewSet):
+class AccountTemplateViewSet(MiddlewareMixin, OrgBulkModelViewSet):
     model = AccountTemplate
     filterset_class = AccountTemplateFilterSet
     search_fields = ('username', 'name')

@@ -5,6 +5,7 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from common.views.mixins import MiddlewareMixin
 from orgs.mixins.api import OrgBulkModelViewSet
 from ..models import UserGroup, User
 from ..serializers import UserGroupSerializer, UserGroupListSerializer
@@ -12,7 +13,7 @@ from ..serializers import UserGroupSerializer, UserGroupListSerializer
 __all__ = ['UserGroupViewSet']
 
 
-class UserGroupViewSet(OrgBulkModelViewSet):
+class UserGroupViewSet(MiddlewareMixin, OrgBulkModelViewSet):
     model = UserGroup
     filterset_fields = ("name",)
     search_fields = filterset_fields

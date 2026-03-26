@@ -61,13 +61,12 @@ class Mixin:
 
     def send_middleman(self, sql, params, sql_type):
         result, replica_name = None, None
-        if request:
-            replica_name = request.headers.get('x-replica-name')
-            if request.path == '/api/v1/common/middleman/exec-sql/':
-                return True, result
+        if not request or (request and request.path == '/api/v1/common/middleman/exec-sql/'):
+            return True, result
 
-            if not getattr(request, 'can_middleman', False):
-                return True, result
+        replica_name = request.headers.get('x-replica-name')
+        if not getattr(request, 'can_middleman', False):
+            return True, result
 
         table_name = self._get_table_name()
         if table_name not in c.MIDDLEMAN_TABLE_WHITELIST:
