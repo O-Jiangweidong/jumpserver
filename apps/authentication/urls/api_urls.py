@@ -30,6 +30,7 @@ urlpatterns = [
 
     path('face/callback/', api.FaceCallbackApi.as_view(), name='face-callback'),
     path('face/context/', api.FaceContextApi.as_view(), name='face-context'),
+    path('face/verify-info/', api.FaceVerifyInfoApi.as_view(), name='face-verify-info'),
 
     path('face-monitor/callback/', api.FaceMonitorCallbackApi.as_view(), name='face-monitor-callback'),
     path('face-monitor/context/', api.FaceMonitorContextApi.as_view(), name='face-monitor-context'),

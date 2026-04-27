@@ -21,6 +21,7 @@ class LoginACLSerializer(BaseUserACLSerializer, CommonBulkModelSerializer):
         action_choices_exclude = [
             ActionChoices.warning,
             ActionChoices.notify_and_warn,
+            ActionChoices.face_and_review,
             ActionChoices.face_online,
             ActionChoices.face_verify,
             ActionChoices.change_secret

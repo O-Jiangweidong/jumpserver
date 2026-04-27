@@ -62,7 +62,7 @@ class ActionAclSerializer(serializers.Serializer):
         self.set_action_choices()
 
     class Meta:
-        action_choices_exclude = [ActionChoices.warning, ActionChoices.notify_and_warn]
+        action_choices_exclude = [ActionChoices.warning, ActionChoices.notify_and_warn, ActionChoices.face_and_review]
 
     def set_action_choices(self):
         field_action = self.fields.get("action")

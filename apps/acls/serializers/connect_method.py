@@ -17,6 +17,7 @@ class ConnectMethodACLSerializer(BaseSerializer, CommonBulkModelSerializer):
             ActionChoices.review,
             ActionChoices.notice,
             ActionChoices.face_verify,
+            ActionChoices.face_and_review,
             ActionChoices.face_online,
             ActionChoices.change_secret
         ]

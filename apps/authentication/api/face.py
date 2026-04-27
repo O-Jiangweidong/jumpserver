@@ -24,7 +24,8 @@ __all__ = [
     'FaceContextApi',
     'FaceMonitorContext',
     'FaceMonitorContextApi',
-    'FaceMonitorCallbackApi'
+    'FaceMonitorCallbackApi',
+    'FaceVerifyInfoApi',
 ]
 
 
@@ -75,6 +76,10 @@ class FaceCallbackApi(AuthMixin, CreateAPIView):
     def _update_cache(self, context):
         cache_key = self.get_face_cache_key(context['token'])
         cache.set(cache_key, context, FACE_CONTEXT_CACHE_TTL)
+        action = context.get('action', None)
+        if action == 'face-verify':
+            verify_id = context.get('verify_id')
+            cache.set(verify_id, context, FACE_CONTEXT_CACHE_TTL)
 
     def _handle_success(self, context, face_code):
         context.update({
@@ -101,6 +106,19 @@ class FaceCallbackApi(AuthMixin, CreateAPIView):
         self._update_cache(context)
 
 
+class FaceVerifyInfoApi(AuthMixin, RetrieveAPIView):
+    permission_classes = (IsServiceAccount,)
+
+    def get(self, request, *args, **kwargs):
+        token = request.query_params.get('token')
+        context = cache.get(token, {}) or {}
+        return Response({
+            "is_finished": context.get('is_finished', False),
+            "success": context.get('success', False),
+            "error_message": _(context.get("error_message", ''))
+        })
+
+
 class FaceContextApi(AuthMixin, RetrieveAPIView, CreateAPIView):
     permission_classes = (AllowAny,)
     face_token_session_key = FACE_SESSION_KEY
@@ -113,7 +131,11 @@ class FaceContextApi(AuthMixin, RetrieveAPIView, CreateAPIView):
         return self.create_face_verify_context()
 
     def post(self, request, *args, **kwargs):
-        token = self.new_face_context()
+        action = request.data.get('action', 'mfa') or 'mfa'
+        verify_id = request.data.get('verify_id', '')
+        token = self.create_face_verify_context({
+            'action': action, 'verify_id': verify_id,
+        })
         return Response({'token': token})
 
     def get(self, request, *args, **kwargs):
