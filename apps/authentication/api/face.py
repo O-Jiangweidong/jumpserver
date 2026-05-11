@@ -1,3 +1,5 @@
+import os
+
 from django.core.cache import cache
 from django.utils.translation import gettext as _
 from rest_framework.exceptions import NotFound
@@ -75,11 +77,25 @@ class FaceCallbackApi(AuthMixin, CreateAPIView):
 
     def _update_cache(self, context):
         cache_key = self.get_face_cache_key(context['token'])
-        cache.set(cache_key, context, FACE_CONTEXT_CACHE_TTL)
         action = context.get('action', None)
         if action == 'face-verify':
+            is_success = context.get('success', False)
             verify_id = context.get('verify_id')
+            if not is_success:
+                context = cache.get(verify_id) or context
+                failed_times = context.get('failed_times', 0) or 0
+                failed_times += 1
+                max_failed_times = int(os.environ.get('TICKET_FACELIVE_FAILED_TIMES', 3))
+                context['max_failed_times'] = max_failed_times
+                context['failed_times'] = failed_times
+                if failed_times >= max_failed_times:
+                    context['success'] = False
+                    context['is_finished'] = True
+                else:
+                    context['success'] = False
+                    context['is_finished'] = False
             cache.set(verify_id, context, FACE_CONTEXT_CACHE_TTL)
+        cache.set(cache_key, context, FACE_CONTEXT_CACHE_TTL)
 
     def _handle_success(self, context, face_code):
         context.update({
@@ -133,9 +149,12 @@ class FaceContextApi(AuthMixin, RetrieveAPIView, CreateAPIView):
     def post(self, request, *args, **kwargs):
         action = request.data.get('action', 'mfa') or 'mfa'
         verify_id = request.data.get('verify_id', '')
-        token = self.create_face_verify_context({
-            'action': action, 'verify_id': verify_id,
-        })
+        context = cache.get(verify_id) or {}
+        token = context.get('token')
+        if not token:
+            token = self.create_face_verify_context({
+                'action': action, 'verify_id': verify_id,
+            })
         return Response({'token': token})
 
     def get(self, request, *args, **kwargs):
@@ -149,7 +168,9 @@ class FaceContextApi(AuthMixin, RetrieveAPIView, CreateAPIView):
         return Response({
             "is_finished": context.get('is_finished', False),
             "success": context.get('success', False),
-            "error_message": _(context.get("error_message", ''))
+            "error_message": _(context.get("error_message", '')),
+            "max_failed_times": context.get('max_failed_times', 0) or 0,
+            "failed_times": context.get('failed_times', 0) or 0
         })
 
 
