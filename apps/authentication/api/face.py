@@ -104,21 +104,33 @@ class FaceCallbackApi(AuthMixin, CreateAPIView):
             'face_code': face_code
         })
         action = context.get('action', None)
-        if action == 'login_asset':
-            user_id = context.get('user_id')
-            user = User.objects.get(id=user_id)
+        user_id = context.get('user_id')
 
-            if user.check_face(face_code):
-                with tmp_to_root_org():
-                    connection_token_id = context.get('connection_token_id')
-                    token = ConnectionToken.objects.filter(id=connection_token_id).first()
-                    token.is_active = True
-                    token.save(update_fields=['is_active'])
-            else:
-                context.update({
-                    'success': False,
-                    'error_message': _('Facial comparison failed')
-                })
+        try:
+            if not user_id:
+                raise ValidationError()
+
+            user = User.objects.filter(id=user_id).first()
+            if not user:
+                raise ValidationError()
+
+            if action == 'login_asset':
+                if user.check_face(face_code):
+                    with tmp_to_root_org():
+                        connection_token_id = context.get('connection_token_id')
+                        token = ConnectionToken.objects.filter(id=connection_token_id).first()
+                        token.is_active = True
+                        token.save(update_fields=['is_active'])
+                else:
+                    raise ValidationError()
+            elif action == 'face-verify':
+                if not user.check_face(face_code):
+                    raise ValidationError()
+        except ValidationError as e:
+            context.update({
+                'success': False,
+                'error_message': _('Facial comparison failed')
+            })
         self._update_cache(context)
 
 
